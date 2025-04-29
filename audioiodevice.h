@@ -6,6 +6,7 @@
 #include <QMutex>
 #include <QWaitCondition>
 
+
 class AudioIODevice : public QIODevice {
     Q_OBJECT
 public:
@@ -21,10 +22,6 @@ public:
 
 private:
     QByteArray buffer;
-
-    bool& isPaused;
-    QMutex& playORpause_mutex;
-    QWaitCondition& pauseWait;
 };
 
 #endif // AUDIOIODEVICE_H

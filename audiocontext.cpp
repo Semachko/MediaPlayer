@@ -2,7 +2,8 @@
 #include <qdebug.h>
 #include <QMediaDevices>
 
-AudioContext::AudioContext(AVFormatContext *format_context) {
+AudioContext::AudioContext(AVFormatContext *format_context)
+{
     stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
     if (stream_id<0)
         return;

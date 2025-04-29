@@ -11,7 +11,7 @@ class Synchronizer : public QObject
 {
     Q_OBJECT
 public:
-    Synchronizer(MasterClock* clock, QObject* parent = nullptr);
+    Synchronizer(QObject* parent = nullptr);
     void playORpause();
 public:
     MasterClock* clock;

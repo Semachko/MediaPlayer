@@ -1,9 +1,11 @@
 #include "synchronizer.h"
 
-Synchronizer::Synchronizer(MasterClock *clock, QObject * parent)
+Synchronizer::Synchronizer(QObject * parent)
     : QObject(parent),
-    clock(clock)
-    {}
+    clock(new MasterClock(this))
+{
+    clock->start(0);
+}
 
 void Synchronizer::playORpause()
 {

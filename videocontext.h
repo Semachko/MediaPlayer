@@ -11,13 +11,13 @@ extern "C" {
     #include <libswscale/swscale.h>
     #include "libavutil/imgutils.h"
 }
-#include "masterclock.h"
+#include "synchronizer.h"
 
 class VideoContext : public QObject
 {
     Q_OBJECT
 public:
-    VideoContext(AVFormatContext* format_context, MasterClock* mainlock, QVideoSink* video_sink);
+    VideoContext(AVFormatContext* format_context, Synchronizer* sync, QVideoSink* video_sink);
 
     void process(AVPacket*);
 private:
@@ -33,7 +33,7 @@ public:
     AVFrame* rgbFrame;
     std::vector<uint8_t> buffer;
 
-    MasterClock* clock;
+    Synchronizer* sync;
     QVideoSink* videoSink;
 private:
     qint64 imagetime = 0;

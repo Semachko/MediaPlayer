@@ -52,9 +52,8 @@ private:
     std::mutex mtx;
     std::condition_variable cv;
 
-    MasterClock* clock;
-
-    QVideoSink* videosink = nullptr;
+    QVideoSink* videosink;
+    QAudioSink* audiosink;
 
     QThread* audioThread;
     QThread* videoThread;

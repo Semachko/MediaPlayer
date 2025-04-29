@@ -5,7 +5,7 @@
 
 #include "videocontext.h"
 
-VideoContext::VideoContext(AVFormatContext *format_context, MasterClock* mainclock, QVideoSink* video_sink) : clock(mainclock)
+VideoContext::VideoContext(AVFormatContext *format_context, Synchronizer* sync, QVideoSink* video_sink) : sync(sync)
 {
     stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     if (stream_id<0)
@@ -83,11 +83,15 @@ void VideoContext::process(AVPacket* packet)
         QVideoFrame qframe = QVideoFrame(image.copy());
         //qDebug()<<"qVideoFrame size = " << qframe.size();
 
+        QMutexLocker locker(&sync->playORpause_mutex);
+        while(sync->isPaused)
+            sync->pauseWait.wait(&sync->playORpause_mutex);
+
         imagetime = frame->best_effort_timestamp * 1000 * time_base.num / time_base.den;
         if (!qframe.size().isEmpty()){
-            qint64 delay = imagetime - clock->getClock()-10;
-            qDebug()<<"Video time = "<<this->imagetime;
-            qDebug()<<"Clock time = "<<this->clock->getClock();
+            qint64 delay = imagetime - sync->clock->getClock()-10;
+            qDebug()<<"Video time = "<<imagetime;
+            qDebug()<<"Clock time = "<<sync->clock->getClock();
             qDebug()<<"Delay: "<<delay;
             if (delay<50){
                 if (delay>0)

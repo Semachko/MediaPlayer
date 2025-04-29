@@ -6,7 +6,7 @@
 #include "mediacontext.h"
 #include "libavutil/frame.h"
 
-MediaContext::MediaContext(): clock(new MasterClock(this)){}
+MediaContext::MediaContext(){}
 
 void MediaContext::setFile(const QUrl &filename)
 {
@@ -20,9 +20,9 @@ void MediaContext::setFile(const QUrl &filename)
     avformat_open_input(&format_context, filename.toLocalFile().toStdString().c_str(), nullptr, nullptr);
     avformat_find_stream_info(format_context, nullptr);
 
-    clock->start(0);
+    sync = new Synchronizer(this);
 
-    video = new VideoContext(format_context, clock, videosink);
+    video = new VideoContext(format_context, sync, videosink);
     videoThread = new QThread(this);
     video->moveToThread(videoThread);
     videoThread->start();
@@ -45,13 +45,21 @@ void MediaContext::setFile(const QUrl &filename)
 void MediaContext::playORpause()
 {
     sync->playORpause();
-
+    if(sync->isPaused)
+        QMetaObject::invokeMethod(audio, [this](){
+            audio->audioSink->suspend();
+        });
+    else
+        QMetaObject::invokeMethod(audio, [this](){
+            audio->audioSink->resume();
+        });
 }
 
 void MediaContext::processMedia()
 {
     AVPacket *packet = av_packet_alloc();
-    while (av_read_frame(format_context, packet) >= 0) {
+    while (av_read_frame(format_context, packet) >= 0)
+    {
         QMutexLocker locker(&sync->playORpause_mutex);
         while(sync->isPaused)
             sync->pauseWait.wait(&sync->playORpause_mutex);

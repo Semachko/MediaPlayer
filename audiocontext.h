@@ -27,13 +27,13 @@ public:
 
 public:
     int stream_id;
+    QAudioSink* audioSink;
 private:
     AVCodecContext* codec_context;
     AVCodecParameters* codec_parameters;
     SwrContext* resampleContext;
 
     QAudioFormat format;
-    QAudioSink* audioSink;
     AudioIODevice* audioDevice;
 };
 
