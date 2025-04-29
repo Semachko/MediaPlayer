@@ -27,6 +27,8 @@ public:
 
 public:
     int stream_id;
+    bool isMuted = false;
+    qreal last_volume = 0.2;
     QAudioSink* audioSink;
 private:
     AVCodecContext* codec_context;

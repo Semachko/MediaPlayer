@@ -57,12 +57,18 @@ void MediaContext::playORpause()
 
 void MediaContext::volumeChanged(qreal value)
 {
-    audio->audioSink->setVolume(value);
+    audio->last_volume=value;
+    if (!audio->isMuted)
+        audio->audioSink->setVolume(value);
 }
 
 void MediaContext::muteORunmute()
 {
-
+    if(audio->isMuted)
+        audio->audioSink->setVolume(audio->last_volume);
+    else
+        audio->audioSink->setVolume(0);
+    audio->isMuted=!audio->isMuted;
 }
 
 void MediaContext::processMedia()

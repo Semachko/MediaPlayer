@@ -56,6 +56,7 @@ AudioContext::AudioContext(AVFormatContext *format_context)
     audioDevice = new AudioIODevice(this);
     audioSink = new QAudioSink(format, this);
     audioSink->setBufferSize(4096);
+    audioSink->setVolume(last_volume);
     audioSink->start(audioDevice);
 }
 
