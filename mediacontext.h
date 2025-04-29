@@ -35,14 +35,15 @@ public:
 
     Q_INVOKABLE void setFile(const QUrl& filename);
     Q_INVOKABLE void playORpause();
-
+    Q_INVOKABLE void volumeChanged(qreal);
+    Q_INVOKABLE void muteORunmute();
 
 signals:
     void videoSinkChanged();
 
 private:
     void processMedia();
-
+    void synchronize();
 private:
     AVFormatContext* format_context = nullptr;
     VideoContext* video = nullptr;

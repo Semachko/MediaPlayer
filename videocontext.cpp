@@ -58,6 +58,13 @@ QVideoFrame VideoContext::decode(AVPacket* packet, AVFrame* frame)
     return QVideoFrame();
 }
 
+void VideoContext::synchronize()
+{
+    QMutexLocker locker(&sync->playORpause_mutex);
+    while(sync->isPaused)
+        sync->pauseWait.wait(&sync->playORpause_mutex);
+}
+
 void VideoContext::process(AVPacket* packet)
 {
     int ret = avcodec_send_packet(codec_context, packet);
@@ -83,21 +90,17 @@ void VideoContext::process(AVPacket* packet)
         QVideoFrame qframe = QVideoFrame(image.copy());
         //qDebug()<<"qVideoFrame size = " << qframe.size();
 
-        QMutexLocker locker(&sync->playORpause_mutex);
-        while(sync->isPaused)
-            sync->pauseWait.wait(&sync->playORpause_mutex);
+        synchronize();
 
         imagetime = frame->best_effort_timestamp * 1000 * time_base.num / time_base.den;
         if (!qframe.size().isEmpty()){
             qint64 delay = imagetime - sync->clock->getClock()-10;
-            qDebug()<<"Video time = "<<imagetime;
-            qDebug()<<"Clock time = "<<sync->clock->getClock();
+            //qDebug()<<"Video time = "<<imagetime;
+            //qDebug()<<"Clock time = "<<sync->clock->getClock();
             qDebug()<<"Delay: "<<delay;
-            if (delay<50){
-                if (delay>0)
-                    QThread::msleep(delay);
-                emit frameReady(qframe);
-            }
+            if (delay>0)
+                QThread::msleep(delay);
+            emit frameReady(qframe);
         }
         av_frame_unref(frame);
     }

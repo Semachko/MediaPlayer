@@ -55,15 +55,23 @@ void MediaContext::playORpause()
         });
 }
 
+void MediaContext::volumeChanged(qreal value)
+{
+    audio->audioSink->setVolume(value);
+}
+
+void MediaContext::muteORunmute()
+{
+
+}
+
 void MediaContext::processMedia()
 {
+    synchronize();
+
     AVPacket *packet = av_packet_alloc();
     while (av_read_frame(format_context, packet) >= 0)
     {
-        QMutexLocker locker(&sync->playORpause_mutex);
-        while(sync->isPaused)
-            sync->pauseWait.wait(&sync->playORpause_mutex);
-
         if (packet->stream_index == audio->stream_id)
         {
             AVPacket* packet_copy = av_packet_alloc();
@@ -80,8 +88,17 @@ void MediaContext::processMedia()
             });
         }
         av_packet_unref(packet);
+
+        synchronize();
     }
     av_packet_free(&packet);
+}
+
+void MediaContext::synchronize()
+{
+    QMutexLocker locker(&sync->playORpause_mutex);
+    while(sync->isPaused)
+        sync->pauseWait.wait(&sync->playORpause_mutex);
 }
 
 

@@ -13,7 +13,7 @@ Slider {
     id: root
     width: 200
     height: 30
-    value: 0.5
+    value: 0.2
 
     background: Item {
         Rectangle {

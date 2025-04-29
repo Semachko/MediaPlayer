@@ -107,14 +107,21 @@ Window {
             id: mutebutton
             anchors.verticalCenter: parent.verticalCenter
             scale: 0.8
+            onPressed: {
+                mediaplayer.muteORunmute(mutebutton.checked,volumeslider.value)
+            }
         }
 
         VolumeSlider{
+            id: volumeslider
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: mutebutton.right
             anchors.leftMargin: -10
             anchors.right: resizebutton.left
             anchors.rightMargin: 20
+            onMoved:{
+                mediaplayer.volumeChanged()
+            }
         }
 
         ResizeButton{

@@ -22,7 +22,7 @@ public:
     void process(AVPacket*);
 private:
     QVideoFrame decode(AVPacket*, AVFrame*);
-
+    void synchronize();
 signals:
     void frameReady(QVideoFrame frame);
 public:
