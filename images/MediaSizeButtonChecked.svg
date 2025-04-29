@@ -1,0 +1,6 @@
+<svg width="63" height="64" viewBox="0 0 63 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M8.53413e-07 44.0001L17 44.0001C18.6569 44.0001 20 45.3433 20 47.0001L20 64.0001" stroke="white" stroke-width="6"/>
+<path d="M43 64L43 47C43 45.3431 44.3431 44 46 44L63 44" stroke="white" stroke-width="6"/>
+<path d="M43 0V17C43 18.6569 44.3431 20 46 20H63" stroke="white" stroke-width="6"/>
+<path d="M20 0V17C20 18.6569 18.6569 20 17 20H0" stroke="white" stroke-width="6"/>
+</svg>
