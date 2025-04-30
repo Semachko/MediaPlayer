@@ -59,6 +59,14 @@ Window {
             anchors.right: media_time.left
             anchors.leftMargin: 10
             anchors.rightMargin: 10
+            onPressedChanged:{
+                if (pressed) {
+                    mediaplayer.playORpause()
+                } else {
+                    mediaplayer.timeChanged(position)
+                    mediaplayer.playORpause()
+                }
+            }
         }
         Text{
             id: media_time

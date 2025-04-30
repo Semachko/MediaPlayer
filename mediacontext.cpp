@@ -16,7 +16,6 @@ void MediaContext::setFile(const QUrl &filename)
         delete audio;
         avformat_close_input(&format_context);
     }
-
     avformat_open_input(&format_context, filename.toLocalFile().toStdString().c_str(), nullptr, nullptr);
     avformat_find_stream_info(format_context, nullptr);
 
@@ -27,11 +26,11 @@ void MediaContext::setFile(const QUrl &filename)
     video->moveToThread(videoThread);
     videoThread->start();
 
+    qDebug()<<"Creating audiocontext...";
     audio = new AudioContext(format_context);
     audioThread = new QThread(this);
     audio->moveToThread(audioThread);
     audioThread->start();
-
 
     connect(video, &VideoContext::frameReady, this, [this](QVideoFrame frame){
         videosink->setVideoFrame(frame);
@@ -71,11 +70,29 @@ void MediaContext::muteORunmute()
     audio->isMuted=!audio->isMuted;
 }
 
+void MediaContext::timeChanged(qreal position)
+{
+    qDebug()<<"Position: "<<position;
+
+    // int64_t seek_target = timestamp * AV_TIME_BASE; // timestamp в секундах
+    // int res = av_seek_frame(format_context, -1, seek_target, AVSEEK_FLAG_BACKWARD);
+    // if (res) {
+    //     qWarning() << "Не удалось перемотать";
+    //     isSeeking = false;
+    //     return;
+    // }
+
+    // avcodec_flush_buffers(audio_codec_ctx);
+    // avcodec_flush_buffers(video_codec_ctx);
+}
+
 void MediaContext::processMedia()
 {
     synchronize();
 
     AVPacket *packet = av_packet_alloc();
+    int it = 0;
+    int wholebuffer = 0;
     while (av_read_frame(format_context, packet) >= 0)
     {
         if (packet->stream_index == audio->stream_id)
@@ -87,6 +104,10 @@ void MediaContext::processMedia()
             });
         }
         else if(packet->stream_index == video->stream_id){
+            it++;
+            qDebug()<<"Processing new frame = "<<it;
+            wholebuffer+=packet->size;
+            qDebug()<<"Total buffered size = "<<wholebuffer;
             AVPacket* packet_copy = av_packet_alloc();
             av_packet_ref(packet_copy, packet);
             QMetaObject::invokeMethod(video, [this, packet_copy](){

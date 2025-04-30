@@ -37,6 +37,7 @@ public:
     Q_INVOKABLE void playORpause();
     Q_INVOKABLE void volumeChanged(qreal);
     Q_INVOKABLE void muteORunmute();
+    Q_INVOKABLE void timeChanged(qreal);
 
 signals:
     void videoSinkChanged();
