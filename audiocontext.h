@@ -5,6 +5,7 @@
 #include <QIODevice>
 #include <QByteArray>
 #include <QThread>
+#include <queue>
 
 extern "C" {
     #include "libavformat/avformat.h"
@@ -30,6 +31,9 @@ public:
     bool isMuted = false;
     qreal last_volume = 0.2;
     QAudioSink* audioSink;
+
+    std::queue<AVPacket*> audioPacketQueue;
+    std::queue<AVFrame*> audioFrameQueue;
 private:
     AVCodecContext* codec_context;
     AVCodecParameters* codec_parameters;
@@ -37,6 +41,8 @@ private:
 
     QAudioFormat format;
     AudioIODevice* audioDevice;
+
+
 };
 
 #endif // AUDIOCONTEXT_H

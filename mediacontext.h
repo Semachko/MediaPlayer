@@ -4,7 +4,7 @@
 #include <QString>
 #include <QVideoSink>
 #include <QUrl>
-
+#include <QMutex>
 
 #include <atomic>
 #include <condition_variable>
@@ -39,20 +39,19 @@ public:
     Q_INVOKABLE void muteORunmute();
     Q_INVOKABLE void timeChanged(qreal);
 
+    void fill_videoPacketQueue(int n_packets);
+    void fill_audioPacketQueue(int n_packets);
 signals:
     void videoSinkChanged();
-
 private:
     void processMedia();
     void synchronize();
+
+    int push_packet_to_queues();
 private:
     AVFormatContext* format_context = nullptr;
     VideoContext* video = nullptr;
     AudioContext* audio = nullptr;
-
-    std::atomic<bool> is_paused = true;
-    std::mutex mtx;
-    std::condition_variable cv;
 
     QVideoSink* videosink;
     QAudioSink* audiosink;
@@ -60,6 +59,8 @@ private:
     QThread* audioThread;
     QThread* videoThread;
     Synchronizer* sync;
+
+    QMutex formatMutex;
 };
 
 #endif // MEDIACONTEXT_H

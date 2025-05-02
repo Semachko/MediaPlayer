@@ -22,6 +22,7 @@ public:
 
 private:
     QByteArray buffer;
+    int queueSize = 10;
 };
 
 #endif // AUDIOIODEVICE_H

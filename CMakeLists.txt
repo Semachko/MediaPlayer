@@ -37,6 +37,8 @@ qt_add_qml_module(appMediaPlayer
     SOURCES masterclock.h masterclock.cpp
     QML_FILES FilenameBar.qml
     SOURCES synchronizer.h synchronizer.cpp
+    SOURCES
+    SOURCES frameoutput.h frameoutput.cpp
 )
 
 qt_add_resources(appMediaPlayer

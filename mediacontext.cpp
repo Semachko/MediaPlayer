@@ -4,7 +4,6 @@
 #include <utility>
 
 #include "mediacontext.h"
-#include "libavutil/frame.h"
 
 MediaContext::MediaContext(){}
 
@@ -21,29 +20,86 @@ void MediaContext::setFile(const QUrl &filename)
 
     sync = new Synchronizer(this);
 
-    video = new VideoContext(format_context, sync, videosink);
+    video = new VideoContext(format_context, sync);
     videoThread = new QThread(this);
     video->moveToThread(videoThread);
     videoThread->start();
 
-    qDebug()<<"Creating audiocontext...";
     audio = new AudioContext(format_context);
     audioThread = new QThread(this);
     audio->moveToThread(audioThread);
     audioThread->start();
 
-    connect(video, &VideoContext::frameReady, this, [this](QVideoFrame frame){
+
+    connect(video->output, &FrameOutput::imageToOutput, this, [this](QVideoFrame frame){
+        qDebug()<<"\033[32m[Screen]\033[0m Outputing image, size = "<<frame.size();
         videosink->setVideoFrame(frame);
+
+        if(video->packetQueue.size() < video->queueSize)
+            fill_videoPacketQueue(1);
     });
 
-    auto _ = QtConcurrent::run([this](){
-        processMedia();
-    });
+    fill_videoPacketQueue(video->queueSize);
+
+    // QMetaObject::invokeMethod(video, [this](){
+    //     video->start_output();
+    // });
+
+    // auto _ = QtConcurrent::run([this](){
+    //     processMedia();
+    // });
+}
+
+
+void MediaContext::fill_videoPacketQueue(int n_packets)
+{
+    qDebug()<<"\033[33m[Packet]\033[0m Filling video packet queue with"<<n_packets<<"packets";
+    while(n_packets>0)
+    {
+        int res = push_packet_to_queues();
+        if (res<0)
+            return;
+        if (res==video->stream_id){
+            qDebug()<<"\033[33m[Packet]\033[0m Video packet added. Queue size ="<< video->packetQueue.size()<<"Signaling about new packet";
+            emit video->newPacketReady();
+            n_packets -= 1;
+        }
+    }
+}
+
+void MediaContext::fill_audioPacketQueue(int n_packets)
+{
+    while(audio->audioPacketQueue.size() < n_packets)
+    {
+        bool res = push_packet_to_queues();
+        if (!res)
+            return;
+    }
+}
+
+int MediaContext::push_packet_to_queues()
+{
+    QMutexLocker _(&formatMutex);
+
+    AVPacket *packet = av_packet_alloc();
+    int res = av_read_frame(format_context, packet);
+    if (res<0)
+        return -1;
+
+    if (packet->stream_index == audio->stream_id){
+        audio->audioPacketQueue.push(packet);
+        return audio->stream_id;
+    }
+    if(packet->stream_index == video->stream_id){
+        video->packetQueue.push(packet);
+        return video->stream_id;
+    }
+    return INT32_MAX;
 }
 
 void MediaContext::playORpause()
 {
-    sync->playORpause();
+    sync->play_or_pause();
     if(sync->isPaused)
         QMetaObject::invokeMethod(audio, [this](){
             audio->audioSink->suspend();
@@ -70,6 +126,8 @@ void MediaContext::muteORunmute()
     audio->isMuted=!audio->isMuted;
 }
 
+
+
 void MediaContext::timeChanged(qreal position)
 {
     qDebug()<<"Position: "<<position;
@@ -86,46 +144,34 @@ void MediaContext::timeChanged(qreal position)
     // avcodec_flush_buffers(video_codec_ctx);
 }
 
+
 void MediaContext::processMedia()
 {
-    synchronize();
+    // synchronize();
 
-    AVPacket *packet = av_packet_alloc();
-    int it = 0;
-    int wholebuffer = 0;
-    while (av_read_frame(format_context, packet) >= 0)
-    {
-        if (packet->stream_index == audio->stream_id)
-        {
-            AVPacket* packet_copy = av_packet_alloc();
-            av_packet_ref(packet_copy, packet);
-            QMetaObject::invokeMethod(audio, [this, packet_copy](){
-                audio->process(packet_copy);
-            });
-        }
-        else if(packet->stream_index == video->stream_id){
-            it++;
-            qDebug()<<"Processing new frame = "<<it;
-            wholebuffer+=packet->size;
-            qDebug()<<"Total buffered size = "<<wholebuffer;
-            AVPacket* packet_copy = av_packet_alloc();
-            av_packet_ref(packet_copy, packet);
-            QMetaObject::invokeMethod(video, [this, packet_copy](){
-                video->process(packet_copy);
-            });
-        }
-        av_packet_unref(packet);
+    // AVPacket *packet = av_packet_alloc();
+    // while (av_read_frame(format_context, packet) >= 0)
+    // {
+    //     if (packet->stream_index == audio->stream_id)
+    //     {
+    //         AVPacket* packet_copy = av_packet_alloc();
+    //         av_packet_ref(packet_copy, packet);
+    //         QMetaObject::invokeMethod(audio, [this, packet_copy](){
+    //             audio->process(packet_copy);
+    //         });
+    //     }
+    //     else if(packet->stream_index == video->stream_id){
+    //         AVPacket* packet_copy = av_packet_alloc();
+    //         av_packet_ref(packet_copy, packet);
+    //         QMetaObject::invokeMethod(video, [this, packet_copy](){
+    //             video->process(packet_copy);
+    //         });
+    //     }
+    //     av_packet_unref(packet);
 
-        synchronize();
-    }
-    av_packet_free(&packet);
-}
-
-void MediaContext::synchronize()
-{
-    QMutexLocker locker(&sync->playORpause_mutex);
-    while(sync->isPaused)
-        sync->pauseWait.wait(&sync->playORpause_mutex);
+    //     synchronize();
+    // }
+    // av_packet_free(&packet);
 }
 
 

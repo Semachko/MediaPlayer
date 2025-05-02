@@ -2,14 +2,14 @@
 
 Synchronizer::Synchronizer(QObject * parent)
     : QObject(parent),
-    clock(new MasterClock(this))
+    clock(new Clock(this))
 {
     clock->start(0);
 }
 
-void Synchronizer::playORpause()
+void Synchronizer::play_or_pause()
 {
-    QMutexLocker locker(&playORpause_mutex);
+    QMutexLocker locker(&pauseMutex);
     isPaused = !isPaused;
     if (!isPaused){
         pauseWait.wakeAll();
@@ -17,3 +17,17 @@ void Synchronizer::playORpause()
     }else
         clock->pause();
 }
+
+void Synchronizer::check_pause()
+{
+    QMutexLocker locker(&pauseMutex);
+    while(isPaused)
+        pauseWait.wait(&pauseMutex);
+}
+
+qint64 Synchronizer::get_time()
+{
+    return clock->get_time();
+}
+
+

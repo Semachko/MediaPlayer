@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QVideoSink>
 #include <QVideoFrame>
+#include <QPair>
 
 extern "C" {
     #include "libavformat/avformat.h"
@@ -12,32 +13,47 @@ extern "C" {
     #include "libavutil/imgutils.h"
 }
 #include "synchronizer.h"
+#include "frameoutput.h"
 
 class VideoContext : public QObject
 {
     Q_OBJECT
 public:
-    VideoContext(AVFormatContext* format_context, Synchronizer* sync, QVideoSink* video_sink);
+    VideoContext(AVFormatContext* format_context, Synchronizer* sync);
 
     void process(AVPacket*);
+    void start_output();
+
+    void output_image();
+    void fill_frameQueue();
+    void push_frame_to_queue();
 private:
-    QVideoFrame decode(AVPacket*, AVFrame*);
     void synchronize();
 signals:
-    void frameReady(QVideoFrame frame);
+    void newPacketReady();
+    void imageToOutput(QVideoFrame frame);
+//////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 public:
     int stream_id;
+    std::queue<AVPacket*> packetQueue;
+    int queueSize = 5;
+private:
     AVCodecContext* codec_context;
     AVCodecParameters* codec_parameters;
+    AVRational time_base;
+
     SwsContext* frame_format;
-    AVFrame* rgbFrame;
     std::vector<uint8_t> buffer;
+    AVFrame* rgbFrame;
 
     Synchronizer* sync;
-    QVideoSink* videoSink;
-private:
-    qint64 imagetime = 0;
-    AVRational time_base;
+    QMutex imageMutex;
+    QWaitCondition* imageReady;
+
+    QThread* outputThread;
+public:
+    FrameOutput* output;
 };
 
 #endif // VIDEOCONTEXT_H

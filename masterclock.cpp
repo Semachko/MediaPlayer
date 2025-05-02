@@ -1,14 +1,14 @@
 #include "masterclock.h"
 
-MasterClock::MasterClock(QObject *parent): QObject(parent), speed(1.0), paused(true), baseTime(0) {}
+Clock::Clock(QObject *parent): QObject(parent), speed(1.0), paused(true), baseTime(0) {}
 
-void MasterClock::start(qint64 pts)
+void Clock::start(qint64 pts)
 {
     startTime.start();
     baseTime = pts;
 }
 
-void MasterClock::pause()
+void Clock::pause()
 {
     if (!paused) {
         paused = true;
@@ -16,7 +16,7 @@ void MasterClock::pause()
     }
 }
 
-void MasterClock::resume()
+void Clock::resume()
 {
     if (paused) {
         paused = false;
@@ -25,12 +25,12 @@ void MasterClock::resume()
     }
 }
 
-void MasterClock::setSpeed(double newSpeed)
+void Clock::setSpeed(double newSpeed)
 {
     speed = newSpeed;
 }
 
-qint64 MasterClock::getClock() const
+qint64 Clock::get_time() const
 {
     if (paused) {
         return baseTime + (pausedTime * speed);

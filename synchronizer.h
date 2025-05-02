@@ -1,9 +1,15 @@
 #ifndef SYNCHRONIZER_H
 #define SYNCHRONIZER_H
 
+extern "C" {
+    #include "libavutil/frame.h"
+    #include "libavcodec/packet.h"
+}
+
 #include <QObject>
 #include <QMutex>
 #include <QWaitCondition>
+#include <queue>
 
 #include "masterclock.h"
 
@@ -12,13 +18,16 @@ class Synchronizer : public QObject
     Q_OBJECT
 public:
     Synchronizer(QObject* parent = nullptr);
-    void playORpause();
-public:
-    MasterClock* clock;
 
-    QMutex playORpause_mutex;
-    QWaitCondition pauseWait;
+    void play_or_pause();
+    void check_pause();
+    qint64 get_time();
+public:
     bool isPaused = true;
+private:
+    Clock* clock;
+    QMutex pauseMutex;
+    QWaitCondition pauseWait;
 };
 
 #endif // SYNCHRONIZER_H
