@@ -21,14 +21,9 @@ class VideoContext : public QObject
 public:
     VideoContext(AVFormatContext* format_context, Synchronizer* sync);
 
-    void process(AVPacket*);
-    void start_output();
-
     void output_image();
     void fill_frameQueue();
     void push_frame_to_queue();
-private:
-    void synchronize();
 signals:
     void newPacketReady();
     void imageToOutput(QVideoFrame frame);
@@ -36,9 +31,13 @@ signals:
 //////////////////////////////////////////////////////////
 public:
     int stream_id;
+    int queueSize = 20;
+    QMutex queueMutex;
     std::queue<AVPacket*> packetQueue;
-    int queueSize = 5;
+    FrameOutput* output;
+
 private:
+    QThread* outputThread;
     AVCodecContext* codec_context;
     AVCodecParameters* codec_parameters;
     AVRational time_base;
@@ -50,10 +49,6 @@ private:
     Synchronizer* sync;
     QMutex imageMutex;
     QWaitCondition* imageReady;
-
-    QThread* outputThread;
-public:
-    FrameOutput* output;
 };
 
 #endif // VIDEOCONTEXT_H

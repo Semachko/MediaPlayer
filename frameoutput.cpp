@@ -10,7 +10,7 @@ ImageFrame::ImageFrame(QVideoFrame&& videoframe, qint64 time)
 FrameOutput::FrameOutput(Synchronizer * sync)
     : sync(sync)
 {}
-
+constexpr auto OUTPUT = "\033[34m[Output]\033[0m";
 void FrameOutput::start_output()
 {
     while(true)
@@ -18,12 +18,12 @@ void FrameOutput::start_output()
         sync->check_pause();
 
         QMutexLocker locker(&conditionMutex);
-        //qDebug()<<"\033[34m[Output]\033[0m Checking is image queue empty";
+        //qDebug()<<OUTPUT<<"Checking is image queue empty";
         while(imageQueue.empty()){
-            //qDebug()<<"\033[34m[Output]\033[0m Queue is empty, waiting for images";
+            //qDebug()<<OUTPUT<<"Queue is empty, waiting for images";
             imageReady.wait(&conditionMutex);
         }
-        //qDebug()<<"\033[34m[Output]\033[0m Queue contain image, outputing";
+        //qDebug()<<OUTPUT<<"Queue contain image, outputing";
         ImageFrame imageFrame = pop_imageQueue();
         qint64 delay = imageFrame.time - sync->get_time();
         // qDebug()<<"Video time = "<<imageFrame.time;

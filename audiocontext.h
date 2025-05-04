@@ -17,23 +17,34 @@ extern "C" {
 }
 
 #include "audioiodevice.h"
+#include "synchronizer.h"
 
 class AudioContext : public QObject
 {
     Q_OBJECT
 public:
-    AudioContext(AVFormatContext* format_context);
+    AudioContext(AVFormatContext* format_context, Synchronizer* sync);
 
     void process(AVPacket*);
-
+    void push_frame_to_buffer();
+signals:
+    void newPacketReady();
+private:
+    AVSampleFormat convert_to_AVFormat(QAudioFormat::SampleFormat format);
+signals:
+    void packetDecoded();
+///////////////////////////////////////////////
+///////////////////////////////////////////////
 public:
     int stream_id;
     bool isMuted = false;
     qreal last_volume = 0.2;
     QAudioSink* audioSink;
 
-    std::queue<AVPacket*> audioPacketQueue;
-    std::queue<AVFrame*> audioFrameQueue;
+    int queueSize = 16;
+    QMutex queueMutex;
+    std::queue<AVPacket*> packetQueue;
+
 private:
     AVCodecContext* codec_context;
     AVCodecParameters* codec_parameters;
@@ -42,7 +53,7 @@ private:
     QAudioFormat format;
     AudioIODevice* audioDevice;
 
-
+    Synchronizer* sync;
 };
 
 #endif // AUDIOCONTEXT_H

@@ -39,15 +39,12 @@ public:
     Q_INVOKABLE void muteORunmute();
     Q_INVOKABLE void timeChanged(qreal);
 
-    void fill_videoPacketQueue(int n_packets);
-    void fill_audioPacketQueue(int n_packets);
+private:
+    void fill_videoPacketQueue();
+    void fill_audioPacketQueue();
+    bool push_packet_to_queues();
 signals:
     void videoSinkChanged();
-private:
-    void processMedia();
-    void synchronize();
-
-    int push_packet_to_queues();
 private:
     AVFormatContext* format_context = nullptr;
     VideoContext* video = nullptr;
@@ -58,8 +55,8 @@ private:
 
     QThread* audioThread;
     QThread* videoThread;
-    Synchronizer* sync;
 
+    Synchronizer* sync;
     QMutex formatMutex;
 };
 

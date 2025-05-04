@@ -62,24 +62,29 @@ VideoContext::VideoContext(AVFormatContext *format_context, Synchronizer* sync) 
     connect(this,&VideoContext::newPacketReady,this,&VideoContext::push_frame_to_queue);
 }
 
+constexpr auto DECODING = "\033[31m[Decoding]\033[0m";
+constexpr auto IMAGE = "\033[35m[Image]\033[0m";
+
 void VideoContext::push_frame_to_queue()
 {
-    //qDebug()<<"\033[31m[Decoding]\033[0m New video packet arrived";
+    //qDebug()<<DECODING<<"New video packet arrived";
+    queueMutex.lock();
     AVPacket* packet = packetQueue.front();
     packetQueue.pop();
+    queueMutex.unlock();
 
-    //qDebug()<<"\033[31m[Decoding]\033[0m Decoding packet";
+    //qDebug()<<DECODING<<"Decoding packet";
     int ret = avcodec_send_packet(codec_context, packet);
     av_packet_free(&packet);
     if (ret < 0) {
-        qDebug()<<"Error sending video packet: "<<ret;
+        //qDebug()<<"Error sending video packet: "<<ret;
         return;
     }
 
     AVFrame *frame = av_frame_alloc();
     while (avcodec_receive_frame(codec_context, frame) == 0)
     {
-        //qDebug()<<"\033[35m[Image]\033[0m Received frame, formating it";
+        //qDebug()<<IMAGE<<"Received frame, formating it";
         sws_scale(
             frame_format,
             frame->data,
@@ -95,7 +100,7 @@ void VideoContext::push_frame_to_queue()
         ImageFrame imageFrame(std::move(QVideoFrame(image.copy())),imagetime);
 
         output->push_imageQueue(std::move(imageFrame));
-        //qDebug()<<"\033[35m[Image]\033[0m Notifying about new image";
+        //qDebug()<<IMAGE<<"Notifying about new image";
         output->imageReady.notify_all();
 
         av_frame_unref(frame);
@@ -103,90 +108,4 @@ void VideoContext::push_frame_to_queue()
     av_frame_free(&frame);
 }
 
-
-void VideoContext::start_output()
-{
-    // while(true)
-    // {
-    //     sync->check_pause();
-
-    //     QMutexLocker locker(&imageMutex);
-    //     qDebug()<<"\033[34m[Output]\033[0m Checking is image queue empty";
-    //     while(imageQueue.empty()){
-    //         qDebug()<<"\033[34m[Output]\033[0m Queue is empty, waiting for images";
-    //         imageReady.wait(&imageMutex);
-    //     }
-    //     qDebug()<<"\033[34m[Output]\033[0m Queue contain image, outputing";
-
-    //     qDebug()<<"IMAGE OBJ SIZE = "<<sizeof(imageQueue.front());
-
-    //     qint64 delay = imageQueue.front().second - sync->get_time();
-    //     qDebug()<<"Video time = "<<imageQueue.front().second;
-    //     qDebug()<<"Clock time = "<<sync->get_time();
-    //     qDebug()<<"Delay: "<<delay;
-    //     if (delay>0)
-    //         QThread::msleep(delay);
-    //     output_image();
-    // }
-}
-
-void VideoContext::output_image()
-{
-    // qDebug()<<"\033[34m[Output]\033[0m Signaling to output image";
-    // QVideoFrame image = imageQueue.front().first;
-    // imageQueue.pop();
-    // emit imageToOutput(image);
-}
-
-
-
-void VideoContext::synchronize()
-{
-    // QMutexLocker locker(&sync->pauseMutex);
-    // while(sync->isPaused)
-    //     sync->pauseWait.wait(&sync->pauseMutex);
-}
-
-void VideoContext::process(AVPacket* packet)
-{
-    // int ret = avcodec_send_packet(codec_context, packet);
-    // av_packet_free(&packet);
-    // if (ret < 0) {
-    //     qDebug()<<"Error sending video packet: "<<ret;
-    //     return;
-    // }
-
-    // AVFrame *frame = av_frame_alloc();
-    // while (avcodec_receive_frame(codec_context, frame) == 0)
-    // {
-    //     sws_scale(
-    //         frame_format,
-    //         frame->data,
-    //         frame->linesize,
-    //         0,
-    //         codec_context->height,
-    //         rgbFrame->data,
-    //         rgbFrame->linesize
-    //     );
-    //     QImage image = QImage(rgbFrame->data[0], codec_context->width, codec_context->height, rgbFrame->linesize[0], QImage::Format_RGB32);
-    //     QVideoFrame qframe = QVideoFrame(image.copy());
-    //     //qDebug()<<"qVideoFrame size = " << qframe.size();
-
-    //     synchronize();
-
-    //     imagetime = frame->best_effort_timestamp * 1000 * time_base.num / time_base.den;
-    //     if (!qframe.size().isEmpty()){
-    //         qint64 delay = imagetime - sync->clock->get_time()-10;
-    //         //qDebug()<<"Video time = "<<imagetime;
-    //         //qDebug()<<"Clock time = "<<sync->clock->getClock();
-    //         qDebug()<<"Delay: "<<delay;
-    //         if (delay>0)
-    //             QThread::msleep(delay);
-    //         emit imageToOutput(qframe);
-    //     }
-    //     av_frame_unref(frame);
-    // }
-    // av_frame_free(&frame);
-    // return;
-}
 
