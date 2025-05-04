@@ -39,6 +39,7 @@ qt_add_qml_module(appMediaPlayer
     SOURCES synchronizer.h synchronizer.cpp
     SOURCES
     SOURCES frameoutput.h frameoutput.cpp
+    SOURCES queue.h
 )
 
 qt_add_resources(appMediaPlayer

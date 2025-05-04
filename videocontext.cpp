@@ -60,31 +60,39 @@ VideoContext::VideoContext(AVFormatContext *format_context, Synchronizer* sync) 
     });
 
     connect(this,&VideoContext::newPacketReady,this,&VideoContext::push_frame_to_queue);
+    connect(output,&FrameOutput::imageToOutput,this, &VideoContext::push_frame_to_queue);
 }
 
 constexpr auto DECODING = "\033[31m[Decoding]\033[0m";
 constexpr auto IMAGE = "\033[35m[Image]\033[0m";
 
+
 void VideoContext::push_frame_to_queue()
 {
-    //qDebug()<<DECODING<<"New video packet arrived";
-    queueMutex.lock();
-    AVPacket* packet = packetQueue.front();
-    packetQueue.pop();
-    queueMutex.unlock();
-
-    //qDebug()<<DECODING<<"Decoding packet";
+    sync->check_pause();
+    qDebug()<<DECODING<<"New video packet arrived";
+    qDebug()<<DECODING<<"Packet queue size ="<<packetQueue.size();
+    if (output->imageQueue.size()>=output->QUEUE_MAX_SIZE)
+        return;
+    if (packetQueue.size()==0){
+        emit requestPacket();
+        return;
+    }
+    AVPacket* packet = packetQueue.pop();
+    emit requestPacket();
+    //qDebug()<<"Video packet size = "<<packet->size;
+    qDebug()<<DECODING<<"Decoding packet";
     int ret = avcodec_send_packet(codec_context, packet);
     av_packet_free(&packet);
     if (ret < 0) {
-        //qDebug()<<"Error sending video packet: "<<ret;
+        qDebug()<<"Error sending video packet: "<<ret;
         return;
     }
 
     AVFrame *frame = av_frame_alloc();
     while (avcodec_receive_frame(codec_context, frame) == 0)
     {
-        //qDebug()<<IMAGE<<"Received frame, formating it";
+        qDebug()<<IMAGE<<"Received frame, formating it";
         sws_scale(
             frame_format,
             frame->data,
@@ -99,13 +107,14 @@ void VideoContext::push_frame_to_queue()
 
         ImageFrame imageFrame(std::move(QVideoFrame(image.copy())),imagetime);
 
-        output->push_imageQueue(std::move(imageFrame));
-        //qDebug()<<IMAGE<<"Notifying about new image";
+        output->imageQueue.push(std::move(imageFrame));
+        qDebug()<<IMAGE<<"Notifying about new image";
         output->imageReady.notify_all();
 
         av_frame_unref(frame);
     }
     av_frame_free(&frame);
+    qDebug()<<DECODING<<"After decoding queue size ="<<packetQueue.size();
 }
 
 

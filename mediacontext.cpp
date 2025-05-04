@@ -31,34 +31,32 @@ void MediaContext::setFile(const QUrl &filename)
     audioThread->start();
 
 
+    fill_packetQueue();
+
     connect(video->output, &FrameOutput::imageToOutput, this, [this](QVideoFrame frame){
         //qDebug()<<"\033[32m[Screen]\033[0m Outputing image, size = "<<frame.size();
         videosink->setVideoFrame(frame);
-        fill_videoPacketQueue();
+        //fill_packetQueue();
+    });
+    connect(video,&VideoContext::requestPacket,this,[this](){
+        fill_packetQueue();
     });
     connect(audio,&AudioContext::packetDecoded,this,[this](){
-        fill_audioPacketQueue();
+        fill_packetQueue();
     });
-    fill_videoPacketQueue();
-    fill_audioPacketQueue();
-    qDebug()<<"Video queue size ="<<video->packetQueue.size();
-    qDebug()<<"Audio queue size ="<<audio->packetQueue.size();
+
+    // fill_videoPacketQueue();
+    // fill_audioPacketQueue();
+
 }
 
 constexpr auto PACKET = "\033[33m[Packet]\033[0m";
 
-void MediaContext::fill_videoPacketQueue()
-{
-    qDebug()<<PACKET<<"Filling video packet queue. Current size = "<<video->packetQueue.size();
-    while(video->packetQueue.size() < video->queueSize)
-        if (!push_packet_to_queues())
-            return;
-}
 
-void MediaContext::fill_audioPacketQueue()
+void MediaContext::fill_packetQueue()
 {
-    qDebug()<<PACKET<<"Filling audio packet queue. Current size = "<<audio->packetQueue.size();
-    while(audio->packetQueue.size() < audio->queueSize)
+    //sync->check_pause();
+    while(video->packetQueue.size() + audio->packetQueue.size() < QUEUE_MAX_SIZE)
         if (!push_packet_to_queues())
             return;
 }
@@ -71,20 +69,17 @@ bool MediaContext::push_packet_to_queues()
     int res = av_read_frame(format_context, packet);
     if (res<0)
         return false;
+    //qDebug()<<"Stream index"<<packet->stream_index;
     if (packet->stream_index == audio->stream_id){
-        qDebug()<<"Audio packet";
-        audio->queueMutex.lock();
-        audio->packetQueue.push(packet);
-        audio->queueMutex.unlock();
-        emit audio->newPacketReady();
+        // audio->packetQueue.push(packet);
+        // emit audio->newPacketReady();
     }
-    if(packet->stream_index == video->stream_id){
-        qDebug()<<"Video packet";
-        video->queueMutex.lock();
+    else if(packet->stream_index == video->stream_id){
         video->packetQueue.push(packet);
-        video->queueMutex.unlock();
         emit video->newPacketReady();
     }
+    qDebug()<<PACKET<<"Video queue size ="<<video->packetQueue.size();
+    qDebug()<<PACKET<<"Audio queue size ="<<audio->packetQueue.size();
     return true;
 }
 
@@ -148,3 +143,21 @@ void MediaContext::setVideoSink(QVideoSink *sink)
 }
 
 
+
+
+
+void MediaContext::fill_videoPacketQueue()
+{
+    // qDebug()<<PACKET<<"Filling video packet queue. Current size = "<<video->packetQueue.size();
+    // while(video->packetQueue.size() < video->queueSize)
+    //     if (!push_packet_to_queues())
+    //         return;
+}
+
+void MediaContext::fill_audioPacketQueue()
+{
+    // qDebug()<<PACKET<<"Filling audio packet queue. Current size = "<<audio->packetQueue.size();
+    // while(audio->packetQueue.size() < audio->queueSize)
+    //     if (!push_packet_to_queues())
+    //         return;
+}

@@ -5,7 +5,6 @@
 #include <QIODevice>
 #include <QByteArray>
 #include <QThread>
-#include <queue>
 
 extern "C" {
     #include "libavformat/avformat.h"
@@ -18,6 +17,7 @@ extern "C" {
 
 #include "audioiodevice.h"
 #include "synchronizer.h"
+#include <queue.h>
 
 class AudioContext : public QObject
 {
@@ -43,7 +43,7 @@ public:
 
     int queueSize = 16;
     QMutex queueMutex;
-    std::queue<AVPacket*> packetQueue;
+    Queue<AVPacket*> packetQueue;
 
 private:
     AVCodecContext* codec_context;

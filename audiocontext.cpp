@@ -71,11 +71,9 @@ void AudioContext::push_frame_to_buffer()
 {
     sync->check_pause();
     //qDebug()<<DECODING<<"New packet arrived. Popping it";
-    queueMutex.lock();
-    AVPacket* packet = packetQueue.front();
-    packetQueue.pop();
-    queueMutex.unlock();
+    AVPacket* packet = packetQueue.pop();
     emit packetDecoded();
+    qDebug()<<"Audio packet size = "<<packet->size;
 
     int ret = avcodec_send_packet(codec_context, packet);
     av_packet_free(&packet);
@@ -96,7 +94,7 @@ void AudioContext::push_frame_to_buffer()
             frame->nb_samples,
             convert_to_AVFormat(format.sampleFormat()),
             1
-            );
+        );
 
         uint8_t *outputBuffer = (uint8_t*)av_malloc(outputBufferSize);
         if (!outputBuffer) {
@@ -132,138 +130,6 @@ void AudioContext::push_frame_to_buffer()
     av_frame_free(&frame);
 }
 
-// void AudioContext::push_frame_to_buffer()
-// {
-//     qDebug() << DECODING << "New packet arrived. Popping it";
-
-//     queueMutex.tryLock();
-//     AVPacket* packet = packetQueue.front();
-//     packetQueue.pop();
-//     queueMutex.unlock();
-
-//     int ret = avcodec_send_packet(codec_context, packet);
-//     av_packet_free(&packet);
-//     if (ret < 0) {
-//         qWarning() << "Error sending audio packet: " << ret;
-//         return;
-//     }
-
-//     AVFrame *frame = av_frame_alloc();
-//     while (avcodec_receive_frame(codec_context, frame) == 0)
-//     {
-//         int out_samples = av_rescale_rnd(
-//             swr_get_delay(resampleContext, frame->sample_rate) + frame->nb_samples,
-//             format.sampleRate(),
-//             frame->sample_rate,
-//             AV_ROUND_UP
-//             );
-
-//         uint8_t **converted_data = nullptr;
-//         ret = av_samples_alloc_array_and_samples(
-//             &converted_data,
-//             nullptr,
-//             format.channelCount(),
-//             out_samples,
-//             AV_SAMPLE_FMT_S16,  // подставь нужный формат
-//             0
-//             );
-//         if (ret < 0 || !converted_data) {
-//             qWarning() << "Failed to allocate output audio buffer.";
-//             av_frame_unref(frame);
-//             continue;
-//         }
-
-//         int samplesConverted = swr_convert(
-//             resampleContext,
-//             converted_data,
-//             out_samples,
-//             (const uint8_t **)frame->data,
-//             frame->nb_samples
-//             );
-//         if (samplesConverted < 0) {
-//             qWarning() << "Error converting audio.";
-//             av_freep(&converted_data[0]);
-//             av_freep(&converted_data);
-//             av_frame_unref(frame);
-//             continue;
-//         }
-
-//         int realSize = samplesConverted * format.channelCount() * format.bytesPerSample();
-//         qDebug() << SAMPLE << "Appending sample data to output buffer. Size =" << realSize;
-
-//         audioDevice->appendData(QByteArray((const char*)converted_data[0], realSize));
-
-//         if (converted_data) {
-//             if (converted_data[0]) {
-//                 av_freep(&converted_data[0]);
-//             }
-//             av_freep(&converted_data);
-//         }
-//         av_frame_unref(frame);
-//     }
-
-//     av_frame_free(&frame);
-// }
-
-
-
-
-// void AudioContext::push_frame_to_buffer()
-// {
-//     qDebug()<<DECODING<<"New packet arrived. Popping it";
-//     AVPacket* packet = packetQueue.front();
-//     packetQueue.pop();
-
-//     int ret = avcodec_send_packet(codec_context, packet);
-//     av_packet_free(&packet);
-//     if (ret < 0) {
-//         qDebug()<<"Error sending video packet: "<<ret;
-//         return;
-//     }
-//     AVFrame *frame = av_frame_alloc();
-//     while (avcodec_receive_frame(codec_context, frame) == 0)
-//     {
-//         int outputBufferSize = av_samples_get_buffer_size(
-//             nullptr,
-//             codec_context->ch_layout.nb_channels,
-//             frame->nb_samples,
-//             codec_context->sample_fmt,
-//             1
-//         );
-//         uint8_t *outputBuffer = (uint8_t*)av_malloc(outputBufferSize);
-//         if (!outputBuffer) {
-//             qWarning() << "Failed to allocate output buffer.";
-//             av_frame_unref(frame);
-//             continue;
-//         }
-//         int samplesConverted = swr_convert(
-//             resampleContext,
-//             &outputBuffer,
-//             frame->nb_samples * format.sampleRate() / frame->sample_rate,
-//             //frame->nb_samples,
-//             (const uint8_t **)frame->data,
-//             frame->nb_samples
-//         );
-//         if (samplesConverted < 0) {
-//             qWarning() << "Error converting audio.";
-//             av_free(outputBuffer);
-//             av_frame_unref(frame);
-//             continue;
-//         }
-
-//         //int bytesPerSample = av_get_bytes_per_sample(AV_SAMPLE_FMT_FLT);
-//         int realSize = samplesConverted * format.channelCount() * format.bytesPerSample();
-
-//         qDebug()<<SAMPLE<<"Appending sample data to output buffer. Outputbuffer:"<<outputBuffer<<"Size ="<<realSize;
-//         audioDevice->appendData(QByteArray((const char*)outputBuffer, realSize));
-//         qDebug()<<SAMPLE<<"Data appended";
-//         av_free(outputBuffer);
-//         qDebug()<<"HERE?";
-//         av_frame_unref(frame);
-//     }
-//     av_frame_free(&frame);
-// }
-
 AVSampleFormat AudioContext::convert_to_AVFormat(QAudioFormat::SampleFormat format)
 {
     switch (format) {
@@ -274,55 +140,3 @@ AVSampleFormat AudioContext::convert_to_AVFormat(QAudioFormat::SampleFormat form
     default:                    return AV_SAMPLE_FMT_NONE;
     }
 }
-
-// void AudioContext::process(AVPacket* packet)
-// {
-//     int ret = avcodec_send_packet(codec_context, packet);
-//     av_packet_free(&packet);
-//     if (ret < 0) {
-//         qWarning() << "Error sending audio packet."<<ret;
-//         return;
-//     }
-
-//     AVFrame *frame = av_frame_alloc();
-//     while (avcodec_receive_frame(codec_context, frame) == 0)
-//     {
-//         int outputBufferSize = av_samples_get_buffer_size(
-//             nullptr,
-//             codec_context->ch_layout.nb_channels,
-//             frame->nb_samples,
-//             codec_context->sample_fmt,
-//             1
-//         );
-//         uint8_t *outputBuffer = (uint8_t*)av_malloc(outputBufferSize);
-//         if (!outputBuffer) {
-//             qWarning() << "Failed to allocate output buffer.";
-//             av_frame_unref(frame);
-//             continue;
-//         }
-//         int samplesConverted = swr_convert(
-//             resampleContext,
-//             &outputBuffer,
-//             frame->nb_samples * format.sampleRate() / frame->sample_rate,
-//             //frame->nb_samples,
-//             (const uint8_t **)frame->data,
-//             frame->nb_samples
-//         );
-//         if (samplesConverted < 0) {
-//             qWarning() << "Error converting audio.";
-//             av_free(outputBuffer);
-//             av_frame_unref(frame);
-//             continue;
-//         }
-
-//         //int bytesPerSample = av_get_bytes_per_sample(AV_SAMPLE_FMT_FLT);
-//         int realSize = samplesConverted * format.channelCount() * format.bytesPerSample();
-
-//         audioDevice->appendData(QByteArray((const char*)outputBuffer, realSize));
-
-//         av_free(outputBuffer);
-//         av_frame_unref(frame);
-//     }
-
-//     av_frame_free(&frame);
-// }

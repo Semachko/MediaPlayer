@@ -5,6 +5,7 @@
 #include <QVideoSink>
 #include <QVideoFrame>
 #include <QPair>
+#include <atomic>
 
 extern "C" {
     #include "libavformat/avformat.h"
@@ -14,6 +15,8 @@ extern "C" {
 }
 #include "synchronizer.h"
 #include "frameoutput.h"
+#include "queue.h"
+
 
 class VideoContext : public QObject
 {
@@ -22,20 +25,17 @@ public:
     VideoContext(AVFormatContext* format_context, Synchronizer* sync);
 
     void output_image();
-    void fill_frameQueue();
     void push_frame_to_queue();
 signals:
+    void requestPacket();
     void newPacketReady();
-    void imageToOutput(QVideoFrame frame);
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
 public:
     int stream_id;
-    int queueSize = 20;
-    QMutex queueMutex;
-    std::queue<AVPacket*> packetQueue;
+    int QUEUE_MAX_SIZE = 20;
+    Queue<AVPacket*> packetQueue;
     FrameOutput* output;
-
 private:
     QThread* outputThread;
     AVCodecContext* codec_context;

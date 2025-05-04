@@ -42,6 +42,7 @@ public:
 private:
     void fill_videoPacketQueue();
     void fill_audioPacketQueue();
+    void fill_packetQueue();
     bool push_packet_to_queues();
 signals:
     void videoSinkChanged();
@@ -58,6 +59,8 @@ private:
 
     Synchronizer* sync;
     QMutex formatMutex;
+
+    quint64 QUEUE_MAX_SIZE = 20;
 };
 
 #endif // MEDIACONTEXT_H
