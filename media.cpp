@@ -20,7 +20,7 @@ void Media::setVideoSink(QVideoSink *sink)
     videosink = sink;
 }
 
-void Media::setFile(const QUrl &filename, QVideoSink* videosink)
+void Media::setFile(const QUrl &filename)
 {
     if (mediacontext->video)
         disconnect(connection);

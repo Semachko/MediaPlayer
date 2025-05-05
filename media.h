@@ -13,7 +13,7 @@ public:
     QVideoSink* videoSink() const;
     void setVideoSink(QVideoSink* sink);
 
-    Q_INVOKABLE void setFile(const QUrl& filename,QVideoSink* videosink);
+    Q_INVOKABLE void setFile(const QUrl& filename);
     Q_INVOKABLE void playORpause();
     Q_INVOKABLE void muteORunmute();
     Q_INVOKABLE void volumeChanged(qreal volume);
