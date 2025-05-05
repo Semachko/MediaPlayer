@@ -20,11 +20,12 @@ protected:
     qint64 bytesAvailable() const override;
 signals:
     void dataReaded();
+///////////////////////////////////////////////
+///////////////////////////////////////////////
 public:
-
-private:
     QByteArray buffer;
-    int queueSize = 10;
+    int max_buffer_size = 163840;
+private:
     Synchronizer* sync;
 };
 

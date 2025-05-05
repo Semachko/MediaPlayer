@@ -20,9 +20,10 @@ void AudioIODevice::appendData(const QByteArray &data) {
 
 qint64 AudioIODevice::readData(char *data, qint64 maxlen)
 {
-    //qDebug() << OUTPUT <<"ReadData requested" << maxlen << "bytes";
+    qDebug() << OUTPUT <<"ReadData requested" << maxlen << "bytes";
     qint64 len = qMin(maxlen, (qint64)buffer.size());
     memcpy(data, buffer.constData(), len);
+    emit dataReaded();
     buffer.remove(0, len);
     return len;
 }

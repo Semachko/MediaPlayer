@@ -41,6 +41,7 @@ public:
     //     std::swap(queue, empty);
     // }
 
+    int max_size = 0;
 private:
     mutable QMutex mutex;
     std::queue<T> queue;

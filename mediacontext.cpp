@@ -5,10 +5,18 @@
 
 #include "mediacontext.h"
 
-MediaContext::MediaContext(){}
+MediaContext::MediaContext(){
+    connect(this,&MediaContext::fileChanged,this,&MediaContext::set_file);
+    connect(this,&MediaContext::playORpause,this,&MediaContext::resume_pause);
+    connect(this,&MediaContext::volumeChanged,this,&MediaContext::change_volume);
+    connect(this,&MediaContext::muteORunmute,this,&MediaContext::mute_unmute);
+    connect(this,&MediaContext::timeChanged,this,&MediaContext::change_time);
+}
 
-void MediaContext::setFile(const QUrl &filename)
+void MediaContext::set_file(const QUrl &filename,QVideoSink* sink)
 {
+    videosink = sink;
+
     qDebug()<<filename.toLocalFile();
     if (format_context!=nullptr){
         delete video;
@@ -20,7 +28,7 @@ void MediaContext::setFile(const QUrl &filename)
 
     sync = new Synchronizer(this);
 
-    video = new VideoContext(format_context, sync);
+    video = new VideoContext(format_context, sync, videosink);
     videoThread = new QThread(this);
     video->moveToThread(videoThread);
     videoThread->start();
@@ -30,60 +38,19 @@ void MediaContext::setFile(const QUrl &filename)
     audio->moveToThread(audioThread);
     audioThread->start();
 
+    demuxer = new Demuxer(format_context, sync, formatMutex,video,audio);
+    demuxerThread = new QThread(this);
+    demuxer->moveToThread(demuxerThread);
+    demuxerThread->start();
 
-    fill_packetQueue();
+    connect(video,&VideoContext::requestPacket,demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
+    connect(audio,&AudioContext::requestPacket,demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
 
-    connect(video->output, &FrameOutput::imageToOutput, this, [this](QVideoFrame frame){
-        //qDebug()<<"\033[32m[Screen]\033[0m Outputing image, size = "<<frame.size();
-        videosink->setVideoFrame(frame);
-        //fill_packetQueue();
-    });
-    connect(video,&VideoContext::requestPacket,this,[this](){
-        fill_packetQueue();
-    });
-    connect(audio,&AudioContext::packetDecoded,this,[this](){
-        fill_packetQueue();
-    });
 
-    // fill_videoPacketQueue();
-    // fill_audioPacketQueue();
-
+    QMetaObject::invokeMethod(demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
 }
 
-constexpr auto PACKET = "\033[33m[Packet]\033[0m";
-
-
-void MediaContext::fill_packetQueue()
-{
-    //sync->check_pause();
-    while(video->packetQueue.size() + audio->packetQueue.size() < QUEUE_MAX_SIZE)
-        if (!push_packet_to_queues())
-            return;
-}
-
-bool MediaContext::push_packet_to_queues()
-{
-    QMutexLocker _(&formatMutex);
-
-    AVPacket *packet = av_packet_alloc();
-    int res = av_read_frame(format_context, packet);
-    if (res<0)
-        return false;
-    //qDebug()<<"Stream index"<<packet->stream_index;
-    if (packet->stream_index == audio->stream_id){
-        // audio->packetQueue.push(packet);
-        // emit audio->newPacketReady();
-    }
-    else if(packet->stream_index == video->stream_id){
-        video->packetQueue.push(packet);
-        emit video->newPacketReady();
-    }
-    qDebug()<<PACKET<<"Video queue size ="<<video->packetQueue.size();
-    qDebug()<<PACKET<<"Audio queue size ="<<audio->packetQueue.size();
-    return true;
-}
-
-void MediaContext::playORpause()
+void MediaContext::resume_pause()
 {
     sync->play_or_pause();
     if(sync->isPaused)
@@ -96,14 +63,14 @@ void MediaContext::playORpause()
         });
 }
 
-void MediaContext::volumeChanged(qreal value)
+void MediaContext::change_volume(qreal value)
 {
     audio->last_volume=value;
     if (!audio->isMuted)
         audio->audioSink->setVolume(value);
 }
 
-void MediaContext::muteORunmute()
+void MediaContext::mute_unmute()
 {
     if(audio->isMuted)
         audio->audioSink->setVolume(audio->last_volume);
@@ -113,7 +80,7 @@ void MediaContext::muteORunmute()
 }
 
 
-void MediaContext::timeChanged(qreal position)
+void MediaContext::change_time(qreal position)
 {
     qDebug()<<"Position: "<<position;
 
@@ -129,35 +96,5 @@ void MediaContext::timeChanged(qreal position)
     // avcodec_flush_buffers(video_codec_ctx);
 }
 
-QVideoSink *MediaContext::videoSink() const
-{
-    return videosink;
-}
-
-void MediaContext::setVideoSink(QVideoSink *sink)
-{
-    if (videosink == sink)
-        return;
-    videosink = sink;
-    emit videoSinkChanged();
-}
 
 
-
-
-
-void MediaContext::fill_videoPacketQueue()
-{
-    // qDebug()<<PACKET<<"Filling video packet queue. Current size = "<<video->packetQueue.size();
-    // while(video->packetQueue.size() < video->queueSize)
-    //     if (!push_packet_to_queues())
-    //         return;
-}
-
-void MediaContext::fill_audioPacketQueue()
-{
-    // qDebug()<<PACKET<<"Filling audio packet queue. Current size = "<<audio->packetQueue.size();
-    // while(audio->packetQueue.size() < audio->queueSize)
-    //     if (!push_packet_to_queues())
-    //         return;
-}

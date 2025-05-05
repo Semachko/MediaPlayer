@@ -28,11 +28,10 @@ public:
     void process(AVPacket*);
     void push_frame_to_buffer();
 signals:
-    void newPacketReady();
+    void requestPacket();
+    void newPacketArrived();
 private:
     AVSampleFormat convert_to_AVFormat(QAudioFormat::SampleFormat format);
-signals:
-    void packetDecoded();
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
 public:
@@ -41,13 +40,10 @@ public:
     qreal last_volume = 0.2;
     QAudioSink* audioSink;
 
-    int queueSize = 16;
     QMutex queueMutex;
     Queue<AVPacket*> packetQueue;
-
 private:
     AVCodecContext* codec_context;
-    AVCodecParameters* codec_parameters;
     SwrContext* resampleContext;
 
     QAudioFormat format;

@@ -61,10 +61,10 @@ Window {
             anchors.rightMargin: 10
             onPressedChanged:{
                 if (pressed) {
-                    mediaplayer.playORpause()
+                    media.playORpause()
                 } else {
-                    mediaplayer.timeChanged(position)
-                    mediaplayer.playORpause()
+                    media.timeChanged(position)
+                    media.playORpause()
                 }
             }
         }
@@ -92,7 +92,7 @@ Window {
         PlayButton{scale: 0.8
             anchors.verticalCenter: parent.verticalCenter
             onPressed: {
-                mediaplayer.playORpause()
+                media.playORpause()
             }
         }
         ChangeTimeButtonRight{scale: 0.8
@@ -115,7 +115,7 @@ Window {
             anchors.verticalCenter: parent.verticalCenter
             scale: 0.8
             onPressed: {
-                mediaplayer.muteORunmute()
+                media.muteORunmute()
             }
         }
 
@@ -127,7 +127,7 @@ Window {
             anchors.right: resizebutton.left
             anchors.rightMargin: 20
             onMoved:{
-                mediaplayer.volumeChanged(volumeslider.value)
+                media.volumeChanged(volumeslider.value)
             }
         }
 
@@ -171,8 +171,8 @@ Window {
             console.log("Selected file:", fileDialog.selectedFile)
             filenamebar.text = fileDialog.selectedFile.toString().split("/").pop().split(".")[0]
 
-            mediaplayer.videoSink = videoOutput.videoSink
-            mediaplayer.setFile(fileDialog.selectedFile)
+            media.videoSink = videoOutput.videoSink
+            media.setFile(fileDialog.selectedFile)
         }
     }
     FilenameBar{

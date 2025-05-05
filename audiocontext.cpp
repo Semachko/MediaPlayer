@@ -8,7 +8,7 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync) 
     if (stream_id<0)
         return;
 
-    codec_parameters = format_context->streams[stream_id]->codecpar;
+    AVCodecParameters* codec_parameters = format_context->streams[stream_id]->codecpar;
     const AVCodec* codec = avcodec_find_decoder(codec_parameters->codec_id);
 
     codec_context = avcodec_alloc_context3(codec);
@@ -22,14 +22,15 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync) 
     qDebug() << "Sample format:" << format.sampleFormat();
     if (!QMediaDevices::defaultAudioOutput().isFormatSupported(format)) {
         qWarning() << "Format not supported!";
-    }
-    else
+        stream_id = -1;
+        return;
+    } else
         qDebug()<<"Format is supported!";
 
     AVChannelLayout outlayout;
     av_channel_layout_default(&outlayout, format.channelCount());
-    AVChannelLayout inlayout;
-    av_channel_layout_default(&inlayout, codec_context->ch_layout.nb_channels);
+    // AVChannelLayout inlayout;
+    // av_channel_layout_default(&inlayout, codec_context->ch_layout.nb_channels);
 
     resampleContext=swr_alloc();
     int ret = swr_alloc_set_opts2(
@@ -54,14 +55,16 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync) 
         return;
     }
 
+    packetQueue.max_size = 16;
+
     audioDevice = new AudioIODevice(sync,this);
     audioSink = new QAudioSink(format, this);
-    audioSink->setBufferSize(4096);
     audioSink->setVolume(last_volume);
     audioSink->start(audioDevice);
     audioSink->suspend();
 
-    connect(this, &AudioContext::newPacketReady, this,&AudioContext::push_frame_to_buffer);
+    connect(this, &AudioContext::newPacketArrived, this,&AudioContext::push_frame_to_buffer, Qt::QueuedConnection);
+    connect(audioDevice, &AudioIODevice::dataReaded, this,&AudioContext::push_frame_to_buffer, Qt::QueuedConnection);
 }
 
 constexpr auto DECODING = "\033[31m[Decoding]\033[0m";
@@ -70,10 +73,21 @@ constexpr auto SAMPLE = "\033[35m[Sample]\033[0m";
 void AudioContext::push_frame_to_buffer()
 {
     sync->check_pause();
-    //qDebug()<<DECODING<<"New packet arrived. Popping it";
+    qDebug()<<DECODING<<"New packet arrived. Popping it";
+    // qDebug()<<DECODING<<"Audio device buffer size ="<<audioDevice->buffer.size();
+    // qDebug()<<DECODING<<"Audio device buffer size ="<<audioDevice->max_buffer_size;
+    // qDebug()<<DECODING<<"Audio device buffer REAL size ="<<audioSink->bufferSize();
+    if (audioDevice->buffer.size()>=audioDevice->max_buffer_size){
+        qDebug()<<DECODING<<"Audio device buffer is full, skipping...";
+        return;
+    }
+    if (packetQueue.size()==0){
+        emit requestPacket();
+        return;
+    }
     AVPacket* packet = packetQueue.pop();
-    emit packetDecoded();
-    qDebug()<<"Audio packet size = "<<packet->size;
+    emit requestPacket();
+    qDebug()<<DECODING<<"Audio packet size = "<<packet->size;
 
     int ret = avcodec_send_packet(codec_context, packet);
     av_packet_free(&packet);
@@ -86,7 +100,6 @@ void AudioContext::push_frame_to_buffer()
     while (avcodec_receive_frame(codec_context, frame) == 0)
     {
         //qDebug()<<DECODING<<"Sample decoded";
-        //qDebug()<<DECODING<<"AV_SAMPLE_FMT_FLT = "<< AV_SAMPLE_FMT_FLT;
         //qDebug()<<DECODING<<"codec_context->sample_fmt = "<< codec_context->sample_fmt;
         int outputBufferSize = av_samples_get_buffer_size(
             nullptr,
@@ -119,13 +132,14 @@ void AudioContext::push_frame_to_buffer()
 
         int realSize = samplesConverted * format.channelCount() * format.bytesPerSample();
 
-        //qDebug()<<SAMPLE<<"Outputbuffer size ="<<realSize;
+        qDebug()<<SAMPLE<<"Outputbuffer size ="<<realSize;
         audioDevice->appendData(QByteArray((const char*)outputBuffer, realSize));
         av_free(outputBuffer);
         av_frame_unref(frame);
-        // qDebug()<<"Audio state:"<<audioSink->state();
-        // qDebug()<<"Audio error:"<<audioSink->error();
-        // qDebug()<<"Audio volume:"<<audioSink->volume();
+
+        qDebug()<<"Audio state:"<<audioSink->state();
+        qDebug()<<"Audio error:"<<audioSink->error();
+        qDebug()<<"Audio volume:"<<audioSink->volume();
     }
     av_frame_free(&frame);
 }

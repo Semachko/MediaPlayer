@@ -40,6 +40,7 @@ qt_add_qml_module(appMediaPlayer
     SOURCES
     SOURCES frameoutput.h frameoutput.cpp
     SOURCES queue.h
+    SOURCES demuxer.h demuxer.cpp
 )
 
 qt_add_resources(appMediaPlayer

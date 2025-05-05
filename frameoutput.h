@@ -2,6 +2,7 @@
 #define FRAMEOUTPUT_H
 
 #include <QObject>
+#include <QVideoSink>
 #include <QVideoFrame>
 #include <QWaitCondition>
 #include <QMutex>
@@ -25,19 +26,21 @@ class FrameOutput: public QObject
 {
     Q_OBJECT
 public:
-    FrameOutput(Synchronizer*);
+    FrameOutput(Synchronizer*,QVideoSink*);
     void start_output();
 signals:
-    void imageToOutput(QVideoFrame frame);
+    //void imageToOutput(QVideoFrame frame);
+    void imageOutputted();
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
 public:
-    quint64 QUEUE_MAX_SIZE = 36;
     Queue<ImageFrame> imageQueue;
     QWaitCondition imageReady;
 private:
     QMutex conditionMutex;
     Synchronizer* sync;
+
+    QVideoSink* videosink;
 };
 
 #endif // FRAMEOUTPUT_H

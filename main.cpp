@@ -6,6 +6,7 @@
 #include <QQmlApplicationEngine>
 
 #include "mediacontext.h"
+#include "media.h"
 
 int main(int argc, char *argv[])
 {
@@ -20,8 +21,10 @@ int main(int argc, char *argv[])
         Qt::QueuedConnection);
     engine.loadFromModule("MediaPlayer", "Main");
 
-    MediaContext* mediaplayer = new MediaContext();
-    engine.rootContext()->setContextProperty("mediaplayer", mediaplayer);
+    // MediaContext* mediaplayer = new MediaContext();
+    // engine.rootContext()->setContextProperty("mediaplayer", mediaplayer);
+    Media* media = new Media();
+    engine.rootContext()->setContextProperty("media", media);
 
     return app.exec();
 }

@@ -22,18 +22,16 @@ class VideoContext : public QObject
 {
     Q_OBJECT
 public:
-    VideoContext(AVFormatContext* format_context, Synchronizer* sync);
+    VideoContext(AVFormatContext* format_context, Synchronizer* sync,QVideoSink* videosink);
 
-    void output_image();
     void push_frame_to_queue();
 signals:
     void requestPacket();
-    void newPacketReady();
+    void newPacketArrived();
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
 public:
     int stream_id;
-    int QUEUE_MAX_SIZE = 20;
     Queue<AVPacket*> packetQueue;
     FrameOutput* output;
 private:
@@ -47,8 +45,9 @@ private:
     AVFrame* rgbFrame;
 
     Synchronizer* sync;
-    QMutex imageMutex;
     QWaitCondition* imageReady;
+
+    QVideoSink* videosink;
 };
 
 #endif // VIDEOCONTEXT_H

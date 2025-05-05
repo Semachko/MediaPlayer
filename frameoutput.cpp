@@ -7,9 +7,11 @@ ImageFrame::ImageFrame(QVideoFrame&& videoframe, qint64 time)
     time(time)
 {}
 
-FrameOutput::FrameOutput(Synchronizer * sync)
-    : sync(sync)
-{}
+FrameOutput::FrameOutput(Synchronizer * sync, QVideoSink * videosink)
+    : sync(sync), videosink(videosink)
+{
+    imageQueue.max_size = 5;
+}
 constexpr auto OUTPUT = "\033[34m[Output]\033[0m";
 void FrameOutput::start_output()
 {
@@ -18,27 +20,27 @@ void FrameOutput::start_output()
         sync->check_pause();
 
         QMutexLocker locker(&conditionMutex);
-        qDebug()<<OUTPUT<<"Checking is image queue empty";
-        qDebug()<<OUTPUT<<"Image queue size ="<<imageQueue.size();
+        //qDebug()<<OUTPUT<<"Checking is image queue empty";
+        //qDebug()<<OUTPUT<<"Image queue size ="<<imageQueue.size();
         while(imageQueue.empty()){
-            qDebug()<<OUTPUT<<"Queue is empty, waiting for images";
+            //qDebug()<<OUTPUT<<"Queue is empty, waiting for images";
             imageReady.wait(&conditionMutex);
         }
         if (imageQueue.empty())
              continue;
 
-        qDebug()<<OUTPUT<<"Queue contain image, outputing";
+        //qDebug()<<OUTPUT<<"Queue contain image, outputing";
         ImageFrame imageFrame = imageQueue.pop();
 
         qint64 delay = imageFrame.time - sync->get_time();
-        // qDebug()<<"Video time = "<<imageFrame.time;
-        // qDebug()<<"Clock time = "<<sync->get_time();
-        qDebug()<<"Delay: "<<delay;
+        //qDebug()<<"Delay: "<<delay;
         if (delay>0)
             QThread::msleep(delay);
 
-        qDebug()<<OUTPUT<<"Signaling to output image";
-        emit imageToOutput(imageFrame.image);
+        //qDebug()<<OUTPUT<<"Signaling to output image";
+        videosink->setVideoFrame(imageFrame.image);
+        //emit imageToOutput(imageFrame.image);
+        emit imageOutputted();
     }
 }
 
