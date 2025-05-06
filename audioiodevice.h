@@ -14,6 +14,7 @@ public:
     explicit AudioIODevice(Synchronizer* sync, QObject* parent = nullptr);
 
     void appendData(const QByteArray& data);
+    void clear();
 protected:
     qint64 readData(char* data, qint64 maxlen) override;
     qint64 writeData(const char*, qint64) override;
@@ -23,10 +24,11 @@ signals:
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
 public:
+    const int max_buffer_size = 163840;
     QByteArray buffer;
-    int max_buffer_size = 163840;
 private:
     Synchronizer* sync;
+    mutable QMutex clearAvailable;
 };
 
 #endif // AUDIOIODEVICE_H

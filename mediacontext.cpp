@@ -82,18 +82,33 @@ void MediaContext::mute_unmute()
 
 void MediaContext::change_time(qreal position)
 {
-    qDebug()<<"Position: "<<position;
 
-    // int64_t seek_target = timestamp * AV_TIME_BASE; // timestamp в секундах
-    // int res = av_seek_frame(format_context, -1, seek_target, AVSEEK_FLAG_BACKWARD);
-    // if (res) {
-    //     qWarning() << "Не удалось перемотать";
-    //     isSeeking = false;
-    //     return;
-    // }
+    QMutexLocker f(&formatMutex);
+    QMutexLocker v(&video->decodingMutex);
+    QMutexLocker a(&audio->decodingMutex);
+    video->packetQueue.clear();
+    audio->packetQueue.clear();
 
-    // avcodec_flush_buffers(audio_codec_ctx);
-    // avcodec_flush_buffers(video_codec_ctx);
+    avcodec_flush_buffers(video->codec_context);
+    avcodec_flush_buffers(audio->codec_context);
+
+    QMutexLocker o(&video->output->queueMutex);
+    video->output->imageQueue.clear();
+    audio->audioDevice->clear();
+
+    int64_t seek_target = format_context->duration * position;
+
+    sync->clock->set_time(seek_target/1000);
+    qDebug()<<"New media time: "<<seek_target/1000000.0<<"sec";
+    qDebug()<<"New timer time: "<<sync->get_time()/1000.0<<"sec";
+
+    int res = av_seek_frame(format_context, -1, seek_target, AVSEEK_FLAG_BACKWARD);
+    if (res) {
+        qWarning() << "No such time";
+        return;
+    }
+
+    resume_pause();
 }
 
 

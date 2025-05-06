@@ -59,12 +59,16 @@ Window {
             anchors.right: media_time.left
             anchors.leftMargin: 10
             anchors.rightMargin: 10
+            //property bool isPlaying
             onPressedChanged:{
                 if (pressed) {
-                    media.playORpause()
+                    if (playbutton.checked)
+                        media.playORpause()
+                        //playbutton.click()
                 } else {
+                    // if(pausePressed)
+                    //     media.playORpause()
                     media.timeChanged(position)
-                    media.playORpause()
                 }
             }
         }
@@ -85,20 +89,30 @@ Window {
         anchors.top: timelinebar.bottom
         anchors.bottom: menubar_background.bottom
         spacing: 3
-        ChangeMediaButton{scale: -0.6
-        anchors.verticalCenter: parent.verticalCenter}
-        ChangeTimeButtonLeft{scale: 0.8
-        anchors.verticalCenter: parent.verticalCenter}
-        PlayButton{scale: 0.8
+        ChangeMediaButton{
+            scale: -0.6
+            anchors.verticalCenter: parent.verticalCenter
+        }
+        ChangeTimeButtonLeft{
+            scale: 0.8
+            anchors.verticalCenter: parent.verticalCenter
+        }
+        PlayButton{
+            id: playbutton
+            scale: 0.8
             anchors.verticalCenter: parent.verticalCenter
             onPressed: {
                 media.playORpause()
             }
         }
-        ChangeTimeButtonRight{scale: 0.8
-        anchors.verticalCenter: parent.verticalCenter}
-        ChangeMediaButton{scale: 0.6
-        anchors.verticalCenter: parent.verticalCenter}
+        ChangeTimeButtonRight{
+            scale: 0.8
+            anchors.verticalCenter: parent.verticalCenter
+        }
+        ChangeMediaButton{
+            scale: 0.6
+            anchors.verticalCenter: parent.verticalCenter
+        }
     }
 
     Row{

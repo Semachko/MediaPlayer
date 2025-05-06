@@ -11,7 +11,7 @@ extern "C" {
 #include <QWaitCondition>
 #include <queue>
 
-#include "masterclock.h"
+#include "clock.h"
 
 class Synchronizer : public QObject
 {
@@ -24,8 +24,8 @@ public:
     qint64 get_time();
 public:
     bool isPaused = true;
-private:
     Clock* clock;
+private:
     QMutex pauseMutex;
     QWaitCondition pauseWait;
 };

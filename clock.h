@@ -1,5 +1,5 @@
-#ifndef MASTERCLOCK_H
-#define MASTERCLOCK_H
+#ifndef CLOCK_H
+#define CLOCK_H
 
 #include <QObject>
 #include <QMutex>
@@ -17,6 +17,7 @@ public:
     void setSpeed(double newSpeed);
     qint64 get_time() const;
     void pause_check();
+    void set_time(qint64 pts);
 public:
 
 private:
@@ -24,11 +25,10 @@ private:
     qint64 pausedTime {0};
     qint64 baseTime {0};
     double speed;
-    bool paused;
+    bool paused = true;
 
-    QMutex playORpause_mutex;
-    QWaitCondition pauseWait;
-    bool isPaused = true;
+    // QMutex playORpause_mutex;
+    // QWaitCondition pauseWait;
 };
 
-#endif // MASTERCLOCK_H
+#endif // CLOCK_H

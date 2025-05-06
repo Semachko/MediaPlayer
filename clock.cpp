@@ -1,4 +1,4 @@
-#include "masterclock.h"
+#include "clock.h"
 
 Clock::Clock(QObject *parent): QObject(parent), speed(1.0), paused(true), baseTime(0) {}
 
@@ -36,5 +36,14 @@ qint64 Clock::get_time() const
         return baseTime + (pausedTime * speed);
     } else {
         return baseTime + (startTime.elapsed() * speed);
+    }
+}
+
+void Clock::set_time(qint64 ms)
+{
+    if (paused) {
+        baseTime = ms - (pausedTime * speed);
+    } else {
+        baseTime = ms - (startTime.elapsed() * speed);
     }
 }

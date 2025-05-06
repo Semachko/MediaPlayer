@@ -20,7 +20,7 @@ extern "C" {
 #include "videocontext.h"
 #include "audiocontext.h"
 #include "demuxer.h"
-#include "masterclock.h"
+#include "clock.h"
 #include "synchronizer.h"
 
 class MediaContext : public QObject

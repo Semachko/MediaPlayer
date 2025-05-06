@@ -5,8 +5,9 @@
 #include <QtConcurrent>
 
 #include "videocontext.h"
+#include "frame.h"
 
-VideoContext::VideoContext(AVFormatContext *format_context, Synchronizer* sync, QVideoSink* videosink) : sync(sync), videosink(videosink)
+VideoContext::VideoContext(AVFormatContext *format_context, Synchronizer* sync, QVideoSink* videosink) : sync(sync), videosink(videosink), packetQueue(20)
 {
     stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     if (stream_id<0)
@@ -51,13 +52,11 @@ VideoContext::VideoContext(AVFormatContext *format_context, Synchronizer* sync, 
         1
     );
 
-    packetQueue.max_size = 20;
-
     output = new FrameOutput(sync,videosink);
     outputThread = new QThread(this);
     output->moveToThread(outputThread);
     outputThread->start();
-    //connect(output,&FrameOutput::imageToOutput, this, &VideoContext::push_frame_to_queue);
+
     connect(output,&FrameOutput::imageOutputted, this, &VideoContext::push_frame_to_queue);
     QMetaObject::invokeMethod(output,&FrameOutput::start_output, Qt::QueuedConnection);
 
@@ -71,28 +70,34 @@ constexpr auto IMAGE = "\033[35m[Image]\033[0m";
 void VideoContext::push_frame_to_queue()
 {
     sync->check_pause();
+    QMutexLocker _(&decodingMutex);
     // qDebug()<<DECODING<<"New video packet arrived";
     // qDebug()<<DECODING<<"Packet queue size ="<<packetQueue.size();
     if (output->imageQueue.size()>=output->imageQueue.max_size)
         return;
     if (packetQueue.size()==0){
+        qDebug()<<DECODING<<"packet queue size = 0, requesting packet...";
         emit requestPacket();
         return;
     }
-    AVPacket* packet = packetQueue.pop();
-    emit requestPacket();
-    //qDebug()<<DECODING<<"Decoding packet";
-    int ret = avcodec_send_packet(codec_context, packet);
-    av_packet_free(&packet);
-    if (ret < 0) {
-        qDebug()<<"Error sending video packet: "<<ret;
-        return;
+
+    {
+        Packet packet = packetQueue.pop();
+        emit requestPacket();
+        qDebug()<<DECODING<<"packet received, decoding... packet size ="<<packet.get()->size;
+        int ret = avcodec_send_packet(codec_context, packet.get());
+
+        if (ret < 0) {
+            qDebug()<<"Error sending video packet: "<<ret;
+            return;
+        }
     }
 
-    AVFrame *frame = av_frame_alloc();
-    while (avcodec_receive_frame(codec_context, frame) == 0)
+    //AVFrame *frame = av_frame_alloc();
+    Frame frame;
+    while (avcodec_receive_frame(codec_context, frame.get()) == 0)
     {
-        //qDebug()<<IMAGE<<"Received frame, formating it";
+        qDebug()<<IMAGE<<"Received frame, formating it";
         sws_scale(
             frame_format,
             frame->data,
@@ -104,16 +109,15 @@ void VideoContext::push_frame_to_queue()
             );
         QImage image(rgbFrame->data[0], codec_context->width, codec_context->height, rgbFrame->linesize[0], QImage::Format_RGB32);
         qint64 imagetime = frame->best_effort_timestamp * 1000 * time_base.num / time_base.den;
-
         ImageFrame imageFrame(std::move(QVideoFrame(image.copy())),imagetime);
 
         output->imageQueue.push(std::move(imageFrame));
-        //qDebug()<<IMAGE<<"Notifying about new image";
+        qDebug()<<IMAGE<<"Notifying about new image";
         output->imageReady.notify_all();
 
-        av_frame_unref(frame);
+        av_frame_unref(frame.get());
     }
-    av_frame_free(&frame);
+    //av_frame_free(&frame);
 }
 
 

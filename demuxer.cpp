@@ -1,5 +1,7 @@
-#include "demuxer.h"
 #include <QDebug>
+
+#include "demuxer.h"
+#include "packet.h"
 
 constexpr auto PACKET = "\033[33m[Packet]\033[0m";
 
@@ -16,10 +18,10 @@ Demuxer::Demuxer(AVFormatContext* format_context, Synchronizer *sync, QMutex &fo
 void Demuxer::demuxe_packets()
 {
     sync->check_pause();
-    qDebug()<<"Max video queue size = "<<video->packetQueue.max_size;
-    qDebug()<<"Max audio queue size = "<<audio->packetQueue.max_size;
-    qDebug()<<"Curr video queue size = "<<video->packetQueue.size();
-    qDebug()<<"Curr audio queue size = "<<audio->packetQueue.size();
+    // qDebug()<<"Max video queue size = "<<video->packetQueue.max_size;
+    // qDebug()<<"Max audio queue size = "<<audio->packetQueue.max_size;
+    // qDebug()<<"Curr video queue size = "<<video->packetQueue.size();
+    // qDebug()<<"Curr audio queue size = "<<audio->packetQueue.size();
     while(video->packetQueue.size() + audio->packetQueue.size() < video->packetQueue.max_size + audio->packetQueue.max_size)
         if (!push_packet_to_queues())
             return;
@@ -28,23 +30,24 @@ void Demuxer::demuxe_packets()
 bool Demuxer::push_packet_to_queues()
 {
     QMutexLocker _(&formatMutex);
-    AVPacket *packet = av_packet_alloc();
-    int res = av_read_frame(format_context, packet);
+    //AVPacket *packet = av_packet_alloc();
+    Packet packet;
+    int res = av_read_frame(format_context, packet.get());
     if (res<0)
         return false;
-    qDebug()<<"Stream index"<<packet->stream_index;
+    //qDebug()<<"Stream index"<<packet->stream_index;
     if (audio->stream_id>=0 && packet->stream_index == audio->stream_id){
-        audio->packetQueue.push(packet);
-        qDebug()<<PACKET<<"Pushed packet to audio queue";
+        audio->packetQueue.push(std::move(packet));
+        //qDebug()<<PACKET<<"Pushed packet to audio queue";
         emit audio->newPacketArrived();
-        qDebug()<<PACKET<<"Signal emited";
+        //qDebug()<<PACKET<<"Signal emited";
     }
     else if(video->stream_id>=0 && packet->stream_index == video->stream_id){
-        video->packetQueue.push(packet);
-        qDebug()<<PACKET<<"Pushed packet to video queue";
+        video->packetQueue.push(std::move(packet));
+        //qDebug()<<PACKET<<"Pushed packet to video queue";
         emit video->newPacketArrived();
     }
-    qDebug()<<PACKET<<"Video queue size ="<<video->packetQueue.size();
-    qDebug()<<PACKET<<"Audio queue size ="<<audio->packetQueue.size();
+    //qDebug()<<PACKET<<"Video queue size ="<<video->packetQueue.size();
+    //qDebug()<<PACKET<<"Audio queue size ="<<audio->packetQueue.size();
     return true;
 }

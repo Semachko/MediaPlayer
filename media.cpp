@@ -39,7 +39,6 @@ void Media::playORpause()
     // if (!connection)
     //     connect(mediacontext->video->output, &FrameOutput::imageToOutput, this, &Media::output_image);
     emit mediacontext->playORpause();
-    qDebug("Emited signal to play/pause");
 }
 
 void Media::muteORunmute()

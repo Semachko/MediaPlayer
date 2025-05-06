@@ -16,13 +16,13 @@ extern "C" {
 #include "synchronizer.h"
 #include "frameoutput.h"
 #include "queue.h"
-
+#include "packet.h"
 
 class VideoContext : public QObject
 {
     Q_OBJECT
 public:
-    VideoContext(AVFormatContext* format_context, Synchronizer* sync,QVideoSink* videosink);
+    VideoContext(AVFormatContext* format_context, Synchronizer* sync, QVideoSink* videosink);
 
     void push_frame_to_queue();
 signals:
@@ -32,11 +32,13 @@ signals:
 //////////////////////////////////////////////////////////
 public:
     int stream_id;
-    Queue<AVPacket*> packetQueue;
+    Queue<Packet> packetQueue;
     FrameOutput* output;
+    AVCodecContext* codec_context;
+
+    QMutex decodingMutex;
 private:
     QThread* outputThread;
-    AVCodecContext* codec_context;
     AVCodecParameters* codec_parameters;
     AVRational time_base;
 

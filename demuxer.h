@@ -18,8 +18,8 @@ public:
     explicit Demuxer(AVFormatContext* format_context,Synchronizer* sync,QMutex& formatMutex,VideoContext* video, AudioContext* audio);
 
     void demuxe_packets();
-private:
     bool push_packet_to_queues();
+private:
 private:
     AVFormatContext* format_context;
     Synchronizer* sync;

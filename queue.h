@@ -10,7 +10,8 @@ template<typename T>
 class Queue : QObject
 {
 public:
-    Queue() = default;
+    Queue(int max_size) : max_size(max_size) {}
+
     void push(const T& value){
         QMutexLocker locker(&mutex);
         queue.push(value);
@@ -35,11 +36,12 @@ public:
         QMutexLocker locker(&mutex);
         return queue.size();
     }
-    // void clear(){
-    //     QMutexLocker locker(&mutex);
-    //     std::queue<T> empty;
-    //     std::swap(queue, empty);
-    // }
+    void clear(){
+        QMutexLocker locker(&mutex);
+        while (!queue.empty()) {
+            queue.pop();
+        }
+    }
 
     int max_size = 0;
 private:

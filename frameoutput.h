@@ -36,6 +36,7 @@ signals:
 public:
     Queue<ImageFrame> imageQueue;
     QWaitCondition imageReady;
+    QMutex queueMutex;
 private:
     QMutex conditionMutex;
     Synchronizer* sync;

@@ -14,7 +14,13 @@ qt_add_executable(appMediaPlayer
     videocontext.cpp videocontext.h
     audiocontext.cpp audiocontext.h
     audioiodevice.cpp audioiodevice.h
-
+    clock.cpp clock.h
+    synchronizer.cpp synchronizer.h
+    frameoutput.cpp frameoutput.h
+    demuxer.cpp demuxer.h
+    queue.h
+    frame.h
+    packet.h
 )
 
 qt_add_qml_module(appMediaPlayer
@@ -34,13 +40,7 @@ qt_add_qml_module(appMediaPlayer
     TimelineSlider.ui.qml
     ToolsMenu.ui.qml
     VolumeSlider.ui.qml
-    SOURCES masterclock.h masterclock.cpp
-    QML_FILES FilenameBar.qml
-    SOURCES synchronizer.h synchronizer.cpp
-    SOURCES
-    SOURCES frameoutput.h frameoutput.cpp
-    SOURCES queue.h
-    SOURCES demuxer.h demuxer.cpp
+    FilenameBar.qml
 )
 
 qt_add_resources(appMediaPlayer

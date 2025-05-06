@@ -17,7 +17,9 @@ extern "C" {
 
 #include "audioiodevice.h"
 #include "synchronizer.h"
-#include <queue.h>
+#include "queue.h"
+#include "packet.h"
+
 
 class AudioContext : public QObject
 {
@@ -25,7 +27,6 @@ class AudioContext : public QObject
 public:
     AudioContext(AVFormatContext* format_context, Synchronizer* sync);
 
-    void process(AVPacket*);
     void push_frame_to_buffer();
 signals:
     void requestPacket();
@@ -39,15 +40,15 @@ public:
     bool isMuted = false;
     qreal last_volume = 0.2;
     QAudioSink* audioSink;
+    AudioIODevice* audioDevice;
 
-    QMutex queueMutex;
-    Queue<AVPacket*> packetQueue;
-private:
     AVCodecContext* codec_context;
+    Queue<Packet> packetQueue;
+    QMutex decodingMutex;
+private:
     SwrContext* resampleContext;
 
     QAudioFormat format;
-    AudioIODevice* audioDevice;
 
     Synchronizer* sync;
 };
