@@ -22,6 +22,8 @@ VideoContext::VideoContext(AVFormatContext *format_context, Synchronizer* sync, 
     avcodec_parameters_to_context(codec_context, codec_parameters);
     avcodec_open2(codec_context, codec, nullptr);
 
+    filters = new Filters(codec_parameters,time_base);
+
     frame_format = sws_getContext(
         codec_context->width,
         codec_context->height,
@@ -76,7 +78,7 @@ void VideoContext::push_frame_to_queue()
     if (output->imageQueue.size()>=output->imageQueue.max_size)
         return;
     if (packetQueue.size()==0){
-        qDebug()<<DECODING<<"packet queue size = 0, requesting packet...";
+        //qDebug()<<DECODING<<"packet queue size = 0, requesting packet...";
         emit requestPacket();
         return;
     }
@@ -84,7 +86,7 @@ void VideoContext::push_frame_to_queue()
     {
         Packet packet = packetQueue.pop();
         emit requestPacket();
-        qDebug()<<DECODING<<"packet received, decoding... packet size ="<<packet.get()->size;
+        //qDebug()<<DECODING<<"packet received, decoding... packet size ="<<packet.get()->size;
         int ret = avcodec_send_packet(codec_context, packet.get());
 
         if (ret < 0) {
@@ -97,27 +99,48 @@ void VideoContext::push_frame_to_queue()
     Frame frame;
     while (avcodec_receive_frame(codec_context, frame.get()) == 0)
     {
-        qDebug()<<IMAGE<<"Received frame, formating it";
+
+        Frame filtered_frame = filters->applyFilters(frame.get());
+
+        //qDebug()<<IMAGE<<"Received frame, formating it";
         sws_scale(
             frame_format,
-            frame->data,
-            frame->linesize,
+            filtered_frame->data,
+            filtered_frame->linesize,
             0,
             codec_context->height,
             rgbFrame->data,
             rgbFrame->linesize
             );
         QImage image(rgbFrame->data[0], codec_context->width, codec_context->height, rgbFrame->linesize[0], QImage::Format_RGB32);
-        qint64 imagetime = frame->best_effort_timestamp * 1000 * time_base.num / time_base.den;
+        qint64 imagetime = filtered_frame->best_effort_timestamp * 1000 * time_base.num / time_base.den;
         ImageFrame imageFrame(std::move(QVideoFrame(image.copy())),imagetime);
 
         output->imageQueue.push(std::move(imageFrame));
-        qDebug()<<IMAGE<<"Notifying about new image";
+        //qDebug()<<IMAGE<<"Notifying about new image";
         output->imageReady.notify_all();
 
         av_frame_unref(frame.get());
     }
     //av_frame_free(&frame);
+}
+
+void VideoContext::set_brightness(qreal value)
+{
+    qDebug("Invoking set_brightness");
+    filters->set_brightness(value);
+}
+
+void VideoContext::set_contrast(qreal value)
+{
+    qDebug("Invoking set_contrast");
+    filters->set_contrast(value);
+}
+
+void VideoContext::set_saturation(qreal value)
+{
+    qDebug("Invoking set_saturation");
+    filters->set_saturation(value);
 }
 
 

@@ -41,6 +41,9 @@ qt_add_qml_module(appMediaPlayer
     ToolsMenu.ui.qml
     VolumeSlider.ui.qml
     FilenameBar.qml
+    SOURCES filters.h filters.cpp
+    QML_FILES FiltersWindow.qml
+    QML_FILES ToolsMenuButton.qml
 )
 
 qt_add_resources(appMediaPlayer

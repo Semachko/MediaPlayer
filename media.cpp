@@ -1,4 +1,5 @@
 #include "media.h"
+#include <QDebug>
 
 Media::Media() {
     mediacontext = new MediaContext();
@@ -6,18 +7,28 @@ Media::Media() {
     mediacontext->moveToThread(mediaThread);
     mediaThread->start();
 
+    connect(mediacontext,&MediaContext::outputGlobalTime,this,&Media::globalTime);
+    connect(mediacontext,&MediaContext::outputTime,this,[this](qint64 time,qreal pos){
+        // qDebug()<<"curr_time ="<<time;
+        // qDebug()<<"pos ="<<pos;
+        emit newTime(time);
+
+        m_currentPosition=pos;
+        emit currentPositionChanged(m_currentPosition);
+    });
+    //connect(mediacontext,&MediaContext::moveSliderPosition,this,&Media::sliderPositionChanged);
 }
 
 QVideoSink *Media::videoSink() const
 {
-    return videosink;
+    return m_videoSink;
 }
 
 void Media::setVideoSink(QVideoSink *sink)
 {
-    if (videosink == sink)
+    if (m_videoSink == sink)
         return;
-    videosink = sink;
+    m_videoSink = sink;
 }
 
 void Media::setFile(const QUrl &filename)
@@ -25,13 +36,13 @@ void Media::setFile(const QUrl &filename)
     if (mediacontext->video)
         disconnect(connection);
     //emit mediacontext.fileChanged(filename);
-    emit mediacontext->fileChanged(filename,videosink);
+    emit mediacontext->fileChanged(filename,m_videoSink);
 }
 
 void Media::output_image(QVideoFrame frame)
 {
     //qDebug()<<"\033[32m[Screen]\033[0m Outputing image, size = "<<frame.size();
-    videosink->setVideoFrame(frame);
+    m_videoSink->setVideoFrame(frame);
 }
 
 void Media::playORpause()
@@ -56,6 +67,11 @@ void Media::timeChanged(qreal time)
     emit mediacontext->timeChanged(time);
 }
 
+void Media::sliderPause()
+{
+    emit mediacontext->sliderPause();
+}
+
 void Media::add5sec()
 {
 
@@ -76,4 +92,29 @@ void Media::shuffleMedia()
 
 }
 
+void Media::changeBrightness(qreal value)
+{
+    // from -1 to 1
+    qreal brightness_val = value * 2.0 - 1.0;
+    emit mediacontext->brightnessChanged(brightness_val);
+}
 
+void Media::changeContrast(qreal value)
+{
+    // from 0 to 2
+    qreal contrast_val = value * 2.0;
+    emit mediacontext->contrastChanged(contrast_val);
+}
+
+void Media::changeSaturation(qreal value)
+{
+    // from 0 to 3
+    qreal saturation_val = value * 3.0;
+    emit mediacontext->saturationChanged(saturation_val);
+}
+
+
+qreal Media::currentPosition() const
+{
+    return m_currentPosition;
+}

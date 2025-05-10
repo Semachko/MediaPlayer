@@ -15,6 +15,16 @@ Window {
     visible: true
     title: "MediaPlayer"
 
+    function get_time_by_ms(ms)
+    {
+        var totalSeconds = Math.floor(ms / 1000);
+        var hours = Math.floor(totalSeconds / 3600);
+        var minutes = Math.floor((totalSeconds % 3600) / 60);
+        var seconds = totalSeconds % 60;
+        return ("0" + hours).slice(-2) + ":" +
+                ("0" + minutes).slice(-2) + ":" +
+                ("0" + seconds).slice(-2);
+    }
 
     Image {
         id: backgroundlogo
@@ -52,22 +62,25 @@ Window {
             font.bold: true
             anchors.left: parent.left
             anchors.leftMargin: 15
+            Connections {
+                target: media
+                function onNewTime(time) {
+                    current_time.text = root.get_time_by_ms(time)
+                }
+            }
         }
         TimelineSlider{
             id: timeslider
+            value: media.currentPosition
             anchors.left: current_time.right
             anchors.right: media_time.left
             anchors.leftMargin: 10
             anchors.rightMargin: 10
-            //property bool isPlaying
             onPressedChanged:{
                 if (pressed) {
                     if (playbutton.checked)
-                        media.playORpause()
-                        //playbutton.click()
+                        media.sliderPause()
                 } else {
-                    // if(pausePressed)
-                    //     media.playORpause()
                     media.timeChanged(position)
                 }
             }
@@ -80,6 +93,12 @@ Window {
             font.bold: true
             anchors.right: parent.right
             anchors.rightMargin: 15
+            Connections {
+                target: media
+                function onGlobalTime(time) {
+                    media_time.text = root.get_time_by_ms(time)
+                }
+            }
         }
     }
 
@@ -208,5 +227,19 @@ Window {
         anchors.right: mediacontrolsbar.left
         anchors.rightMargin: 85
         y: menubar_background.y+55
+        onFiltersClicked: filterswindow.visible = true
+    }
+
+
+    FiltersWindow{
+        id: filterswindow
+        visible: false
+        anchors{
+            centerIn: backgroundlogo
+            //bottomMargin: 50
+        }
+        onBrightnessChanged: media.changeBrightness(filterswindow.brightness)
+        onContrastChanged: media.changeContrast(filterswindow.contrast)
+        onSaturationChanged: media.changeSaturation(filterswindow.saturation)
     }
 }

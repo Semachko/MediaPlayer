@@ -1,29 +1,26 @@
-
-
-/*
-This is a UI file (.ui.qml) that is intended to be edited in Qt Design Studio only.
-It is supposed to be strictly declarative and only uses a subset of QML. If you edit
-this file manually, you might introduce QML code that is not supported by Qt Design Studio.
-Check out https://doc.qt.io/qtcreator/creator-quick-ui-forms.html for details on .ui.qml files.
-*/
 import QtQuick
 import QtQuick.Controls.Basic
 
-// Rectangle {
-//     id: popup
-//     width: 200
-//     height: 200
-//     color: "black"
-// }
 Item {
+    id: root
     OptionsButton {
+        id: optionsbutton
         onClicked: {
-            popup.x = x
-            popup.y = y - popup.height - 60
-            popup.open()
+            if(popup.closed){
+                popup.x = x
+                popup.y = y - popup.height - 60
+                popup.open()
+            }
+            else{
+                popup.close()
+            }
         }
     }
 
+    signal filtersClicked()
+    signal equalizerClicked()
+    signal shuffleClicked()
+    signal repeatClicked()
     Popup {
         id: popup
         width: 230
@@ -39,112 +36,40 @@ Item {
         }
         contentItem: Column {
             anchors.fill: parent
-            Button {
+            ToolsMenuButton {
                 id: filters
-                anchors.left: parent.left
-                anchors.right: parent.right
-                height: 50
-                contentItem: Text {
-                    verticalAlignment: Text.AlignVCenter
-                    leftPadding: 50
-                    text: "Filters"
-                    color: "white"
-                    font.pointSize: 18
-                }
-                background: Rectangle {
-                    Image {
-                        scale: 0.8
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                        anchors.leftMargin: 10
-                        source: "qrc:/images/filters.svg"
-                        fillMode: Image.PreserveAspectFit
-                    }
-                    radius: 5
-                    color: filters.hovered ? "#5C5D5D" : "transparent"
-                    border.width: filters.pressed ? 3 : 0
-                    border.color: "white"
+                label: "Filters"
+                iconSRC: "qrc:/images/filters.svg"
+                onClicked: {
+                    popup.close()
+                    root.onFiltersClicked();
                 }
             }
-            Button {
+            ToolsMenuButton {
                 id: equalizer
-                anchors.left: parent.left
-                anchors.right: parent.right
-                height: 50
-                contentItem: Text {
-                    verticalAlignment: Text.AlignVCenter
-                    leftPadding: 50
-                    text: "Equalizer"
-                    color: "white"
-                    font.pointSize: 18
-                }
-                background: Rectangle {
-                    Image {
-                        scale: 0.8
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                        anchors.leftMargin: 10
-                        source: "qrc:/images/equalizer.svg"
-                        fillMode: Image.PreserveAspectFit
-                    }
-                    radius: 5
-                    color: equalizer.hovered ? "#5C5D5D" : "transparent"
-                    border.width: equalizer.pressed ? 3 : 0
-                    border.color: "white"
+                label: "Equalizer"
+                iconSRC: "qrc:/images/equalizer.svg"
+                onClicked: {
+                    popup.close()
+                    onEqualizerClicked();
                 }
             }
-            Button {
+            ToolsMenuButton {
                 id: shuffle
-                anchors.left: parent.left
-                anchors.right: parent.right
-                height: 50
-                contentItem: Text {
-                    verticalAlignment: Text.AlignVCenter
-                    leftPadding: 50
-                    text: "Shuffle"
-                    color: "white"
-                    font.pointSize: 18
-                }
-                background: Rectangle {
-                    Image {
-                        scale: 0.8
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                        anchors.leftMargin: 10
-                        source: "qrc:/images/shuffle.svg"
-                        fillMode: Image.PreserveAspectFit
-                    }
-                    radius: 5
-                    color: shuffle.hovered ? "#5C5D5D" : "transparent"
-                    border.width: shuffle.pressed ? 3 : 0
-                    border.color: "white"
+                label: "Shuffle"
+                iconSRC: "qrc:/images/shuffle.svg"
+                onClicked: {
+                    popup.close()
+                    onShuffleClicked();
                 }
             }
-            Button {
+            ToolsMenuButton {
                 id: repeat
-                anchors.left: parent.left
-                anchors.right: parent.right
-                height: 50
-                contentItem: Text {
-                    verticalAlignment: Text.AlignVCenter
-                    leftPadding: 50
-                    text: "Repeat"
-                    color: "white"
-                    font.pointSize: 18
-                }
-                background: Rectangle {
-                    Image {
-                        scale: 0.8
-                        anchors.verticalCenter: parent.verticalCenter
-                        anchors.left: parent.left
-                        anchors.leftMargin: 10
-                        source: "qrc:/images/repeat.svg"
-                        fillMode: Image.PreserveAspectFit
-                    }
-                    radius: 5
-                    color: repeat.hovered ? "#5C5D5D" : "transparent"
-                    border.width: repeat.pressed ? 3 : 0
-                    border.color: "white"
+                label: "Repeat"
+                iconSRC: "qrc:/images/repeat.svg"
+                onClicked: {
+                    popup.close()
+                    onRepeatClicked();
                 }
             }
         }

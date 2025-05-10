@@ -32,7 +32,7 @@ void FrameOutput::start_output()
         ImageFrame imageFrame = imageQueue.pop();
 
         qint64 delay = imageFrame.time - sync->get_time();
-        qDebug()<<"Delay: "<<delay;
+        //qDebug()<<"Delay: "<<delay;
         if (delay>0)
             QThread::msleep(delay);
 

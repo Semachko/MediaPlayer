@@ -1,22 +1,24 @@
 #ifndef VIDEOCONTEXT_H
 #define VIDEOCONTEXT_H
 
+extern "C" {
+#include "libavformat/avformat.h"
+#include <libavcodec/avcodec.h>
+#include <libswscale/swscale.h>
+#include "libavutil/imgutils.h"
+}
+
 #include <QObject>
 #include <QVideoSink>
 #include <QVideoFrame>
 #include <QPair>
 #include <atomic>
 
-extern "C" {
-    #include "libavformat/avformat.h"
-    #include <libavcodec/avcodec.h>
-    #include <libswscale/swscale.h>
-    #include "libavutil/imgutils.h"
-}
 #include "synchronizer.h"
 #include "frameoutput.h"
 #include "queue.h"
 #include "packet.h"
+#include "filters.h"
 
 class VideoContext : public QObject
 {
@@ -25,6 +27,9 @@ public:
     VideoContext(AVFormatContext* format_context, Synchronizer* sync, QVideoSink* videosink);
 
     void push_frame_to_queue();
+    void set_brightness(qreal value);
+    void set_contrast(qreal value);
+    void set_saturation(qreal value);
 signals:
     void requestPacket();
     void newPacketArrived();
@@ -45,6 +50,7 @@ private:
     SwsContext* frame_format;
     std::vector<uint8_t> buffer;
     AVFrame* rgbFrame;
+    Filters* filters;
 
     Synchronizer* sync;
     QWaitCondition* imageReady;

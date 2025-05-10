@@ -41,6 +41,7 @@ public:
     qreal last_volume = 0.2;
     QAudioSink* audioSink;
     AudioIODevice* audioDevice;
+    QAudioFormat format;
 
     AVCodecContext* codec_context;
     Queue<Packet> packetQueue;
@@ -48,7 +49,6 @@ public:
 private:
     SwrContext* resampleContext;
 
-    QAudioFormat format;
 
     Synchronizer* sync;
 };

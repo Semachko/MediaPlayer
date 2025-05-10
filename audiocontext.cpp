@@ -58,10 +58,13 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync) 
     }
 
     audioDevice = new AudioIODevice(sync,this);
+
     audioSink = new QAudioSink(format, this);
     audioSink->setVolume(last_volume);
     audioSink->start(audioDevice);
     audioSink->suspend();
+    qDebug()<<"AudioSink bufferSize: "<<audioSink->bufferSize();
+    qDebug()<<"AudioSink bytesFree: "<<audioSink->bytesFree();
 
     connect(this, &AudioContext::newPacketArrived, this,&AudioContext::push_frame_to_buffer, Qt::QueuedConnection);
     connect(audioDevice, &AudioIODevice::dataReaded, this,&AudioContext::push_frame_to_buffer, Qt::QueuedConnection);

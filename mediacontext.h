@@ -32,6 +32,7 @@ public:
 
     void set_file(const QUrl& filename,QVideoSink* videosink);
     void resume_pause();
+    void slider_pause();
     void mute_unmute();
     void change_volume(qreal);
     void change_time(qreal);
@@ -39,9 +40,17 @@ public:
 signals:
     void fileChanged(const QUrl,QVideoSink*);
     void playORpause();
+    void sliderPause();
     void muteORunmute();
     void volumeChanged(qreal);
     void timeChanged(qreal);
+
+    void outputTime(qint64,qreal);
+    void outputGlobalTime(qint64);
+
+    void brightnessChanged(qreal);
+    void contrastChanged(qreal);
+    void saturationChanged(qreal);
 
 private:
     void fill_packetQueue();
@@ -63,6 +72,9 @@ private:
 
     Synchronizer* sync;
     QMutex formatMutex;
+    bool isTemporaryPaused = false;
+
+    QTimer* updateTimer;
 };
 
 #endif // MEDIACONTEXT_H
