@@ -34,12 +34,14 @@ public:
     Q_INVOKABLE void changeBrightness(qreal value);
     Q_INVOKABLE void changeContrast(qreal value);
     Q_INVOKABLE void changeSaturation(qreal value);
+
+    Q_INVOKABLE void changeLowSounds(qreal value);
+    Q_INVOKABLE void changeMidSounds(qreal value);
+    Q_INVOKABLE void changeHighSounds(qreal value);
 signals:
     Q_SIGNAL void globalTime(qint64 time);
     Q_SIGNAL void newTime(qint64 time);
     Q_SIGNAL void currentPositionChanged(qreal pos);
-    //Q_SIGNAL void sliderPositionChanged(qreal pos);
-    //Q_SIGNAL void currentTimeChanged();
 
 private:
     void output_image(QVideoFrame frame);
@@ -49,7 +51,6 @@ private:
     QThread* mediaThread;
     QMetaObject::Connection connection;
     qreal m_currentPosition;
-    //qint64 m_currentTime;
 };
 
 #endif // MEDIA_H

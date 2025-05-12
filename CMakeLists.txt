@@ -9,15 +9,19 @@ qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(appMediaPlayer
     main.cpp
-    media.cpp media.h
-    mediacontext.cpp mediacontext.h
-    videocontext.cpp videocontext.h
-    audiocontext.cpp audiocontext.h
-    audioiodevice.cpp audioiodevice.h
-    clock.cpp clock.h
-    synchronizer.cpp synchronizer.h
-    frameoutput.cpp frameoutput.h
-    demuxer.cpp demuxer.h
+    media.h media.cpp
+    mediacontext.h mediacontext.cpp
+    videocontext.h videocontext.cpp
+    frameoutput.h frameoutput.cpp
+    audiocontext.h audiocontext.cpp
+    audioiodevice.h audioiodevice.cpp
+    clock.h clock.cpp
+    synchronizer.h synchronizer.cpp
+    demuxer.h demuxer.cpp
+    filters.h filters.cpp
+    equalizer.h equalizer.cpp
+    sampleconverter.h sampleconverter.cpp
+    imageconverter.h imageconverter.cpp
     queue.h
     frame.h
     packet.h
@@ -41,9 +45,9 @@ qt_add_qml_module(appMediaPlayer
     ToolsMenu.ui.qml
     VolumeSlider.ui.qml
     FilenameBar.qml
-    SOURCES filters.h filters.cpp
-    QML_FILES FiltersWindow.qml
-    QML_FILES ToolsMenuButton.qml
+    FiltersWindow.qml
+    ToolsMenuButton.qml
+    EqualizerWindow.qml
 )
 
 qt_add_resources(appMediaPlayer

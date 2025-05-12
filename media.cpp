@@ -113,6 +113,27 @@ void Media::changeSaturation(qreal value)
     emit mediacontext->saturationChanged(saturation_val);
 }
 
+void Media::changeLowSounds(qreal value)
+{
+    // from -12 to 12
+    qreal dB = value * 56.0 - 28.0;
+    emit mediacontext->lowChanged(dB);
+}
+
+void Media::changeMidSounds(qreal value)
+{
+    // from -12 to 12
+    qreal dB = value * 56.0 - 28.0;
+    emit mediacontext->midChanged(dB);
+}
+
+void Media::changeHighSounds(qreal value)
+{
+    // from -12 to 12
+    qreal dB = value * 56.0 - 28.0;
+    emit mediacontext->highChanged(dB);
+}
+
 
 qreal Media::currentPosition() const
 {

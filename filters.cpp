@@ -3,9 +3,14 @@
 
 Filters::Filters(AVCodecParameters* codec_parameters, AVRational time_base)
 {
-    snprintf(args, sizeof(args),
-             "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d:pixel_aspect=1/1",
-             codec_parameters->width, codec_parameters->height, codec_parameters->format, time_base.num, time_base.den);
+    args =
+        "video_size="+std::to_string(codec_parameters->width)+"x"+std::to_string(codec_parameters->height)
+        +":pix_fmt="+std::to_string(codec_parameters->format)
+        +":time_base="+std::to_string(time_base.num)+"/"+std::to_string(time_base.den);
+
+    // snprintf(args, sizeof(args),
+    //          "video_size=%dx%d:pix_fmt=%d:time_base=%d/%d",
+    //          codec_parameters->width, codec_parameters->height, codec_parameters->format, time_base.num, time_base.den);
 
     update_filters();
 
@@ -84,7 +89,7 @@ void Filters::update_filters()
 
     buffersrc  = avfilter_get_by_name("buffer");
     buffersink = avfilter_get_by_name("buffersink");
-    avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in", args, nullptr, filter_graph);
+    avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in", args.c_str(), nullptr, filter_graph);
     avfilter_graph_create_filter(&buffersink_ctx, buffersink, "out", nullptr, nullptr, filter_graph);
 
     outputs = avfilter_inout_alloc();

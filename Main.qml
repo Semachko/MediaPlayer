@@ -228,18 +228,26 @@ Window {
         anchors.rightMargin: 85
         y: menubar_background.y+55
         onFiltersClicked: filterswindow.visible = true
+        onEqualizerClicked: equalizerwindow.visible = true
     }
 
 
     FiltersWindow{
         id: filterswindow
         visible: false
-        anchors{
-            centerIn: backgroundlogo
-            //bottomMargin: 50
-        }
+        anchors.centerIn: backgroundlogo
+
         onBrightnessChanged: media.changeBrightness(filterswindow.brightness)
         onContrastChanged: media.changeContrast(filterswindow.contrast)
         onSaturationChanged: media.changeSaturation(filterswindow.saturation)
+    }
+    EqualizerWindow{
+        id: equalizerwindow
+        visible: false
+        anchors.centerIn: backgroundlogo
+
+        onLowChanged: media.changeLowSounds(equalizerwindow.low)
+        onMidChanged: media.changeMidSounds(equalizerwindow.mid)
+        onHighChanged: media.changeHighSounds(equalizerwindow.high)
     }
 }

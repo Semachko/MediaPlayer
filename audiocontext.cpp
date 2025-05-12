@@ -29,6 +29,9 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync) 
     } else
         qDebug()<<"Format is supported!";
 
+    //equalizer = new Equalizer(format,convert_to_AVFormat(format.sampleFormat()));
+    equalizer = new Equalizer(codec_context);
+
     AVChannelLayout outlayout;
     av_channel_layout_default(&outlayout, format.channelCount());
     // AVChannelLayout inlayout;
@@ -38,12 +41,10 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync) 
     int ret = swr_alloc_set_opts2(
         &resampleContext,
         &outlayout,
-        //AV_SAMPLE_FMT_FLT,
         convert_to_AVFormat(format.sampleFormat()),
         format.sampleRate(),
-        //&inlayout,
         &codec_context->ch_layout,
-        codec_context->sample_fmt,
+        AV_SAMPLE_FMT_FLTP,
         codec_context->sample_rate,
         0,
         nullptr
@@ -56,15 +57,14 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync) 
         qDebug() << "swr_init failed:" << ret;
         return;
     }
-
     audioDevice = new AudioIODevice(sync,this);
 
     audioSink = new QAudioSink(format, this);
     audioSink->setVolume(last_volume);
     audioSink->start(audioDevice);
     audioSink->suspend();
-    qDebug()<<"AudioSink bufferSize: "<<audioSink->bufferSize();
-    qDebug()<<"AudioSink bytesFree: "<<audioSink->bytesFree();
+    // qDebug()<<"AudioSink bufferSize: "<<audioSink->bufferSize();
+    // qDebug()<<"AudioSink bytesFree: "<<audioSink->bytesFree();
 
     connect(this, &AudioContext::newPacketArrived, this,&AudioContext::push_frame_to_buffer, Qt::QueuedConnection);
     connect(audioDevice, &AudioIODevice::dataReaded, this,&AudioContext::push_frame_to_buffer, Qt::QueuedConnection);
@@ -100,50 +100,121 @@ void AudioContext::push_frame_to_buffer()
     }
 
     Frame frame;
-    while (avcodec_receive_frame(codec_context, frame.frame) == 0)
+    while (avcodec_receive_frame(codec_context, frame.get()) == 0)
     {
-        //qDebug()<<DECODING<<"Sample decoded";
-        //qDebug()<<DECODING<<"codec_context->sample_fmt = "<< codec_context->sample_fmt;
-        int outputBufferSize = av_samples_get_buffer_size(
-            nullptr,
-            format.channelCount(),
-            frame->nb_samples,
-            convert_to_AVFormat(format.sampleFormat()),
-            1
-        );
+        // AVFrame* out_frame = av_frame_alloc();
+        // out_frame->ch_layout = frame->ch_layout;
+        // out_frame->sample_rate = frame->sample_rate;
+        // out_frame->format = AV_SAMPLE_FMT_FLTP;
 
-        uint8_t *outputBuffer = (uint8_t*)av_malloc(outputBufferSize);
-        if (!outputBuffer) {
-            qWarning() << "Failed to allocate output buffer.";
-            av_frame_unref(frame.frame);
-            continue;
-        }
-        int samplesConverted = swr_convert(
-            resampleContext,
-            &outputBuffer,
-            //frame->nb_samples * format.sampleRate() / frame->sample_rate,
-            frame->nb_samples,
-            (const uint8_t **)frame->data,
-            frame->nb_samples
-            );
-        if (samplesConverted < 0) {
-            qWarning() << "Error converting audio.";
-            av_free(outputBuffer);
-            av_frame_unref(frame.frame);
-            continue;
-        }
+        // SwrContext* toFLTP = swr_alloc();
+        // int ret = swr_alloc_set_opts2(
+        //     &toFLTP,
+        //     &out_frame->ch_layout,
+        //     static_cast<AVSampleFormat>(out_frame->format),
+        //     out_frame->sample_rate,
+        //     &frame->ch_layout,
+        //     static_cast<AVSampleFormat>(frame->format),
+        //     frame->sample_rate,
+        //     0,
+        //     nullptr
+        //     );
+        // if (ret < 0) {
+        //     qDebug() << "swr_alloc_set_opts2 failed:" << ret;
+        //     return;
+        // }
+        // if ((ret = swr_init(toFLTP)) < 0) {
+        //     qDebug() << "swr_init failed:" << ret;
+        //     return;
+        // }
+        // // out_frame->nb_samples = av_rescale_rnd(
+        // //     swr_get_delay(toFLTP, frame->sample_rate) + frame->nb_samples,
+        // //     out_frame->sample_rate,
+        // //     frame->sample_rate,
+        // //     AV_ROUND_UP
+        // // );
+        // out_frame->nb_samples = frame->nb_samples;
+        // if ((ret = av_frame_get_buffer(out_frame, 0)) < 0) {
+        //     qDebug() << "av_frame_get_buffer failed:" << ret;
+        //     return;
+        // }
+        // ret = swr_convert(
+        //     toFLTP,
+        //     out_frame->data,
+        //     out_frame->nb_samples,
+        //     (const uint8_t**)frame->data,
+        //     frame->nb_samples
+        // );
+        // //qDebug()<<"Number of converted samples ="<<ret;
 
-        int realSize = samplesConverted * format.channelCount() * format.bytesPerSample();
+        // av_frame_unref(frame.get());
+
+        // av_frame_free(&out_frame);
+
+
+        // int outputBufferSize = av_samples_get_buffer_size(
+        //     nullptr,
+        //     format.channelCount(),
+        //     filtered_frame->nb_samples,
+        //     convert_to_AVFormat(format.sampleFormat()),
+        //     1
+        // );
+        // uint8_t *outputBuffer = (uint8_t*)av_malloc(outputBufferSize);
+        // if (!outputBuffer) {
+        //     qWarning() << "Failed to allocate output buffer.";
+        //     av_frame_unref(filtered_frame.get());
+        //     continue;
+        // }
+        // int samplesConverted = swr_convert(
+        //     resampleContext,
+        //     &outputBuffer,
+        //     filtered_frame->nb_samples,
+        //     (const uint8_t **)filtered_frame->data,
+        //     filtered_frame->nb_samples
+        // );
+        // if (samplesConverted < 0) {
+        //     qWarning() << "Error converting audio.";
+        //     av_free(outputBuffer);
+        //     av_frame_unref(filtered_frame.get());
+        //     continue;
+        // }
+
+        // int realSize = samplesConverted * format.channelCount() * format.bytesPerSample();
 
         //qDebug()<<SAMPLE<<"Outputbuffer size ="<<realSize;
-        audioDevice->appendData(QByteArray((const char*)outputBuffer, realSize));
-        av_free(outputBuffer);
-        av_frame_unref(frame.frame);
+
+        Frame filtered_frame = equalizer->applyEqualizer(frame.get());
+        int size = filtered_frame->nb_samples * filtered_frame->ch_layout.nb_channels * format.bytesPerSample();
+
+
+        audioDevice->appendData(QByteArray((const char*)filtered_frame->data[0], size));
+        //av_free(outputBuffer);
+        av_frame_free(&filtered_frame.frame);
+        av_frame_unref(frame.get());
+        //av_frame_free(&frame.frame);
 
         // qDebug()<<"Audio state:"<<audioSink->state();
         // qDebug()<<"Audio error:"<<audioSink->error();
         // qDebug()<<"Audio volume:"<<audioSink->volume();
     }
+}
+
+void AudioContext::set_low(qreal value)
+{
+    qDebug("Invoking set_low");
+    equalizer->set_low(value);
+}
+
+void AudioContext::set_mid(qreal value)
+{
+    qDebug("Invoking set_mid");
+    equalizer->set_mid(value);
+}
+
+void AudioContext::set_high(qreal value)
+{
+    qDebug("Invoking set_high");
+    equalizer->set_high(value);
 }
 
 AVSampleFormat AudioContext::convert_to_AVFormat(QAudioFormat::SampleFormat format)

@@ -19,7 +19,7 @@ extern "C" {
 #include "synchronizer.h"
 #include "queue.h"
 #include "packet.h"
-
+#include "equalizer.h"
 
 class AudioContext : public QObject
 {
@@ -28,6 +28,9 @@ public:
     AudioContext(AVFormatContext* format_context, Synchronizer* sync);
 
     void push_frame_to_buffer();
+    void set_low(qreal value);
+    void set_mid(qreal value);
+    void set_high(qreal value);
 signals:
     void requestPacket();
     void newPacketArrived();
@@ -48,7 +51,7 @@ public:
     QMutex decodingMutex;
 private:
     SwrContext* resampleContext;
-
+    Equalizer* equalizer;
 
     Synchronizer* sync;
 };

@@ -1,13 +1,14 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
 Item{
     id: root
     height: parent.height * 0.5
-    width: parent.height * 0.6
-    property real brightness: brightness_slider.value
-    property real contrast: contrast_slider.value
-    property real saturation: saturation_slider.value
+    width: parent.height * 0.4
+    property real low: low_slider.value
+    property real mid: mid_slider.value
+    property real high: high_slider.value
 
     Rectangle{
         id: background
@@ -16,9 +17,9 @@ Item{
         radius: 25
         opacity: 0.5
     }
-    Column {
+    RowLayout {
         id: settings
-        anchors{
+        anchors {
             top: parent.top
             left: parent.left
             right: parent.right
@@ -26,77 +27,66 @@ Item{
             leftMargin: 30
             rightMargin: 30
         }
-        spacing: 0
-        height: parent.height*0.6
+        spacing: 30
+        height: parent.height * 0.6
 
-        Row {
-            width: parent.width
-            height: parent.height*0.3
+        Column {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            Slider {
+                id: low_slider
+                orientation: Qt.Vertical
+                value: 0.5
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
             Text {
-                id: brightness_label
-                text: "brightness"
+                text: "low"
                 color: "white"
                 font.pointSize: 16
                 font.bold: true
-                horizontalAlignment: Text.AlignRight
-                verticalAlignment: Text.AlignVCenter
-                anchors.verticalCenter: parent.verticalCenter
-            }
-            Slider {
-                id: brightness_slider
-                width: parent.width*0.55
-                anchors{
-                    right: parent.right
-                    verticalCenter: parent.verticalCenter
-                }
-                value: 0.5
+                horizontalAlignment: Text.AlignHCenter
+                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
-        Row {
-            width: parent.width
-            height: parent.height*0.3
+
+        Column {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            Slider {
+                id: mid_slider
+                orientation: Qt.Vertical
+                value: 0.5
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
             Text {
-                id: contrast_label
-                text: "contrast"
+                text: "mid"
                 color: "white"
                 font.pointSize: 16
                 font.bold: true
-                horizontalAlignment: Text.AlignRight
-                verticalAlignment: Text.AlignVCenter
-                anchors.verticalCenter: parent.verticalCenter
-                //anchors.right: contrast_slider.left
-            }
-            Slider {
-                id: contrast_slider
-                width: parent.width*0.55
-                anchors{
-                    right: parent.right
-                    verticalCenter: parent.verticalCenter
-                }
-                value: 0.5
+                horizontalAlignment: Text.AlignHCenter
+                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
-        Row {
-            width: parent.width
-            height: parent.height*0.3
+
+        Column {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+
+            Slider {
+                id: high_slider
+                orientation: Qt.Vertical
+                value: 0.5
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
             Text {
-                id: saturation_label
-                text: "saturation"
+                text: "high"
                 color: "white"
                 font.pointSize: 16
                 font.bold: true
-                horizontalAlignment: Text.AlignRight
-                verticalAlignment: Text.AlignVCenter
-                anchors.verticalCenter: parent.verticalCenter
-            }
-            Slider {
-                id: saturation_slider
-                width: parent.width*0.55
-                anchors{
-                    right: parent.right
-                    verticalCenter: parent.verticalCenter
-                }
-                value: 0.5
+                horizontalAlignment: Text.AlignHCenter
+                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
     }
@@ -106,12 +96,16 @@ Item{
             bottom: root.bottom
             left: root.left
             right: root.right
-            margins: 20
+            leftMargin: 20
+            rightMargin: 20
+            topMargin: 30
+            bottomMargin: 10
         }
         Button {
             id: resetbutton
             anchors.left: parent.left
             anchors.leftMargin: 10
+            anchors.verticalCenter: parent.verticalCenter
             width: root.width*0.3
             height: parent.height*0.7
 
@@ -122,7 +116,7 @@ Item{
                 text: "Reset"
                 color: "white"
                 font.bold: true
-                font.pointSize: 16
+                font.pointSize: 14
             }
             background: Rectangle {
                 color: resetbutton.hovered ? "#535353" : "#3A3A3A"
@@ -132,15 +126,16 @@ Item{
                 opacity: 0.5
             }
             onClicked: {
-                brightness_slider.value = 0.5;
-                contrast_slider.value = 0.5;
-                saturation_slider.value = 0.5;
+                low_slider.value = 0.5;
+                mid_slider.value = 0.5;
+                high_slider.value = 0.5;
             }
         }
         Button {
             id: closebutton
             anchors.right: parent.right
             anchors.rightMargin: 10
+            anchors.verticalCenter: parent.verticalCenter
             width: root.width*0.3
             height: parent.height*0.7
 
@@ -151,7 +146,7 @@ Item{
                 text: "Close"
                 color: "white"
                 font.bold: true
-                font.pointSize: 16
+                font.pointSize: 14
             }
             background: Rectangle {
                 color: closebutton.hovered ? "#535353" : "#3A3A3A"

@@ -52,6 +52,10 @@ signals:
     void contrastChanged(qreal);
     void saturationChanged(qreal);
 
+    void lowChanged(qreal);
+    void midChanged(qreal);
+    void highChanged(qreal);
+
 private:
     void fill_packetQueue();
     bool push_packet_to_queues();

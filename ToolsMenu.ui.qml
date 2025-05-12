@@ -51,7 +51,7 @@ Item {
                 iconSRC: "qrc:/images/equalizer.svg"
                 onClicked: {
                     popup.close()
-                    onEqualizerClicked();
+                    root.onEqualizerClicked();
                 }
             }
             ToolsMenuButton {
@@ -60,7 +60,7 @@ Item {
                 iconSRC: "qrc:/images/shuffle.svg"
                 onClicked: {
                     popup.close()
-                    onShuffleClicked();
+                    root.onShuffleClicked();
                 }
             }
             ToolsMenuButton {
@@ -69,7 +69,7 @@ Item {
                 iconSRC: "qrc:/images/repeat.svg"
                 onClicked: {
                     popup.close()
-                    onRepeatClicked();
+                    root.onRepeatClicked();
                 }
             }
         }

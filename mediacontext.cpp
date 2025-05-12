@@ -63,6 +63,10 @@ void MediaContext::set_file(const QUrl &filename,QVideoSink* sink)
     connect(this,&MediaContext::contrastChanged,video,&VideoContext::set_contrast);
     connect(this,&MediaContext::saturationChanged,video,&VideoContext::set_saturation);
 
+    connect(this,&MediaContext::lowChanged,audio,&AudioContext::set_low);
+    connect(this,&MediaContext::midChanged,audio,&AudioContext::set_mid);
+    connect(this,&MediaContext::highChanged,audio,&AudioContext::set_high);
+
     QMetaObject::invokeMethod(demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
 }
 
