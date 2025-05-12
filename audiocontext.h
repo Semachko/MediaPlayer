@@ -7,12 +7,12 @@
 #include <QThread>
 
 extern "C" {
-    #include "libavformat/avformat.h"
-    #include <libavcodec/avcodec.h>
-    #include <libswresample/swresample.h>
-    #include <libavutil/opt.h>
-    #include <libavutil/channel_layout.h>
-    #include <libavutil/avutil.h>
+#include "libavformat/avformat.h"
+#include <libavcodec/avcodec.h>
+#include <libswresample/swresample.h>
+#include <libavutil/opt.h>
+#include <libavutil/channel_layout.h>
+#include <libavutil/avutil.h>
 }
 
 #include "audioiodevice.h"
@@ -20,6 +20,7 @@ extern "C" {
 #include "queue.h"
 #include "packet.h"
 #include "equalizer.h"
+#include "sampleconverter.h"
 
 class AudioContext : public QObject
 {

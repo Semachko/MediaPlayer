@@ -19,9 +19,9 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync) 
 
     format = QMediaDevices::defaultAudioOutput().preferredFormat();
     qDebug() << "Preferred format:";
+    qDebug() << "Sample format:" << format.sampleFormat();
     qDebug() << "Sample rate:" << format.sampleRate();
     qDebug() << "Channel count:" << format.channelCount();
-    qDebug() << "Sample format:" << format.sampleFormat();
     if (!QMediaDevices::defaultAudioOutput().isFormatSupported(format)) {
         qWarning() << "Format not supported!";
         stream_id = -1;
@@ -29,13 +29,10 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync) 
     } else
         qDebug()<<"Format is supported!";
 
-    //equalizer = new Equalizer(format,convert_to_AVFormat(format.sampleFormat()));
     equalizer = new Equalizer(codec_context);
 
     AVChannelLayout outlayout;
     av_channel_layout_default(&outlayout, format.channelCount());
-    // AVChannelLayout inlayout;
-    // av_channel_layout_default(&inlayout, codec_context->ch_layout.nb_channels);
 
     resampleContext=swr_alloc();
     int ret = swr_alloc_set_opts2(
@@ -184,19 +181,26 @@ void AudioContext::push_frame_to_buffer()
         //qDebug()<<SAMPLE<<"Outputbuffer size ="<<realSize;
 
         Frame filtered_frame = equalizer->applyEqualizer(frame.get());
-        int size = filtered_frame->nb_samples * filtered_frame->ch_layout.nb_channels * format.bytesPerSample();
 
+        SampleConverter converter;
+        converter.set_out_sample_rate(format.sampleRate());
+        converter.set_out_format(convert_to_AVFormat(format.sampleFormat()));
+        AVChannelLayout outlayout;
+        av_channel_layout_default(&outlayout, format.channelCount());
+        converter.set_out_layout(outlayout);
 
-        audioDevice->appendData(QByteArray((const char*)filtered_frame->data[0], size));
-        //av_free(outputBuffer);
+        AVFrame* result = converter.convert(filtered_frame.get());
+
+        int size = result->nb_samples * result->ch_layout.nb_channels * format.bytesPerSample();
+        audioDevice->appendData(QByteArray((const char*)result->data[0], size));
+        av_frame_free(&result);
         av_frame_free(&filtered_frame.frame);
         av_frame_unref(frame.get());
-        //av_frame_free(&frame.frame);
-
         // qDebug()<<"Audio state:"<<audioSink->state();
         // qDebug()<<"Audio error:"<<audioSink->error();
         // qDebug()<<"Audio volume:"<<audioSink->volume();
     }
+    av_frame_free(&frame.frame);
 }
 
 void AudioContext::set_low(qreal value)

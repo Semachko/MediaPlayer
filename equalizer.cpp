@@ -5,7 +5,6 @@ Equalizer::Equalizer(AVCodecContext* cod_ctx) : codec_context(cod_ctx){
     args =
         "sample_rate="+std::to_string(codec_context->sample_rate)
         +":sample_fmt="+av_get_sample_fmt_name(codec_context->sample_fmt)
-        //+":sample_fmt=dblp"
         +":channel_layout=stereo"
         +":channels="+std::to_string(codec_context->ch_layout.nb_channels);
 
@@ -13,19 +12,6 @@ Equalizer::Equalizer(AVCodecContext* cod_ctx) : codec_context(cod_ctx){
 
     update_equalizer();
 }
-
-// Equalizer::Equalizer(QAudioFormat& format, AVSampleFormat sampleFormat) {
-//     args =
-//         "sample_rate="+std::to_string(format.sampleRate())
-//         +":sample_fmt="+av_get_sample_fmt_name(sampleFormat)
-//         //+":sample_fmt=dblp"
-//         //+":channel_layout=3"
-//         +":channels="+std::to_string(format.channelCount());
-
-//     av_log_set_level(AV_LOG_DEBUG);
-
-//     update_equalizer();
-// }
 
 Frame Equalizer::applyEqualizer(AVFrame *frame)
 {
@@ -85,15 +71,6 @@ void Equalizer::update_equalizer()
     if (avfilter_graph_create_filter(&buffersink_ctx, buffersink, "out", nullptr, nullptr, filter_graph) < 0)
         qDebug() << "Failed to create abuffersink";
 
-    // const AVSampleFormat out_sample_fmts[] = { codec_context->sample_fmt, AV_SAMPLE_FMT_NONE };
-    // av_opt_set_int_list(buffersink_ctx, "sample_fmts", out_sample_fmts, AV_SAMPLE_FMT_NONE, AV_OPT_SEARCH_CHILDREN);
-
-    // const int64_t out_channel_layouts[] = { codec_context->ch_layout.nb_channels, -1 };
-    // av_opt_set_int_list(buffersink_ctx, "channel_layouts", out_channel_layouts, -1, AV_OPT_SEARCH_CHILDREN);
-
-    // const int out_sample_rates[] = { codec_context->sample_rate, -1 };
-    // av_opt_set_int_list(buffersink_ctx, "sample_rates", out_sample_rates, -1, AV_OPT_SEARCH_CHILDREN);
-
 
     outputs = avfilter_inout_alloc();
     outputs->name       = av_strdup("in");
@@ -107,14 +84,11 @@ void Equalizer::update_equalizer()
     inputs->pad_idx    = 0;
     inputs->next       = nullptr;
 
-    //std::string filter_descr = "bass=g=20,treble=g=30";
     std::string filter_descr =
         "aformat=sample_fmts=fltp,equalizer=f=100:width_type=h:width=400:g=" + std::to_string(low)
         + ",equalizer=f=1000:width_type=h:width=2000:g=" + std::to_string(mid)
-        + ",equalizer=f=8000:width_type=h:width=8000:g=" + std::to_string(high)
-        + ",aformat=sample_fmts=flt";
-    //,aformat=sample_fmts=fltp
-    //std::string filter_descr = "volume=0.5";
+        + ",equalizer=f=8000:width_type=h:width=8000:g=" + std::to_string(high);
+    //+ ",aformat=sample_fmts=flt";
     qDebug() << "filter_descr:" << filter_descr.c_str();
 
     if (avfilter_graph_parse_ptr(filter_graph, filter_descr.c_str(), &inputs, &outputs, nullptr) < 0)
