@@ -22,4 +22,5 @@ Button {
             fillMode: Image.PreserveAspectFit
         }
     }
+    onEnabledChanged: enabled ? opacity = 1 : opacity = 0.3
 }

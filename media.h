@@ -42,6 +42,7 @@ signals:
     Q_SIGNAL void globalTime(qint64 time);
     Q_SIGNAL void newTime(qint64 time);
     Q_SIGNAL void currentPositionChanged(qreal pos);
+    Q_SIGNAL void fileSetted();
 
 private:
     void output_image(QVideoFrame frame);

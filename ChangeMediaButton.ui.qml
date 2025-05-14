@@ -40,4 +40,5 @@ Button {
             radius: 9
         }
     }
+    onEnabledChanged: enabled ? opacity = 1 : opacity = 0.3
 }

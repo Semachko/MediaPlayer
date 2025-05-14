@@ -75,6 +75,7 @@ qt_add_resources(appMediaPlayer
     images/shuffle.svg
     images/repeat.svg
     images/Speed.svg
+    TODO.txt
 )
 
 set_target_properties(appMediaPlayer PROPERTIES

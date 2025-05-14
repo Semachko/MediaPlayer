@@ -1,0 +1,8 @@
++-5 sec buttons
+next/prev media buttons
+speed up/down
+hot keys
+preload images on setting file
+preload images on seeking
+zooming images
+rotating images

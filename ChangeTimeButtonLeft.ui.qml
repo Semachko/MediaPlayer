@@ -72,4 +72,5 @@ Button {
             rotation: 0
         }
     }
+    onEnabledChanged: enabled ? opacity = 1 : opacity = 0.3
 }

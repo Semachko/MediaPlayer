@@ -37,6 +37,7 @@ void Media::setFile(const QUrl &filename)
         disconnect(connection);
     //emit mediacontext.fileChanged(filename);
     emit mediacontext->fileChanged(filename,m_videoSink);
+    emit fileSetted();
 }
 
 void Media::output_image(QVideoFrame frame)
