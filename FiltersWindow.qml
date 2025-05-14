@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Layouts
 
 Item{
     id: root
@@ -16,7 +17,7 @@ Item{
         radius: 25
         opacity: 0.5
     }
-    Column {
+    ColumnLayout {
         id: settings
         anchors{
             top: parent.top
@@ -26,81 +27,77 @@ Item{
             leftMargin: 30
             rightMargin: 30
         }
-        spacing: 0
+        spacing: 10
         height: parent.height*0.6
 
-        Row {
-            width: parent.width
-            height: parent.height*0.3
-            Text {
-                id: brightness_label
-                text: "brightness"
-                color: "white"
-                font.pointSize: 16
-                font.bold: true
-                horizontalAlignment: Text.AlignRight
-                verticalAlignment: Text.AlignVCenter
-                anchors.verticalCenter: parent.verticalCenter
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 30
+            Item {
+                width: 100
+                height: brightness_label.implicitHeight
+                Text {
+                    id: brightness_label
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "brightness"
+                    color: "white"
+                    font.bold: true
+                    font.pointSize: 16
+                }
             }
             Slider {
                 id: brightness_slider
-                width: parent.width*0.55
-                anchors{
-                    right: parent.right
-                    verticalCenter: parent.verticalCenter
-                }
+                Layout.fillWidth: true
                 value: 0.5
             }
         }
-        Row {
-            width: parent.width
-            height: parent.height*0.3
-            Text {
-                id: contrast_label
-                text: "contrast"
-                color: "white"
-                font.pointSize: 16
-                font.bold: true
-                horizontalAlignment: Text.AlignRight
-                verticalAlignment: Text.AlignVCenter
-                anchors.verticalCenter: parent.verticalCenter
-                //anchors.right: contrast_slider.left
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 30
+            Item {
+                width: 100
+                height: contrast_label.implicitHeight
+                Text {
+                    id: contrast_label
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "contrast"
+                    color: "white"
+                    font.bold: true
+                    font.pointSize: 16
+                }
             }
             Slider {
                 id: contrast_slider
-                width: parent.width*0.55
-                anchors{
-                    right: parent.right
-                    verticalCenter: parent.verticalCenter
-                }
+                Layout.fillWidth: true
                 value: 0.5
             }
         }
-        Row {
-            width: parent.width
-            height: parent.height*0.3
-            Text {
-                id: saturation_label
-                text: "saturation"
-                color: "white"
-                font.pointSize: 16
-                font.bold: true
-                horizontalAlignment: Text.AlignRight
-                verticalAlignment: Text.AlignVCenter
-                anchors.verticalCenter: parent.verticalCenter
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: 30
+            Item {
+                width: 100
+                height: saturation_label.implicitHeight
+                Text {
+                    id: saturation_label
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "saturation"
+                    color: "white"
+                    font.bold: true
+                    font.pointSize: 16
+                }
             }
             Slider {
                 id: saturation_slider
-                width: parent.width*0.55
-                anchors{
-                    right: parent.right
-                    verticalCenter: parent.verticalCenter
-                }
+                Layout.fillWidth: true
                 value: 0.5
             }
         }
     }
-    Row{
+    RowLayout{
         anchors{
             top: settings.bottom
             bottom: root.bottom
@@ -110,10 +107,8 @@ Item{
         }
         Button {
             id: resetbutton
-            anchors.left: parent.left
-            anchors.leftMargin: 10
-            width: root.width*0.3
-            height: parent.height*0.7
+            Layout.preferredWidth: root.width * 0.3
+            Layout.preferredHeight: parent.height * 0.7
 
             contentItem: Text {
                 verticalAlignment: Text.AlignVCenter
@@ -137,12 +132,11 @@ Item{
                 saturation_slider.value = 0.5;
             }
         }
+        Item { Layout.fillWidth: true }
         Button {
             id: closebutton
-            anchors.right: parent.right
-            anchors.rightMargin: 10
-            width: root.width*0.3
-            height: parent.height*0.7
+            Layout.preferredWidth: root.width * 0.3
+            Layout.preferredHeight: parent.height * 0.7
 
             contentItem: Text {
                 verticalAlignment: Text.AlignVCenter

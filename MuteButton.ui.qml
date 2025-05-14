@@ -11,8 +11,8 @@ import QtQuick.Controls.Basic
 
 Button {
     id: root
-    width: 85
-    height: 85
+    implicitWidth: 85
+    implicitHeight: 85
     checkable: true
     background: Item {
         Rectangle {

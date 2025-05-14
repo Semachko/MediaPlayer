@@ -48,6 +48,8 @@ qt_add_qml_module(appMediaPlayer
     FiltersWindow.qml
     ToolsMenuButton.qml
     EqualizerWindow.qml
+    QML_FILES SpeedButton.qml
+    QML_FILES SpeedSlider.qml
 )
 
 qt_add_resources(appMediaPlayer
@@ -72,6 +74,7 @@ qt_add_resources(appMediaPlayer
     images/WhiteTriangle.svg
     images/shuffle.svg
     images/repeat.svg
+    images/Speed.svg
 )
 
 set_target_properties(appMediaPlayer PROPERTIES

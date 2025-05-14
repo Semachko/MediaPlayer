@@ -1,5 +1,4 @@
 
-
 /*
 This is a UI file (.ui.qml) that is intended to be edited in Qt Design Studio only.
 It is supposed to be strictly declarative and only uses a subset of QML. If you edit
@@ -11,11 +10,11 @@ import QtQuick.Controls.Basic
 
 Button {
     id: root
-    width: 70
-    height: 70
+    implicitWidth: 70
+    implicitHeight: 70
     contentItem: Text {
         text: "5"
-        color: pressed ? "black" : "white"
+        color: "white"
         font.bold: true
         font.pointSize: 24
         elide: Text.ElideLeft
@@ -23,20 +22,29 @@ Button {
         verticalAlignment: Text.AlignVCenter
         bottomPadding: 17
     }
-    background: Rectangle {
-        id: back
-        anchors.fill: parent
-        color: pressed ? "#3565A6" : hovered ? "#3565A6" : "#343F4D"
-        border.width: 6
-        border.color: "#FFFFFF"
-        radius: 50
+    background: Item {
+        Rectangle {
+            id: background
+            anchors.fill: parent
+            color: pressed ? "black" : "#252525"
+            opacity: hovered ? 1 : 0.5
+            radius: 50
+        }
+        Rectangle {
+            id: rect_border
+            anchors.fill: parent
+            color: "transparent"
+            border.color: "white"
+            border.width: 5
+            radius: 50
+        }
         Rectangle {
             id: rectangle
             x: 38
             y: 49
             width: 12
             height: 4
-            color: pressed ? "black" : "white"
+            color: "white"
             rotation: 20
             radius: 1
         }
@@ -47,7 +55,7 @@ Button {
             y: 53
             width: 12
             height: 4
-            color: pressed ? "black" : "white"
+            color: "white"
             rotation: -20
             radius: 1
         }
@@ -58,7 +66,7 @@ Button {
             y: 51
             width: 27
             height: 4
-            color: pressed ? "black" : "white"
+            color: "white"
             radius: 50
             rotation: 0
         }

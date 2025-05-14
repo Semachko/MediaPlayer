@@ -47,7 +47,7 @@ AVFrame *SampleConverter::convert(AVFrame *input)
         AV_ROUND_UP
     );
     if ((ret = av_frame_get_buffer(output, 0)) < 0) {
-        qDebug() << "Allocating output frame error";
+        qDebug() << "Allocating output frame error" << ret;
         return output;
     }
     ret = swr_convert(

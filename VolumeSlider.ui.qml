@@ -12,7 +12,7 @@ import QtQuick.Controls.Basic
 Slider {
     id: root
     width: 200
-    height: 30
+    height: 28
     value: 0.2
 
     background: Item {
@@ -20,7 +20,7 @@ Slider {
             x: leftPadding
             y: topPadding + availableHeight / 2 - height / 2
             width: availableWidth
-            height: parent.height * 0.38
+            height: parent.height * 0.35
             radius: 9999
             color: "#E0E0E0"
             clip: true

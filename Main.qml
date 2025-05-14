@@ -46,22 +46,22 @@ Window {
         height: 140
         opacity: 0.2
     }
-
-    Row{
+    RowLayout{
         id: timelinebar
         height: timeslider.height
         anchors.top: menubar_background.top
         anchors.left: menubar_background.left
         anchors.right: menubar_background.right
         anchors.topMargin: 5
+        anchors.leftMargin: 15
+        anchors.rightMargin: 15
         Text{
             id: current_time
+            Layout.bottomMargin: 3
             text: "00:00:00"
             color: "white"
             font.pointSize: 15
             font.bold: true
-            anchors.left: parent.left
-            anchors.leftMargin: 15
             Connections {
                 target: media
                 function onNewTime(time) {
@@ -71,11 +71,9 @@ Window {
         }
         TimelineSlider{
             id: timeslider
+            Layout.fillWidth: true
+            Layout.fillHeight: true
             value: media.currentPosition
-            anchors.left: current_time.right
-            anchors.right: media_time.left
-            anchors.leftMargin: 10
-            anchors.rightMargin: 10
             onPressedChanged:{
                 if (pressed) {
                     if (playbutton.checked)
@@ -87,12 +85,11 @@ Window {
         }
         Text{
             id: media_time
+            Layout.bottomMargin: 3
             text: "00:00:00"
             color: "white"
             font.pointSize: 15
             font.bold: true
-            anchors.right: parent.right
-            anchors.rightMargin: 15
             Connections {
                 target: media
                 function onGlobalTime(time) {
@@ -101,52 +98,103 @@ Window {
             }
         }
     }
-
-    Row{
-        id: mediacontrolsbar
-        anchors.horizontalCenter: menubar_background.horizontalCenter
+    RowLayout{
+        id: optionsbar
         anchors.top: timelinebar.bottom
         anchors.bottom: menubar_background.bottom
-        spacing: 3
-        ChangeMediaButton{
+        anchors.left: menubar_background.left
+        anchors.right: mediacontrolsbar.left
+        anchors.margins: 5
+        anchors.leftMargin: 20
+        spacing: 2
+        FilenameBar{
+            id: filenamebar
+            Layout.preferredWidth: parent.width * 0.7
+            Layout.preferredHeight: parent.height * 0.55
+            onClicked: fileDialog.open()
+            FileDialog {
+                id: fileDialog
+                title: "Choose file"
+                nameFilters: ["All (*)"]
+                onAccepted: {
+                    console.log("Selected file:", fileDialog.selectedFile)
+                    filenamebar.text = fileDialog.selectedFile.toString().split("/").pop().split(".")[0]
+
+                    media.videoSink = videoOutput.videoSink
+                    media.setFile(fileDialog.selectedFile)
+                }
+            }
+        }
+        ToolsMenu{
+            id: toolsmenu
+            Layout.fillWidth: true
+            onFiltersClicked: filterswindow.visible = true
+            onEqualizerClicked: equalizerwindow.visible = true
+        }
+
+    }
+    RowLayout {
+        id: mediacontrolsbar
+        anchors{
+            top: timelinebar.bottom
+            bottom: menubar_background.bottom
+            horizontalCenter: menubar_background.horizontalCenter
+        }
+        spacing: 0
+        ChangeMediaButton {
+            Layout.fillWidth: true
             scale: -0.6
-            anchors.verticalCenter: parent.verticalCenter
         }
-        ChangeTimeButtonLeft{
+        ChangeTimeButtonLeft {
+            Layout.fillWidth: true
             scale: 0.8
-            anchors.verticalCenter: parent.verticalCenter
         }
-        PlayButton{
+        PlayButton {
             id: playbutton
-            scale: 0.8
-            anchors.verticalCenter: parent.verticalCenter
+            Layout.fillWidth: true
+            scale: 0.7
             onPressed: {
                 media.playORpause()
             }
         }
-        ChangeTimeButtonRight{
+        ChangeTimeButtonRight {
+            Layout.fillWidth: true
             scale: 0.8
-            anchors.verticalCenter: parent.verticalCenter
         }
-        ChangeMediaButton{
+        ChangeMediaButton {
+            Layout.fillWidth: true
             scale: 0.6
-            anchors.verticalCenter: parent.verticalCenter
         }
     }
 
-    Row{
-        id: volumebar
+
+    RowLayout{
+        id: speed_volume_resize_bar
         anchors.top: timelinebar.bottom
         anchors.bottom: menubar_background.bottom
-        anchors.right: menubar_background.right
-        anchors.rightMargin: 10
         anchors.left: mediacontrolsbar.right
-        anchors.leftMargin: (root.width-volumebar.x)*0.2
-        spacing: 1
+        anchors.right: menubar_background.right
+        anchors.margins: 5
+        anchors.leftMargin: 40
+        anchors.rightMargin: 20
+
+        SpeedButton{
+            id: speedbutton
+            scale: 0.8
+            SpeedSlider{
+                visible: speedbutton.checked
+                anchors.bottom: speedbutton.top
+                anchors.bottomMargin: 5
+                anchors.horizontalCenter: speedbutton.horizontalCenter
+                width: speedbutton.width*0.4
+                height: 250
+                scale: -1
+            }
+        }
+
         MuteButton{
             id: mutebutton
-            anchors.verticalCenter: parent.verticalCenter
-            scale: 0.8
+            scale: 0.75
             onPressed: {
                 media.muteORunmute()
             }
@@ -154,22 +202,17 @@ Window {
 
         VolumeSlider{
             id: volumeslider
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.left: mutebutton.right
-            anchors.leftMargin: -10
-            anchors.right: resizebutton.left
-            anchors.rightMargin: 20
+            Layout.fillWidth: true
+            Layout.preferredHeight: parent.height*0.3
+            Layout.leftMargin: -15
+            Layout.rightMargin: 12
             onMoved:{
                 media.volumeChanged(volumeslider.value)
             }
         }
-
         ResizeButton{
             id: resizebutton
             scale: 0.7
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.right: parent.right
-            anchors.rightMargin: 10
             property int prevWidth: 900
             property int prevHeight: 600
             property bool isMaximized: false
@@ -196,41 +239,6 @@ Window {
             }
         }
     }
-    FileDialog {
-        id: fileDialog
-        title: "Choose file"
-        nameFilters: ["All (*)"]
-        onAccepted: {
-            console.log("Selected file:", fileDialog.selectedFile)
-            filenamebar.text = fileDialog.selectedFile.toString().split("/").pop().split(".")[0]
-
-            media.videoSink = videoOutput.videoSink
-            media.setFile(fileDialog.selectedFile)
-        }
-    }
-    FilenameBar{
-        id: filenamebar
-        onClicked: fileDialog.open()
-        anchors.left: menubar_background.left
-        anchors.leftMargin: 30
-        anchors.right: toolsmenu.left
-        anchors.rightMargin: 25
-        anchors.top: timelinebar.bottom
-        anchors.topMargin: 22
-        anchors.bottom: menubar_background.bottom
-        anchors.bottomMargin: 22
-        anchors.verticalCenter: menubar_background.verticalCenter
-    }
-
-    ToolsMenu{
-        id: toolsmenu
-        anchors.right: mediacontrolsbar.left
-        anchors.rightMargin: 85
-        y: menubar_background.y+55
-        onFiltersClicked: filterswindow.visible = true
-        onEqualizerClicked: equalizerwindow.visible = true
-    }
-
 
     FiltersWindow{
         id: filterswindow
@@ -250,4 +258,5 @@ Window {
         onMidChanged: media.changeMidSounds(equalizerwindow.mid)
         onHighChanged: media.changeHighSounds(equalizerwindow.high)
     }
+
 }

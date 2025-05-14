@@ -5,34 +5,43 @@ import QtQuick.Shapes
 Button {
     id: root
     text: ""
-    width: 86
-    height: 86
+    implicitWidth: 86
+    implicitHeight: 86
     checkable: true
-    background: Rectangle {
-        id: rectangle
-        width: 86
-        height: 86
-        color: hovered ? "#66EAB1" : "#ffffff"
-        radius: 9999
-        border.width: 15
-        border.color: "#283743"
+    background: Item {
+        Rectangle {
+            id: background
+            anchors.fill: parent
+            color: pressed ? "black" : "#252525"
+            opacity: hovered ? 1 : 0.5
+            radius: 9999
+        }
+        Rectangle {
+            id: rect_border
+            anchors.fill: parent
+            color: "transparent"
+            border.color: "white"
+            border.width: 7
+            radius: 9999
+        }
+
         Image {
             id: resume
             visible: !checked
             anchors.centerIn: parent
             anchors.horizontalCenterOffset: 4
-            source: pressed ? "qrc:/images/WhiteTriangle.svg" : "qrc:/images/BlackTriangle.svg"
+            source: "qrc:/images/WhiteTriangle.svg"
         }
         Item {
             id: pause
             visible: checked
-            anchors.fill: rectangle
+            anchors.fill: parent
             Rectangle {
                 anchors.centerIn: parent
                 anchors.horizontalCenterOffset: -8
                 width: 9
                 height: 28
-                color: pressed ? "white" : "#353535"
+                color: "white"
                 radius: 4
                 border.width: 0
             }
@@ -41,7 +50,7 @@ Button {
                 anchors.horizontalCenterOffset: 8
                 width: 9
                 height: 28
-                color: pressed ? "white" : "#353535"
+                color: "white"
                 radius: 4
                 border.width: 0
             }

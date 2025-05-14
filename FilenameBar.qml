@@ -4,8 +4,8 @@ import Qt.labs.platform 1.1
 
 Button {
     id: root
-    implicitHeight: 100
-    implicitWidth: 500
+    width: 100
+    height: 50
     text: qsTr("Choose file")
     contentItem: Item {
         anchors.fill: parent

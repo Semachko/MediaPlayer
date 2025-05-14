@@ -3,27 +3,40 @@ import QtQuick.Controls.Basic
 
 Button {
     id: root
-    width: 73
-    height: 73
+    implicitHeight: 73
+    implicitWidth: 73
+    // width: 73
+    // height: 73
     text: ""
-    background: Rectangle {
-        id: rectangle
-        radius: 10
-        color: hovered ? "#06AA8F" : "#24423D"
-        border.width: 7
-        border.color: "white"
-        Image {
-            anchors.centerIn: rectangle
-            anchors.horizontalCenterOffset: -5
-            scale: 0.8
-            source: pressed ? "qrc:/images/BlackTriangle.svg" : "qrc:/images/WhiteTriangle.svg"
+    background: Item {
+        Rectangle {
+            id: background
+            anchors.fill: parent
+            color: pressed ? "black" : "#252525"
+            opacity: hovered ? 1 : 0.5
+            radius: 10
         }
         Rectangle {
-            anchors.centerIn: rectangle
+            id: rect_border
+            anchors.fill: parent
+            color: "transparent"
+            border.color: "white"
+            border.width: 6
+            radius: 10
+        }
+
+        Image {
+            anchors.centerIn: parent
+            anchors.horizontalCenterOffset: -5
+            scale: 0.8
+            source: "qrc:/images/WhiteTriangle.svg"
+        }
+        Rectangle {
+            anchors.centerIn: parent
             anchors.horizontalCenterOffset: 13
             width: 7
             height: 28
-            color: pressed ? "#353535" : "white"
+            color: "white"
             radius: 9
         }
     }

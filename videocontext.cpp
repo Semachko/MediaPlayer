@@ -83,23 +83,22 @@ void VideoContext::push_frame_to_queue()
         return;
     }
 
-    {
-        Packet packet = packetQueue.pop();
-        emit requestPacket();
-        //qDebug()<<DECODING<<"packet received, decoding... packet size ="<<packet.get()->size;
-        int ret = avcodec_send_packet(codec_context, packet.get());
 
-        if (ret < 0) {
-            qDebug()<<"Error sending video packet: "<<ret;
-            return;
-        }
+    Packet packet = packetQueue.pop();
+    emit requestPacket();
+    //qDebug()<<DECODING<<"packet received, decoding... packet size ="<<packet.get()->size;
+    int ret = avcodec_send_packet(codec_context, packet.get());
+
+    if (ret < 0) {
+        qDebug()<<"Error sending video packet: "<<ret;
+        return;
     }
+
 
     //AVFrame *frame = av_frame_alloc();
     Frame frame;
     while (avcodec_receive_frame(codec_context, frame.get()) == 0)
     {
-
         Frame filtered_frame = filters->applyFilters(frame.get());
 
         //qDebug()<<IMAGE<<"Received frame, formating it";
@@ -111,10 +110,10 @@ void VideoContext::push_frame_to_queue()
             codec_context->height,
             rgbFrame->data,
             rgbFrame->linesize
-            );
+        );
         QImage image(rgbFrame->data[0], codec_context->width, codec_context->height, rgbFrame->linesize[0], QImage::Format_RGB32);
         qint64 imagetime = filtered_frame->best_effort_timestamp * 1000 * time_base.num / time_base.den;
-        ImageFrame imageFrame(std::move(QVideoFrame(image.copy())),imagetime);
+        ImageFrame imageFrame(QVideoFrame(image),imagetime);
 
         output->imageQueue.push(std::move(imageFrame));
         //qDebug()<<IMAGE<<"Notifying about new image";
@@ -122,24 +121,20 @@ void VideoContext::push_frame_to_queue()
 
         av_frame_unref(frame.get());
     }
-    //av_frame_free(&frame);
 }
 
 void VideoContext::set_brightness(qreal value)
 {
-    qDebug("Invoking set_brightness");
     filters->set_brightness(value);
 }
 
 void VideoContext::set_contrast(qreal value)
 {
-    qDebug("Invoking set_contrast");
     filters->set_contrast(value);
 }
 
 void VideoContext::set_saturation(qreal value)
 {
-    qDebug("Invoking set_saturation");
     filters->set_saturation(value);
 }
 

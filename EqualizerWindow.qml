@@ -27,87 +27,87 @@ Item{
             leftMargin: 30
             rightMargin: 30
         }
-        spacing: 30
         height: parent.height * 0.6
+        spacing: 30
 
-        Column {
+        ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
             Slider {
                 id: low_slider
+                Layout.fillWidth: true
                 orientation: Qt.Vertical
                 value: 0.5
-                anchors.horizontalCenter: parent.horizontalCenter
             }
             Text {
+                Layout.fillWidth: true
                 text: "low"
                 color: "white"
                 font.pointSize: 16
                 font.bold: true
                 horizontalAlignment: Text.AlignHCenter
-                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
 
-        Column {
+        ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
             Slider {
                 id: mid_slider
+                Layout.fillWidth: true
                 orientation: Qt.Vertical
                 value: 0.5
-                anchors.horizontalCenter: parent.horizontalCenter
             }
             Text {
+                Layout.fillWidth: true
                 text: "mid"
                 color: "white"
                 font.pointSize: 16
                 font.bold: true
                 horizontalAlignment: Text.AlignHCenter
-                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
 
-        Column {
+        ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
             Slider {
                 id: high_slider
+                Layout.fillWidth: true
                 orientation: Qt.Vertical
                 value: 0.5
-                anchors.horizontalCenter: parent.horizontalCenter
             }
             Text {
+                Layout.fillWidth: true
                 text: "high"
                 color: "white"
                 font.pointSize: 16
                 font.bold: true
                 horizontalAlignment: Text.AlignHCenter
-                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
     }
-    Row{
-        anchors{
+    RowLayout {
+        anchors {
             top: settings.bottom
             bottom: root.bottom
             left: root.left
             right: root.right
-            leftMargin: 20
-            rightMargin: 20
             topMargin: 30
             bottomMargin: 10
+            leftMargin: 20
+            rightMargin: 20
         }
+
+        spacing: 20
+
         Button {
             id: resetbutton
-            anchors.left: parent.left
-            anchors.leftMargin: 10
-            anchors.verticalCenter: parent.verticalCenter
-            width: root.width*0.3
-            height: parent.height*0.7
+            Layout.preferredWidth: root.width * 0.3
+            Layout.preferredHeight: parent.height * 0.7
 
             contentItem: Text {
                 verticalAlignment: Text.AlignVCenter
@@ -118,6 +118,7 @@ Item{
                 font.bold: true
                 font.pointSize: 14
             }
+
             background: Rectangle {
                 color: resetbutton.hovered ? "#535353" : "#3A3A3A"
                 border.width: resetbutton.pressed ? 3 : 0
@@ -125,19 +126,20 @@ Item{
                 radius: 55
                 opacity: 0.5
             }
+
             onClicked: {
-                low_slider.value = 0.5;
-                mid_slider.value = 0.5;
-                high_slider.value = 0.5;
+                low_slider.value = 0.5
+                mid_slider.value = 0.5
+                high_slider.value = 0.5
             }
         }
+
+        Item { Layout.fillWidth: true }
+
         Button {
             id: closebutton
-            anchors.right: parent.right
-            anchors.rightMargin: 10
-            anchors.verticalCenter: parent.verticalCenter
-            width: root.width*0.3
-            height: parent.height*0.7
+            Layout.preferredWidth: root.width * 0.3
+            Layout.preferredHeight: parent.height * 0.7
 
             contentItem: Text {
                 verticalAlignment: Text.AlignVCenter
@@ -148,6 +150,7 @@ Item{
                 font.bold: true
                 font.pointSize: 14
             }
+
             background: Rectangle {
                 color: closebutton.hovered ? "#535353" : "#3A3A3A"
                 border.width: closebutton.pressed ? 3 : 0
@@ -155,6 +158,7 @@ Item{
                 radius: 55
                 opacity: 0.5
             }
+
             onClicked: root.visible = false
         }
     }

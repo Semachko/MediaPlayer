@@ -5,26 +5,26 @@ Item {
     id: root
     OptionsButton {
         id: optionsbutton
+        anchors.centerIn: root
         onClicked: {
-            if(popup.closed){
+            if (popup.closed) {
                 popup.x = x
                 popup.y = y - popup.height - 60
                 popup.open()
-            }
-            else{
+            } else {
                 popup.close()
             }
         }
     }
 
-    signal filtersClicked()
-    signal equalizerClicked()
-    signal shuffleClicked()
-    signal repeatClicked()
+    signal filtersClicked
+    signal equalizerClicked
+    signal shuffleClicked
+    signal repeatClicked
     Popup {
         id: popup
-        width: 230
-        height: 200
+        implicitWidth: 230
+        implicitHeight: 200
         modal: false
         focus: true
         background: Rectangle {
@@ -42,7 +42,7 @@ Item {
                 iconSRC: "qrc:/images/filters.svg"
                 onClicked: {
                     popup.close()
-                    root.onFiltersClicked();
+                    root.onFiltersClicked()
                 }
             }
             ToolsMenuButton {
@@ -51,7 +51,7 @@ Item {
                 iconSRC: "qrc:/images/equalizer.svg"
                 onClicked: {
                     popup.close()
-                    root.onEqualizerClicked();
+                    root.onEqualizerClicked()
                 }
             }
             ToolsMenuButton {
@@ -60,7 +60,7 @@ Item {
                 iconSRC: "qrc:/images/shuffle.svg"
                 onClicked: {
                     popup.close()
-                    root.onShuffleClicked();
+                    root.onShuffleClicked()
                 }
             }
             ToolsMenuButton {
@@ -69,7 +69,7 @@ Item {
                 iconSRC: "qrc:/images/repeat.svg"
                 onClicked: {
                     popup.close()
-                    root.onRepeatClicked();
+                    root.onRepeatClicked()
                 }
             }
         }

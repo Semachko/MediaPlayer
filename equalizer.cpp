@@ -16,7 +16,7 @@ Equalizer::Equalizer(AVCodecContext* cod_ctx) : codec_context(cod_ctx){
 Frame Equalizer::applyEqualizer(AVFrame *frame)
 {
     QMutexLocker _(&mutex);
-    qDebug()<<"Input frame format:"<<frame->format;
+    //qDebug()<<"Input frame format:"<<frame->format;
 
     Frame equalized_frame;
     av_buffersrc_add_frame(buffersrc_ctx, frame);
@@ -24,28 +24,25 @@ Frame Equalizer::applyEqualizer(AVFrame *frame)
     // }
     av_buffersink_get_frame(buffersink_ctx, equalized_frame.get());
 
-    qDebug()<<"Equalized format:"<<equalized_frame->format;
+    //qDebug()<<"Equalized format:"<<equalized_frame->format;
 
     return equalized_frame;
 }
 
 void Equalizer::set_low(qreal value)
 {
-    qDebug()<<"low setted";
     low = value;
     update_equalizer();
 }
 
 void Equalizer::set_mid(qreal value)
 {
-    qDebug()<<"mid setted";
     mid = value;
     update_equalizer();
 }
 
 void Equalizer::set_high(qreal value)
 {
-    qDebug()<<"high setted";
     high = value;
     update_equalizer();
 }
@@ -88,8 +85,8 @@ void Equalizer::update_equalizer()
         "aformat=sample_fmts=fltp,equalizer=f=100:width_type=h:width=400:g=" + std::to_string(low)
         + ",equalizer=f=1000:width_type=h:width=2000:g=" + std::to_string(mid)
         + ",equalizer=f=8000:width_type=h:width=8000:g=" + std::to_string(high);
-    //+ ",aformat=sample_fmts=flt";
-    qDebug() << "filter_descr:" << filter_descr.c_str();
+
+    //qDebug() << "filter_descr:" << filter_descr.c_str();
 
     if (avfilter_graph_parse_ptr(filter_graph, filter_descr.c_str(), &inputs, &outputs, nullptr) < 0)
         qDebug() << "Error to resolve filter";

@@ -17,8 +17,8 @@ void FrameOutput::start_output()
     {
         sync->check_pause();
         QMutexLocker q(&conditionMutex);
-        //qDebug()<<OUTPUT<<"Checking is image queue empty";
-        //qDebug()<<OUTPUT<<"Image queue size ="<<imageQueue.size();
+        qDebug()<<OUTPUT<<"Checking is image queue empty";
+        qDebug()<<OUTPUT<<"Image queue size ="<<imageQueue.size();
         while(imageQueue.empty()){
             //qDebug()<<OUTPUT<<"Queue is empty, waiting for images";
             imageReady.wait(&conditionMutex);
@@ -32,7 +32,7 @@ void FrameOutput::start_output()
         ImageFrame imageFrame = imageQueue.pop();
 
         qint64 delay = imageFrame.time - sync->get_time();
-        //qDebug()<<"Delay: "<<delay;
+        qDebug()<<"Delay: "<<delay;
         if (delay>0)
             QThread::msleep(delay);
 
