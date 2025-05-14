@@ -113,7 +113,7 @@ void VideoContext::push_frame_to_queue()
         );
         QImage image(rgbFrame->data[0], codec_context->width, codec_context->height, rgbFrame->linesize[0], QImage::Format_RGB32);
         qint64 imagetime = filtered_frame->best_effort_timestamp * 1000 * time_base.num / time_base.den;
-        ImageFrame imageFrame(QVideoFrame(image),imagetime);
+        ImageFrame imageFrame(QVideoFrame(std::move(image)),imagetime);
 
         output->imageQueue.push(std::move(imageFrame));
         //qDebug()<<IMAGE<<"Notifying about new image";
