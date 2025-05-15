@@ -6,6 +6,8 @@ extern "C" {
 }
 
 #include <QObject>
+#include <vector>
+#include <unordered_map>
 
 #include "videocontext.h"
 #include "audiocontext.h"
@@ -15,18 +17,19 @@ class Demuxer : public QObject
 {
     Q_OBJECT
 public:
-    explicit Demuxer(AVFormatContext* format_context,Synchronizer* sync,QMutex& formatMutex,VideoContext* video, AudioContext* audio);
+    explicit Demuxer(AVFormatContext* format_context,Synchronizer* sync,QMutex& formatMutex, qint64 bufferization_time);
 
+    void add_context(int stream_id, IMediaContext* context);
     void demuxe_packets();
-    bool push_packet_to_queues();
+    void push_packets_to_queues();
 private:
 private:
     AVFormatContext* format_context;
     Synchronizer* sync;
     QMutex& formatMutex;
 
-    VideoContext* video = nullptr;
-    AudioContext* audio = nullptr;
+    qint64 bufferization_time;
+    std::unordered_map<int,IMediaContext*> medias;
 };
 
 #endif // DEMUXER_H

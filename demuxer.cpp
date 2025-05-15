@@ -5,14 +5,18 @@
 
 constexpr auto PACKET = "\033[33m[Packet]\033[0m";
 
-Demuxer::Demuxer(AVFormatContext* format_context, Synchronizer *sync, QMutex &formatMutex, VideoContext* video, AudioContext* audio)
+Demuxer::Demuxer(AVFormatContext* format_context, Synchronizer *sync, QMutex &formatMutex,qint64 bufferization_time)
     :
     format_context(format_context),
     sync(sync),
     formatMutex(formatMutex),
-    video(video),
-    audio(audio)
+    bufferization_time(bufferization_time)
 {
+}
+
+void Demuxer::add_context(int stream_id, IMediaContext* context)
+{
+    medias[stream_id] = context;
 }
 
 void Demuxer::demuxe_packets()
@@ -22,32 +26,31 @@ void Demuxer::demuxe_packets()
     // qDebug()<<"Max audio queue size = "<<audio->packetQueue.max_size;
     // qDebug()<<"Curr video queue size = "<<video->packetQueue.size();
     // qDebug()<<"Curr audio queue size = "<<audio->packetQueue.size();
-    while(video->packetQueue.size() + audio->packetQueue.size() < video->packetQueue.max_size + audio->packetQueue.max_size)
-        if (!push_packet_to_queues())
-            return;
+    push_packets_to_queues();
 }
 
-bool Demuxer::push_packet_to_queues()
+void Demuxer::push_packets_to_queues()
 {
     QMutexLocker _(&formatMutex);
-    //AVPacket *packet = av_packet_alloc();
-    Packet packet;
-    int res = av_read_frame(format_context, packet.get());
-    if (res<0)
-        return false;
-    //qDebug()<<"Stream index"<<packet->stream_index;
-    if (audio->stream_id>=0 && packet->stream_index == audio->stream_id){
-        audio->packetQueue.push(std::move(packet));
-        //qDebug()<<PACKET<<"Pushed packet to audio queue";
-        emit audio->newPacketArrived();
-        //qDebug()<<PACKET<<"Signal emited";
-    }
-    else if(video->stream_id>=0 && packet->stream_index == video->stream_id){
-        video->packetQueue.push(std::move(packet));
-        //qDebug()<<PACKET<<"Pushed packet to video queue";
-        emit video->newPacketArrived();
+    bool is_buffering = true;
+    while(is_buffering)
+    {
+        Packet packet = make_shared_packet();
+        int res = av_read_frame(format_context, packet.get());
+        if (res<0)
+            return;
+
+        qint64 msduration = packet->duration * av_q2d(packet->time_base) * 1000;
+        qint64 curr_duration = sync->get_time();
+        if (msduration - curr_duration > bufferization_time)
+            is_buffering = false;
+
+        if (medias.contains(packet->stream_index)){
+            IMediaContext* media = medias[packet->stream_index];
+            media->packetQueue.push(std::move(packet));
+            emit media->newPacketArrived();
+        }
     }
     //qDebug()<<PACKET<<"Video queue size ="<<video->packetQueue.size();
     //qDebug()<<PACKET<<"Audio queue size ="<<audio->packetQueue.size();
-    return true;
 }

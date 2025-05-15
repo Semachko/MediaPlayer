@@ -8,17 +8,19 @@ extern "C" {
 #include <libavutil/opt.h>
 #include <libavutil/channel_layout.h>
 #include <libavutil/avutil.h>
+#include "libavutil/imgutils.h"
 }
+#include "frame.h"
 
 class ImageConverter
 {
 public:
-    ImageConverter();
-    AVFrame* convert(AVFrame* input);
+    ImageConverter(AVCodecContext* codec_context);
+    Frame convert(Frame input);
 
 private:
-    SwsContext* converter_context;
-
+    Frame output;
+    SwsContext* converter;
 };
 
 #endif // IMAGECONVERTER_H

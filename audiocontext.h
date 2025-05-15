@@ -13,8 +13,13 @@ extern "C" {
 #include <libavutil/opt.h>
 #include <libavutil/channel_layout.h>
 #include <libavutil/avutil.h>
+
+#include <libavfilter/avfilter.h>
+#include <libavfilter/buffersink.h>
+#include <libavfilter/buffersrc.h>
 }
 
+#include "imediacontext.h"
 #include "audioiodevice.h"
 #include "synchronizer.h"
 #include "queue.h"
@@ -22,19 +27,17 @@ extern "C" {
 #include "equalizer.h"
 #include "sampleconverter.h"
 
-class AudioContext : public QObject
+class AudioContext : public IMediaContext
 {
     Q_OBJECT
 public:
     AudioContext(AVFormatContext* format_context, Synchronizer* sync);
 
-    void push_frame_to_buffer();
+    void push_frame_to_buffer() override;
     void set_low(qreal value);
     void set_mid(qreal value);
     void set_high(qreal value);
-signals:
-    void requestPacket();
-    void newPacketArrived();
+
 private:
     AVSampleFormat convert_to_AVFormat(QAudioFormat::SampleFormat format);
 ///////////////////////////////////////////////
@@ -48,10 +51,9 @@ public:
     QAudioFormat format;
 
     AVCodecContext* codec_context;
-    Queue<Packet> packetQueue;
-    QMutex decodingMutex;
+    QMutex audioMutex;
 private:
-    SwrContext* resampleContext;
+    SampleConverter* converter;
     Equalizer* equalizer;
 
     Synchronizer* sync;

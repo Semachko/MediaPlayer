@@ -43,11 +43,11 @@ Filters::Filters(AVCodecParameters* codec_parameters, AVRational time_base)
     // avfilter_graph_config(filter_graph, NULL);
 }
 
-Frame Filters::applyFilters(AVFrame* frame)
+Frame Filters::applyFilters(Frame frame)
 {
     QMutexLocker _(&mutex);
-    Frame filtered_frame;
-    av_buffersrc_add_frame(buffersrc_ctx, frame);
+    Frame filtered_frame = make_shared_frame();
+    av_buffersrc_add_frame(buffersrc_ctx, frame.get());
     // while (av_buffersink_get_frame(buffersink_ctx, filtered_frame.get()) >= 0) {
     // }
     av_buffersink_get_frame(buffersink_ctx, filtered_frame.get());

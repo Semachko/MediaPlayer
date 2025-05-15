@@ -7,8 +7,7 @@ extern "C" {
 #include <libavfilter/avfilter.h>
 #include <libavfilter/buffersink.h>
 #include <libavfilter/buffersrc.h>
-#include "libavformat/avformat.h"
-#include "libavutil/opt.h"
+#include <libavcodec/avcodec.h>
 }
 
 #include <QMutex>
@@ -18,9 +17,8 @@ extern "C" {
 class Equalizer
 {
 public:
-    //explicit Equalizer(QAudioFormat&,AVSampleFormat sampleFormat);
     explicit Equalizer(AVCodecContext* codec_context);
-    Frame applyEqualizer(AVFrame* frame);
+    Frame applyEqualizer(Frame frame);
     void set_low(qreal value);
     void set_mid(qreal value);
     void set_high(qreal value);

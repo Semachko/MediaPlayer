@@ -1,142 +1,162 @@
+#include <QtConcurrent>
+#include <QElapsedTimer>
+#include <QVideoFrame>
+#include <utility>
+
 #include "media.h"
-#include <QDebug>
 
-Media::Media() {
-    mediacontext = new MediaContext();
-    mediaThread = new QThread(this);
-    mediacontext->moveToThread(mediaThread);
-    mediaThread->start();
+Media::Media(){
+    connect(this,&Media::fileChanged,this,&Media::set_file);
+    connect(this,&Media::playORpause,this,&Media::resume_pause);
+    connect(this,&Media::sliderPause,this,&Media::slider_pause);
+    connect(this,&Media::volumeChanged,this,&Media::change_volume);
+    connect(this,&Media::muteORunmute,this,&Media::mute_unmute);
+    connect(this,&Media::timeChanged,this,&Media::change_time);
 
-    connect(mediacontext,&MediaContext::outputGlobalTime,this,&Media::globalTime);
-    connect(mediacontext,&MediaContext::outputTime,this,[this](qint64 time,qreal pos){
-        // qDebug()<<"curr_time ="<<time;
-        // qDebug()<<"pos ="<<pos;
-        emit newTime(time);
+}
 
-        m_currentPosition=pos;
-        emit currentPositionChanged(m_currentPosition);
+void Media::set_file(const QUrl &filename,QVideoSink* sink)
+{
+    videosink = sink;
+
+    qDebug()<<filename.toLocalFile();
+    if (format_context!=nullptr){
+        delete video;
+        delete audio;
+        avformat_close_input(&format_context);
+    }
+    avformat_open_input(&format_context, filename.toLocalFile().toStdString().c_str(), nullptr, nullptr);
+    avformat_find_stream_info(format_context, nullptr);
+
+    emit outputGlobalTime(format_context->duration/1000);
+
+    sync = new Synchronizer(this);
+
+    updateTimer = new QTimer(this);
+    connect(updateTimer, &QTimer::timeout, this, [this]() {
+        qint64 curr_time = sync->get_time();
+        qreal pos = curr_time/(format_context->duration/1000.0);
+        emit outputTime(curr_time, pos);
     });
-    //connect(mediacontext,&MediaContext::moveSliderPosition,this,&Media::sliderPositionChanged);
+    updateTimer->start(100);
+
+    // How many milliseconds forward we want to bufferize
+    const qint64 bufferization_time = 500;
+    demuxer = new Demuxer(format_context, sync, formatMutex, bufferization_time);
+    demuxerThread = new QThread(this);
+    demuxer->moveToThread(demuxerThread);
+    demuxerThread->start();
+
+    video = new VideoContext(format_context, sync, videosink);
+    if (video->stream_id >= 0){
+        videoThread = new QThread(this);
+        video->moveToThread(videoThread);
+        videoThread->start();
+        demuxer->add_context(video->stream_id, video);
+    }
+
+    audio = new AudioContext(format_context, sync);
+    if (audio->stream_id >= 0){
+        audioThread = new QThread(this);
+        audio->moveToThread(audioThread);
+        audioThread->start();
+        demuxer->add_context(audio->stream_id, audio);
+    }
+
+
+    connect(video,&VideoContext::requestPacket,demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
+    connect(audio,&AudioContext::requestPacket,demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
+
+    connect(this,&Media::brightnessChanged,static_cast<VideoContext*>(video),&VideoContext::set_brightness);
+    connect(this,&Media::contrastChanged,static_cast<VideoContext*>(video),&VideoContext::set_contrast);
+    connect(this,&Media::saturationChanged,static_cast<VideoContext*>(video),&VideoContext::set_saturation);
+
+    connect(this,&Media::lowChanged,static_cast<AudioContext*>(audio),&AudioContext::set_low);
+    connect(this,&Media::midChanged,static_cast<AudioContext*>(audio),&AudioContext::set_mid);
+    connect(this,&Media::highChanged,static_cast<AudioContext*>(audio),&AudioContext::set_high);
+
+    QMetaObject::invokeMethod(demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
 }
 
-QVideoSink *Media::videoSink() const
+void Media::resume_pause()
 {
-    return m_videoSink;
+    sync->play_or_pause();
+    if(sync->isPaused){
+        updateTimer->stop();
+        QMetaObject::invokeMethod(audio, [this](){
+            audio->audioSink->suspend();
+        });
+    }
+    else{
+        updateTimer->start(100);
+        QMetaObject::invokeMethod(audio, [this](){
+            audio->audioSink->resume();
+        });
+    }
 }
 
-void Media::setVideoSink(QVideoSink *sink)
+void Media::slider_pause()
 {
-    if (m_videoSink == sink)
+    if(!sync->isPaused){
+        resume_pause();
+        isTemporaryPaused=true;
+    }
+}
+
+void Media::change_volume(qreal value)
+{
+    audio->last_volume=value;
+    if (!audio->isMuted)
+        audio->audioSink->setVolume(value);
+}
+
+void Media::mute_unmute()
+{
+    if(audio->isMuted)
+        audio->audioSink->setVolume(audio->last_volume);
+    else
+        audio->audioSink->setVolume(0);
+    audio->isMuted=!audio->isMuted;
+}
+
+
+void Media::change_time(qreal position)
+{
+    QMutexLocker f(&formatMutex);
+    QMutexLocker v(&video->decodingMutex);
+    QMutexLocker a(&audio->audioMutex);
+    video->packetQueue.clear();
+    audio->packetQueue.clear();
+
+    avcodec_flush_buffers(video->codec_context);
+    avcodec_flush_buffers(audio->codec_context);
+
+    QMutexLocker o(&video->output->queueMutex);
+    video->output->imageQueue.clear();
+    //audio->audioDevice->clear();
+    audio->audioDevice->readAll();
+
+    audio->audioSink->stop();
+    QAudioSink* oldSink = audio->audioSink;
+    oldSink->deleteLater();
+    audio->audioSink = new QAudioSink(audio->format, this);
+    audio->audioSink->setVolume(audio->last_volume);
+    audio->audioSink->start(audio->audioDevice);
+    audio->audioSink->suspend();
+
+    int64_t seek_target = format_context->duration * position;
+    sync->clock->set_time(seek_target/1000);
+
+    int res = av_seek_frame(format_context, -1, seek_target, AVSEEK_FLAG_BACKWARD);
+    if (res) {
+        qWarning() << "No such time";
         return;
-    m_videoSink = sink;
-}
-
-void Media::setFile(const QUrl &filename)
-{
-    if (mediacontext->video)
-        disconnect(connection);
-    //emit mediacontext.fileChanged(filename);
-    emit mediacontext->fileChanged(filename,m_videoSink);
-    emit fileSetted();
-}
-
-void Media::output_image(QVideoFrame frame)
-{
-    //qDebug()<<"\033[32m[Screen]\033[0m Outputing image, size = "<<frame.size();
-    m_videoSink->setVideoFrame(frame);
-}
-
-void Media::playORpause()
-{
-    // if (!connection)
-    //     connect(mediacontext->video->output, &FrameOutput::imageToOutput, this, &Media::output_image);
-    emit mediacontext->playORpause();
-}
-
-void Media::muteORunmute()
-{
-    emit mediacontext->muteORunmute();
-}
-
-void Media::volumeChanged(qreal volume)
-{
-    emit mediacontext->volumeChanged(volume);
-}
-
-void Media::timeChanged(qreal time)
-{
-    emit mediacontext->timeChanged(time);
-}
-
-void Media::sliderPause()
-{
-    emit mediacontext->sliderPause();
-}
-
-void Media::add5sec()
-{
-
-}
-
-void Media::subtruct5sec()
-{
-
-}
-
-void Media::repeatMedia()
-{
-
-}
-
-void Media::shuffleMedia()
-{
-
-}
-
-void Media::changeBrightness(qreal value)
-{
-    // from -1 to 1
-    qreal brightness_val = value * 2.0 - 1.0;
-    emit mediacontext->brightnessChanged(brightness_val);
-}
-
-void Media::changeContrast(qreal value)
-{
-    // from 0 to 2
-    qreal contrast_val = value * 2.0;
-    emit mediacontext->contrastChanged(contrast_val);
-}
-
-void Media::changeSaturation(qreal value)
-{
-    // from 0 to 3
-    qreal saturation_val = value * 3.0;
-    emit mediacontext->saturationChanged(saturation_val);
-}
-
-void Media::changeLowSounds(qreal value)
-{
-    // from -12 to 12
-    qreal dB = value * 56.0 - 28.0;
-    emit mediacontext->lowChanged(dB);
-}
-
-void Media::changeMidSounds(qreal value)
-{
-    // from -12 to 12
-    qreal dB = value * 56.0 - 28.0;
-    emit mediacontext->midChanged(dB);
-}
-
-void Media::changeHighSounds(qreal value)
-{
-    // from -12 to 12
-    qreal dB = value * 56.0 - 28.0;
-    emit mediacontext->highChanged(dB);
+    }
+    if(isTemporaryPaused){
+        resume_pause();
+        isTemporaryPaused=false;
+    }
 }
 
 
-qreal Media::currentPosition() const
-{
-    return m_currentPosition;
-}
+

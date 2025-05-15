@@ -1,11 +1,6 @@
 #ifndef SYNCHRONIZER_H
 #define SYNCHRONIZER_H
 
-extern "C" {
-    #include "libavutil/frame.h"
-    #include "libavcodec/packet.h"
-}
-
 #include <QObject>
 #include <QMutex>
 #include <QWaitCondition>

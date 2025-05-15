@@ -9,22 +9,27 @@ extern "C" {
 #include <libavutil/channel_layout.h>
 #include <libavutil/avutil.h>
 }
+#include <QAudioSink>
+#include "frame.h"
+
+struct SampleFormat{
+    int format;
+    int sample_rate;
+    AVChannelLayout layout;
+};
+
 
 class SampleConverter
 {
 public:
-    SampleConverter();
-    AVFrame* convert(AVFrame* input);
+    SampleConverter(AVCodecContext* input, SampleFormat output);
+    Frame convert(Frame input);
+    Frame flush();
 
-    void set_out_format(AVSampleFormat);
-    void set_out_sample_rate(int);
-    void set_out_layout(AVChannelLayout);
 private:
     SwrContext* converter_context;
-
-    int out_format;
-    int out_sample_rate;
-    AVChannelLayout out_layout;
+    SampleFormat output_format;
 };
+
 
 #endif // SAMPLECONVERTER_H

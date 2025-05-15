@@ -5,8 +5,8 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
-#include "mediacontext.h"
 #include "media.h"
+#include "player.h"
 
 int main(int argc, char *argv[])
 {
@@ -19,12 +19,10 @@ int main(int argc, char *argv[])
         &app,
         []() { QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
+
+    Player* player = new Player();
+    engine.rootContext()->setContextProperty("player", player);
+
     engine.loadFromModule("MediaPlayer", "Main");
-
-    // MediaContext* mediaplayer = new MediaContext();
-    // engine.rootContext()->setContextProperty("mediaplayer", mediaplayer);
-    Media* media = new Media();
-    engine.rootContext()->setContextProperty("media", media);
-
     return app.exec();
 }

@@ -1,57 +1,84 @@
 #ifndef MEDIA_H
 #define MEDIA_H
 
-#include <QObject>
-#include "mediacontext.h"
+extern "C" {
+#include "libavformat/avformat.h"
+#include <libavutil/imgutils.h>
+#include "libavutil/opt.h"
+#include "libswresample/swresample.h"
+#include <libswscale/swscale.h>
+#include <libavutil/avutil.h>
+}
+#include <QString>
+#include <QVideoSink>
+#include <QUrl>
+#include <QMutex>
 
-class Media: public QObject
+#include <atomic>
+#include <condition_variable>
+
+#include "videocontext.h"
+#include "audiocontext.h"
+#include "demuxer.h"
+#include "clock.h"
+#include "synchronizer.h"
+
+class Media : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QVideoSink* videoSink READ videoSink WRITE setVideoSink)
-    Q_PROPERTY(qreal currentPosition READ currentPosition NOTIFY currentPositionChanged)
-    //Q_PROPERTY(qint64 currentTime READ currentTime NOTIFY currentTimeChanged)
 
 public:
     Media();
-    QVideoSink* videoSink() const;
-    void setVideoSink(QVideoSink* sink);
-    qreal currentPosition() const;
-    //qint64 currentTime() const;
 
-    Q_INVOKABLE void setFile(const QUrl& filename);
-    Q_INVOKABLE void playORpause();
-    Q_INVOKABLE void muteORunmute();
-    Q_INVOKABLE void volumeChanged(qreal volume);
-    Q_INVOKABLE void timeChanged(qreal time);
+    void set_file(const QUrl& filename,QVideoSink* videosink);
+    void resume_pause();
+    void slider_pause();
+    void mute_unmute();
+    void change_volume(qreal);
+    void change_time(qreal);
 
-    Q_INVOKABLE void sliderPause();
-
-    Q_INVOKABLE void add5sec();
-    Q_INVOKABLE void subtruct5sec();
-    Q_INVOKABLE void repeatMedia();
-    Q_INVOKABLE void shuffleMedia();
-
-    Q_INVOKABLE void changeBrightness(qreal value);
-    Q_INVOKABLE void changeContrast(qreal value);
-    Q_INVOKABLE void changeSaturation(qreal value);
-
-    Q_INVOKABLE void changeLowSounds(qreal value);
-    Q_INVOKABLE void changeMidSounds(qreal value);
-    Q_INVOKABLE void changeHighSounds(qreal value);
 signals:
-    Q_SIGNAL void globalTime(qint64 time);
-    Q_SIGNAL void newTime(qint64 time);
-    Q_SIGNAL void currentPositionChanged(qreal pos);
-    Q_SIGNAL void fileSetted();
+    void fileChanged(const QUrl,QVideoSink*);
+    void playORpause();
+    void sliderPause();
+    void muteORunmute();
+    void volumeChanged(qreal);
+    void timeChanged(qreal);
 
+    void outputTime(qint64,qreal);
+    void outputGlobalTime(qint64);
+
+    void brightnessChanged(qreal);
+    void contrastChanged(qreal);
+    void saturationChanged(qreal);
+
+    void lowChanged(qreal);
+    void midChanged(qreal);
+    void highChanged(qreal);
+
+// private:
+//     void fill_packetQueue();
+//     bool push_packet_to_queues();
+
+public:
+    VideoContext* video = nullptr;
+    AudioContext* audio = nullptr;
+    Demuxer* demuxer;
 private:
-    void output_image(QVideoFrame frame);
-private:
-    QVideoSink* m_videoSink;
-    MediaContext* mediacontext;
-    QThread* mediaThread;
-    QMetaObject::Connection connection;
-    qreal m_currentPosition;
+    AVFormatContext* format_context = nullptr;
+
+    QVideoSink* videosink;
+    QAudioSink* audiosink;
+
+    QThread* audioThread;
+    QThread* videoThread;
+    QThread* demuxerThread;
+
+    Synchronizer* sync;
+    QMutex formatMutex;
+    bool isTemporaryPaused = false;
+
+    QTimer* updateTimer;
 };
 
 #endif // MEDIA_H

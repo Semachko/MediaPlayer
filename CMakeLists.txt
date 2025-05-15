@@ -2,15 +2,17 @@ cmake_minimum_required(VERSION 3.21.1)
 
 project(MediaPlayer VERSION 0.1 LANGUAGES CXX)
 
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Qml Quick QuickTimeline Concurrent Multimedia ShaderTools)
 qt_standard_project_setup(REQUIRES 6.8)
 
 qt_add_executable(appMediaPlayer
     main.cpp
+    player.h player.cpp
     media.h media.cpp
-    mediacontext.h mediacontext.cpp
     videocontext.h videocontext.cpp
     frameoutput.h frameoutput.cpp
     audiocontext.h audiocontext.cpp
@@ -50,6 +52,7 @@ qt_add_qml_module(appMediaPlayer
     EqualizerWindow.qml
     SpeedButton.qml
     SpeedSlider.qml
+    SOURCES imediacontext.h
 )
 
 qt_add_resources(appMediaPlayer

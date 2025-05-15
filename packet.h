@@ -1,42 +1,50 @@
 #ifndef PACKET_H
 #define PACKET_H
 
+
+#include <memory>
 extern "C" {
-    #include "libavcodec/avcodec.h"
+#include "libavcodec/packet.h"
 }
 
-class Packet
-{
-public:
-    AVPacket* pkt;
+using Packet = std::shared_ptr<AVPacket>;
 
-public:
-    Packet() {
-        pkt = av_packet_alloc();
-    }
-    ~Packet() {
-        av_packet_free(&pkt);
-    }
+inline Packet make_shared_packet() {
+    return Packet(av_packet_alloc(), [](AVPacket* f){ av_packet_free(&f); });
+}
 
-    Packet(const Packet&) = delete;
-    Packet& operator=(const Packet&) = delete;
+// class Packet
+// {
+// public:
+//     AVPacket* pkt;
 
-    Packet(Packet&& other) noexcept {
-        pkt = other.pkt;
-        other.pkt = nullptr;
-    }
-    Packet& operator=(Packet&& other) noexcept {
-        if (this != &other) {
-            av_packet_free(&pkt);
-            pkt = other.pkt;
-            other.pkt = nullptr;
-        }
-        return *this;
-    }
+// public:
+//     Packet() {
+//         pkt = av_packet_alloc();
+//     }
+//     ~Packet() {
+//         av_packet_free(&pkt);
+//     }
 
-    AVPacket* operator->() { return pkt; }
-    AVPacket* get() const { return pkt; }
-};
+//     Packet(const Packet&) = delete;
+//     Packet& operator=(const Packet&) = delete;
+
+//     Packet(Packet&& other) noexcept {
+//         pkt = other.pkt;
+//         other.pkt = nullptr;
+//     }
+//     Packet& operator=(Packet&& other) noexcept {
+//         if (this != &other) {
+//             av_packet_free(&pkt);
+//             pkt = other.pkt;
+//             other.pkt = nullptr;
+//         }
+//         return *this;
+//     }
+
+//     AVPacket* operator->() { return pkt; }
+//     AVPacket* get() const { return pkt; }
+// };
 
 
 #endif // PACKET_H

@@ -4,7 +4,10 @@
 #include "audiocontext.h"
 #include "frame.h"
 
-AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync) : sync(sync), packetQueue(16)
+constexpr auto DECODING = "\033[31m[Decoding]\033[0m";
+constexpr auto SAMPLE = "\033[35m[Sample]\033[0m";
+
+AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync) : IMediaContext(16), sync(sync)
 {
     stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
     if (stream_id<0)
@@ -23,19 +26,19 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync) 
     qDebug() << "Sample rate:" << format.sampleRate();
     qDebug() << "Channel count:" << format.channelCount();
     if (!QMediaDevices::defaultAudioOutput().isFormatSupported(format)) {
-        qWarning() << "Format not supported!";
+        qWarning() << "Error with supporting default audio device!";
         stream_id = -1;
         return;
-    } else
-        qDebug()<<"Format is supported!";
+    }
 
     equalizer = new Equalizer(codec_context);
 
     AVChannelLayout outlayout;
     av_channel_layout_default(&outlayout, format.channelCount());
+    SampleFormat outputFormat{convert_to_AVFormat(format.sampleFormat()),format.sampleRate(),outlayout};
+    converter = new SampleConverter(codec_context,outputFormat);
 
     audioDevice = new AudioIODevice(sync,this);
-
     audioSink = new QAudioSink(format, this);
     audioSink->setVolume(last_volume);
     audioSink->start(audioDevice);
@@ -45,13 +48,11 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync) 
     connect(audioDevice, &AudioIODevice::dataReaded, this,&AudioContext::push_frame_to_buffer, Qt::QueuedConnection);
 }
 
-constexpr auto DECODING = "\033[31m[Decoding]\033[0m";
-constexpr auto SAMPLE = "\033[35m[Sample]\033[0m";
 
 void AudioContext::push_frame_to_buffer()
 {
     sync->check_pause();
-    QMutexLocker _(&decodingMutex);
+    QMutexLocker _(&audioMutex);
     //qDebug()<<DECODING<<"New packet arrived. Popping it";
     // qDebug()<<DECODING<<"Audio device buffer size ="<<audioDevice->buffer.size();
     // qDebug()<<DECODING<<"Audio device buffer size ="<<audioDevice->max_buffer_size;
@@ -70,29 +71,17 @@ void AudioContext::push_frame_to_buffer()
     //qDebug()<<DECODING<<"Audio packet size = "<<packet->size;
     int ret = avcodec_send_packet(codec_context, packet.get());
     if (ret < 0) {
-        qDebug()<<"Error sending video packet: "<<ret;
+        qDebug()<<"Error sending audio packet: "<<ret;
         return;
     }
 
-    Frame frame;
+    Frame frame = make_shared_frame();
     while (avcodec_receive_frame(codec_context, frame.get()) == 0)
     {
-        Frame filtered_frame = equalizer->applyEqualizer(frame.get());
-
-        SampleConverter converter;
-        converter.set_out_sample_rate(format.sampleRate());
-        converter.set_out_format(convert_to_AVFormat(format.sampleFormat()));
-        AVChannelLayout outlayout;
-        av_channel_layout_default(&outlayout, format.channelCount());
-        converter.set_out_layout(outlayout);
-
-        AVFrame* result = converter.convert(filtered_frame.get());
-
-        int size = result->nb_samples * result->ch_layout.nb_channels * format.bytesPerSample();
-        audioDevice->appendData(QByteArray((const char*)result->data[0], size));
-
-        av_frame_free(&result);
-        av_frame_free(&filtered_frame.frame);
+        Frame filtered_frame = equalizer->applyEqualizer(frame);
+        Frame coverted_frame = converter->convert(filtered_frame);
+        int size = coverted_frame->nb_samples * coverted_frame->ch_layout.nb_channels * format.bytesPerSample();
+        audioDevice->appendData(QByteArray((const char*)coverted_frame->data[0], size));
         av_frame_unref(frame.get());
     }
 }
@@ -122,3 +111,29 @@ AVSampleFormat AudioContext::convert_to_AVFormat(QAudioFormat::SampleFormat form
     default:                    return AV_SAMPLE_FMT_NONE;
     }
 }
+
+// qDebug()<<SAMPLE<<"Raw sample:";
+// qDebug()<<"format ="<<frame->format;
+// qDebug()<<"rate ="<<frame->sample_rate;
+// qDebug()<<"bytes per sample="<<av_get_bytes_per_sample(codec_context->sample_fmt) * 8;
+// qDebug()<<"channels ="<<frame->ch_layout.nb_channels;
+
+
+// qDebug()<<SAMPLE<<"Filtered sample:";
+// qDebug()<<"format ="<<filtered_frame->format;
+// qDebug()<<"rate ="<<filtered_frame->sample_rate;
+// qDebug()<<"bytes per sample="<<av_get_bytes_per_sample(static_cast<AVSampleFormat>(filtered_frame->format)) * 8;
+// qDebug()<<"channels ="<<filtered_frame->ch_layout.nb_channels;
+
+
+// qDebug()<<SAMPLE<<"Output sample:";
+// qDebug()<<"format ="<<result->format;
+// qDebug()<<"rate ="<<result->sample_rate;
+// qDebug()<<"bytes per sample="<<av_get_bytes_per_sample(static_cast<AVSampleFormat>(result->format)) * 8;
+// qDebug()<<"channels ="<<result->ch_layout.nb_channels;
+
+// qDebug()<<SAMPLE<<"Device sample:";
+// qDebug()<<"format ="<<convert_to_AVFormat(format.sampleFormat());
+// qDebug()<<"rate ="<<format.sampleRate();
+// qDebug()<<"bytes per sample="<<av_get_bytes_per_sample(convert_to_AVFormat(format.sampleFormat())) * 8;
+// qDebug()<<"channels ="<<format.channelCount();

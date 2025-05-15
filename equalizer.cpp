@@ -13,13 +13,13 @@ Equalizer::Equalizer(AVCodecContext* cod_ctx) : codec_context(cod_ctx){
     update_equalizer();
 }
 
-Frame Equalizer::applyEqualizer(AVFrame *frame)
+Frame Equalizer::applyEqualizer(Frame frame)
 {
     QMutexLocker _(&mutex);
     //qDebug()<<"Input frame format:"<<frame->format;
 
-    Frame equalized_frame;
-    av_buffersrc_add_frame(buffersrc_ctx, frame);
+    Frame equalized_frame = make_shared_frame();
+    av_buffersrc_add_frame(buffersrc_ctx, frame.get());
     // while (av_buffersink_get_frame(buffersink_ctx, filtered_frame.get()) >= 0) {
     // }
     av_buffersink_get_frame(buffersink_ctx, equalized_frame.get());
@@ -82,7 +82,8 @@ void Equalizer::update_equalizer()
     inputs->next       = nullptr;
 
     std::string filter_descr =
-        "aformat=sample_fmts=fltp,equalizer=f=100:width_type=h:width=400:g=" + std::to_string(low)
+        std::string("aformat=sample_fmts=fltp")
+        + ",equalizer=f=100:width_type=h:width=400:g=" + std::to_string(low)
         + ",equalizer=f=1000:width_type=h:width=2000:g=" + std::to_string(mid)
         + ",equalizer=f=8000:width_type=h:width=8000:g=" + std::to_string(high);
 

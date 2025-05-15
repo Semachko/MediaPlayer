@@ -57,7 +57,7 @@ Window {
 
     }
     Connections{
-        target: media
+        target: player
         onNewTime: {
             timelinebar.enabled = true
             mediacontrolsbar.enabled = true
@@ -106,7 +106,7 @@ Window {
                 font.pointSize: 15
                 font.bold: true
                 Connections {
-                    target: media
+                    target: player
                     function onNewTime(time) {
                         current_time.text = root.get_time_by_ms(time)
                     }
@@ -116,13 +116,13 @@ Window {
                 id: timeslider
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                value: media.currentPosition
+                value: player.currentPosition
                 onPressedChanged:{
                     if (pressed) {
                         if (playbutton.checked)
-                            media.sliderPause()
+                            player.sliderPause()
                     } else {
-                        media.timeChanged(position)
+                        player.timeChanged(position)
                     }
                 }
             }
@@ -134,7 +134,7 @@ Window {
                 font.pointSize: 15
                 font.bold: true
                 Connections {
-                    target: media
+                    target: player
                     function onGlobalTime(time) {
                         media_time.text = root.get_time_by_ms(time)
                     }
@@ -163,8 +163,8 @@ Window {
                         console.log("Selected file:", fileDialog.selectedFile)
                         filenamebar.text = fileDialog.selectedFile.toString().split("/").pop().split(".")[0]
 
-                        media.videoSink = videoOutput.videoSink
-                        media.setFile(fileDialog.selectedFile)
+                        player.videoSink = videoOutput.videoSink
+                        player.setFile(fileDialog.selectedFile)
                     }
                 }
             }
@@ -199,7 +199,7 @@ Window {
                 Layout.fillWidth: true
                 scale: 0.7
                 onPressed: {
-                    media.playORpause()
+                    player.playORpause()
                 }
             }
             ChangeTimeButtonRight {
@@ -242,7 +242,7 @@ Window {
                 id: mutebutton
                 scale: 0.75
                 onPressed: {
-                    media.muteORunmute()
+                    player.muteORunmute()
                 }
             }
 
@@ -253,7 +253,7 @@ Window {
                 Layout.leftMargin: -15
                 Layout.rightMargin: 12
                 onMoved:{
-                    media.volumeChanged(volumeslider.value)
+                    player.volumeChanged(volumeslider.value)
                 }
             }
             ResizeButton{
@@ -291,18 +291,18 @@ Window {
             visible: false
             anchors.centerIn: parent
 
-            onBrightnessChanged: media.changeBrightness(filterswindow.brightness)
-            onContrastChanged: media.changeContrast(filterswindow.contrast)
-            onSaturationChanged: media.changeSaturation(filterswindow.saturation)
+            onBrightnessChanged: player.changeBrightness(filterswindow.brightness)
+            onContrastChanged: player.changeContrast(filterswindow.contrast)
+            onSaturationChanged: player.changeSaturation(filterswindow.saturation)
         }
         EqualizerWindow{
             id: equalizerwindow
             visible: false
             anchors.centerIn: parent
 
-            onLowChanged: media.changeLowSounds(equalizerwindow.low)
-            onMidChanged: media.changeMidSounds(equalizerwindow.mid)
-            onHighChanged: media.changeHighSounds(equalizerwindow.high)
+            onLowChanged: player.changeLowSounds(equalizerwindow.low)
+            onMidChanged: player.changeMidSounds(equalizerwindow.mid)
+            onHighChanged: player.changeHighSounds(equalizerwindow.high)
         }
     }
 }

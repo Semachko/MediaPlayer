@@ -1,3 +1,5 @@
+delete max buffer sizes everywhere
+setting multiple files
 +-5 sec buttons
 next/prev media buttons
 speed up/down
@@ -6,3 +8,7 @@ preload images on setting file
 preload images on seeking
 zooming images
 rotating images
+volume changes slowly ??
+
+
+find out how sound in sample works

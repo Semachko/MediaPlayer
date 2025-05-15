@@ -12,32 +12,29 @@ extern "C" {
 #include <QVideoSink>
 #include <QVideoFrame>
 #include <QPair>
-#include <atomic>
 
+#include "imediacontext.h"
 #include "synchronizer.h"
 #include "frameoutput.h"
-#include "queue.h"
-#include "packet.h"
 #include "filters.h"
+#include "imageconverter.h"
 
-class VideoContext : public QObject
+class VideoContext : public IMediaContext
 {
     Q_OBJECT
 public:
     VideoContext(AVFormatContext* format_context, Synchronizer* sync, QVideoSink* videosink);
 
-    void push_frame_to_queue();
+    void push_frame_to_buffer() override;
     void set_brightness(qreal value);
     void set_contrast(qreal value);
     void set_saturation(qreal value);
-signals:
-    void requestPacket();
-    void newPacketArrived();
+private:
+    void convert_and_push_images();
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
 public:
     int stream_id;
-    Queue<Packet> packetQueue;
     FrameOutput* output;
     AVCodecContext* codec_context;
 
@@ -47,11 +44,8 @@ private:
     AVCodecParameters* codec_parameters;
     AVRational time_base;
 
-    SwsContext* frame_format;
-    std::vector<uint8_t> buffer;
-    AVFrame* rgbFrame;
     Filters* filters;
-
+    ImageConverter* converter;
     Synchronizer* sync;
     QWaitCondition* imageReady;
 

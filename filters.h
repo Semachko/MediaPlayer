@@ -19,7 +19,7 @@ class Filters
 {
 public:
     explicit Filters(AVCodecParameters*, AVRational time_base);
-    Frame applyFilters(AVFrame* frame);
+    Frame applyFilters(Frame frame);
     void set_brightness(qreal value);
     void set_contrast(qreal value);
     void set_saturation(qreal value);
