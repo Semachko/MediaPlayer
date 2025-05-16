@@ -27,7 +27,6 @@ private:
     bool is_queues_full();
     ///////////////////////////////////////////////
     ///////////////////////////////////////////////
-
 private:
     QMutex& formatMutex;
     AVFormatContext* format_context;

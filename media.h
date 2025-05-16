@@ -31,7 +31,7 @@ public:
     Media();
     ~Media();
 
-    void set_file(const QUrl& filename,QVideoSink* videosink);
+    void set_file(const QUrl& filename,QVideoSink* videosink,bool isPlaying);
     void resume_pause();
     void slider_pause();
     void mute_unmute();
@@ -39,7 +39,7 @@ public:
     void change_time(qreal);
 
 signals:
-    void fileChanged(const QUrl,QVideoSink*);
+    void fileChanged(const QUrl,QVideoSink*,bool);
     void playORpause();
     void sliderPause();
     void muteORunmute();
@@ -66,7 +66,6 @@ private:
     AVFormatContext* format_context = nullptr;
 
     QVideoSink* videosink;
-    QAudioSink* audiosink;
 
     QThread* audioThread;
     QThread* videoThread;

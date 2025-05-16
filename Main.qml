@@ -163,7 +163,7 @@ Window {
                         filenamebar.text = fileDialog.selectedFile.toString().split("/").pop().split(".")[0]
 
                         player.videoSink = videoOutput.videoSink
-                        player.setFile(fileDialog.selectedFile)
+                        player.setFile(fileDialog.selectedFile,playbutton.checked)
                     }
                 }
             }

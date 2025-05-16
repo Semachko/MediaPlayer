@@ -27,7 +27,6 @@ void Demuxer::demuxe_packets()
 void Demuxer::push_packets_to_queues()
 {
     QMutexLocker _(&formatMutex);
-
     while(!is_queues_full())
     {
         Packet packet = make_shared_packet();
@@ -36,7 +35,6 @@ void Demuxer::push_packets_to_queues()
             return;
 
         if (medias.contains(packet->stream_index)){
-            qDebug()<<"Stream ="<<packet->stream_index;
             IMediaContext* media = medias[packet->stream_index];
             media->packetQueue.push(std::move(packet));
             emit media->newPacketArrived();

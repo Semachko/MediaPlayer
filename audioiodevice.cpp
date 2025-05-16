@@ -16,7 +16,7 @@ void AudioIODevice::appendData(const QByteArray &data) {
     buffer.append(data);
     if (!isOpen())
         open(QIODevice::ReadOnly);
-    if (buffer.size() >= 4196) {
+    if (buffer.size() >= 8192) {
         //sync->check_pause();
         //qDebug()<<OUTPUT<<"Signaling device to read data";
         emit readyRead();

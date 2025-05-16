@@ -17,7 +17,7 @@ Media::Media(){
 Media::~Media()
 { delete_members(); }
 
-void Media::set_file(const QUrl &filename,QVideoSink* sink)
+void Media::set_file(const QUrl &filename,QVideoSink* sink,bool isPlaying)
 {
     if (format_context != nullptr)
         delete_members();
@@ -31,6 +31,7 @@ void Media::set_file(const QUrl &filename,QVideoSink* sink)
     emit outputGlobalTime(format_context->duration/1000);
 
     sync = new Synchronizer();
+
 
     updateTimer = new QTimer(this);
     connect(updateTimer, &QTimer::timeout, this, [this]() {
@@ -68,13 +69,16 @@ void Media::set_file(const QUrl &filename,QVideoSink* sink)
     connect(video,&VideoContext::requestPacket,demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
     connect(audio,&AudioContext::requestPacket,demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
 
-    connect(this,&Media::brightnessChanged,static_cast<VideoContext*>(video),&VideoContext::set_brightness);
-    connect(this,&Media::contrastChanged,static_cast<VideoContext*>(video),&VideoContext::set_contrast);
-    connect(this,&Media::saturationChanged,static_cast<VideoContext*>(video),&VideoContext::set_saturation);
+    connect(this,&Media::brightnessChanged,video,&VideoContext::set_brightness);
+    connect(this,&Media::contrastChanged,video,&VideoContext::set_contrast);
+    connect(this,&Media::saturationChanged,video,&VideoContext::set_saturation);
 
-    connect(this,&Media::lowChanged,static_cast<AudioContext*>(audio),&AudioContext::set_low);
-    connect(this,&Media::midChanged,static_cast<AudioContext*>(audio),&AudioContext::set_mid);
-    connect(this,&Media::highChanged,static_cast<AudioContext*>(audio),&AudioContext::set_high);
+    connect(this,&Media::lowChanged,audio,&AudioContext::set_low);
+    connect(this,&Media::midChanged,audio,&AudioContext::set_mid);
+    connect(this,&Media::highChanged,audio,&AudioContext::set_high);
+
+    if(sync->isPaused != !isPlaying)
+        sync->play_or_pause();
 
     QMetaObject::invokeMethod(demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
 }
@@ -161,13 +165,16 @@ void Media::change_time(qreal position)
 
 void Media::delete_members()
 {
+    if(sync->isPaused)
+        sync->play_or_pause();
+
+    demuxerThread->quit();
     audioThread->quit();
     videoThread->quit();
-    demuxerThread->quit();
 
+    demuxerThread->wait();
     audioThread->wait();
     videoThread->wait();
-    demuxerThread->wait();
 
     audioThread->deleteLater();
     videoThread->deleteLater();
@@ -177,7 +184,6 @@ void Media::delete_members()
     video->deleteLater();
     demuxer->deleteLater();
 
-    audiosink->deleteLater();
     avformat_close_input(&format_context);
     sync->deleteLater();
     updateTimer->deleteLater();

@@ -18,7 +18,7 @@ public:
     void setVideoSink(QVideoSink* sink);
     qreal currentPosition() const;
 
-    Q_INVOKABLE void setFile(const QUrl& filename);
+    Q_INVOKABLE void setFile(const QUrl& filename, bool isPlaying);
     Q_INVOKABLE void playORpause();
     Q_INVOKABLE void muteORunmute();
     Q_INVOKABLE void volumeChanged(qreal volume);
@@ -42,16 +42,14 @@ signals:
     Q_SIGNAL void globalTime(qint64 time);
     Q_SIGNAL void newTime(qint64 time);
     Q_SIGNAL void currentPositionChanged(qreal pos);
-    Q_SIGNAL void fileSetted();
 
 private:
     void output_image(QVideoFrame frame);
 private:
-    Media* mediacontext;
+    Media* media;
     QVideoSink* m_videoSink;
     QThread* mediaThread;
 
-    QMetaObject::Connection connection;
     qreal m_currentPosition;
 };
 

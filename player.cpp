@@ -2,13 +2,13 @@
 #include <QDebug>
 
 Player::Player() {
-    mediacontext = new Media();
+    media = new Media();
     mediaThread = new QThread(this);
-    mediacontext->moveToThread(mediaThread);
+    media->moveToThread(mediaThread);
     mediaThread->start();
 
-    connect(mediacontext,&Media::outputGlobalTime,this,&Player::globalTime);
-    connect(mediacontext,&Media::outputTime,this,[this](qint64 time,qreal pos){
+    connect(media,&Media::outputGlobalTime,this,&Player::globalTime);
+    connect(media,&Media::outputTime,this,[this](qint64 time,qreal pos){
         emit newTime(time);
         m_currentPosition=pos;
         emit currentPositionChanged(m_currentPosition);
@@ -19,7 +19,7 @@ Player::~Player()
 {
     mediaThread->quit();
     mediaThread->wait();
-    mediacontext->deleteLater();
+    media->deleteLater();
     mediaThread->deleteLater();
 }
 
@@ -35,46 +35,39 @@ void Player::setVideoSink(QVideoSink *sink)
     m_videoSink = sink;
 }
 
-void Player::setFile(const QUrl &filename)
+void Player::setFile(const QUrl &filename, bool isPlaying)
 {
-    if (mediacontext->video)
-        disconnect(connection);
-    //emit mediacontext.fileChanged(filename);
-    emit mediacontext->fileChanged(filename,m_videoSink);
-    emit fileSetted();
+    emit media->fileChanged(filename,m_videoSink,isPlaying);
 }
 
 void Player::output_image(QVideoFrame frame)
 {
-    //qDebug()<<"\033[32m[Screen]\033[0m Outputing image, size = "<<frame.size();
     m_videoSink->setVideoFrame(frame);
 }
 
 void Player::playORpause()
 {
-    // if (!connection)
-    //     connect(mediacontext->video->output, &FrameOutput::imageToOutput, this, &Media::output_image);
-    emit mediacontext->playORpause();
+    emit media->playORpause();
 }
 
 void Player::muteORunmute()
 {
-    emit mediacontext->muteORunmute();
+    emit media->muteORunmute();
 }
 
 void Player::volumeChanged(qreal volume)
 {
-    emit mediacontext->volumeChanged(volume);
+    emit media->volumeChanged(volume);
 }
 
 void Player::timeChanged(qreal time)
 {
-    emit mediacontext->timeChanged(time);
+    emit media->timeChanged(time);
 }
 
 void Player::sliderPause()
 {
-    emit mediacontext->sliderPause();
+    emit media->sliderPause();
 }
 
 void Player::add5sec()
@@ -101,42 +94,42 @@ void Player::changeBrightness(qreal value)
 {
     // from -1 to 1
     qreal brightness_val = value * 2.0 - 1.0;
-    emit mediacontext->brightnessChanged(brightness_val);
+    emit media->brightnessChanged(brightness_val);
 }
 
 void Player::changeContrast(qreal value)
 {
     // from 0 to 2
     qreal contrast_val = value * 2.0;
-    emit mediacontext->contrastChanged(contrast_val);
+    emit media->contrastChanged(contrast_val);
 }
 
 void Player::changeSaturation(qreal value)
 {
     // from 0 to 3
     qreal saturation_val = value * 3.0;
-    emit mediacontext->saturationChanged(saturation_val);
+    emit media->saturationChanged(saturation_val);
 }
 
 void Player::changeLowSounds(qreal value)
 {
     // from -12 to 12
     qreal dB = value * 56.0 - 28.0;
-    emit mediacontext->lowChanged(dB);
+    emit media->lowChanged(dB);
 }
 
 void Player::changeMidSounds(qreal value)
 {
     // from -12 to 12
     qreal dB = value * 56.0 - 28.0;
-    emit mediacontext->midChanged(dB);
+    emit media->midChanged(dB);
 }
 
 void Player::changeHighSounds(qreal value)
 {
     // from -12 to 12
     qreal dB = value * 56.0 - 28.0;
-    emit mediacontext->highChanged(dB);
+    emit media->highChanged(dB);
 }
 
 
