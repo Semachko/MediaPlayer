@@ -3,12 +3,13 @@
 
 SampleConverter::SampleConverter(AVCodecContext* input, SampleFormat output) : output_format(output)
 {
+    //av_log_set_level(AV_LOG_DEBUG);
     converter_context = swr_alloc();
 
     int ret = swr_alloc_set_opts2(
         &converter_context,
         &output_format.layout, (AVSampleFormat)output_format.format, output_format.sample_rate,
-        &input->ch_layout, input->sample_fmt, input->sample_rate,
+        &input->ch_layout, (AVSampleFormat)8, input->sample_rate,
         0, nullptr
         );
     if (ret < 0) {
