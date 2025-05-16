@@ -1,6 +1,6 @@
 #include "clock.h"
 
-Clock::Clock(QObject *parent): QObject(parent), speed(1.0), paused(true), baseTime(0) {}
+Clock::Clock(): speed(1.0), paused(true), baseTime(0) {}
 
 void Clock::start(qint64 pts)
 {

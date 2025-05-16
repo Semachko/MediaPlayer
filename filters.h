@@ -19,6 +19,8 @@ class Filters
 {
 public:
     explicit Filters(AVCodecParameters*, AVRational time_base);
+    ~Filters();
+
     Frame applyFilters(Frame frame);
     void set_brightness(qreal value);
     void set_contrast(qreal value);
@@ -31,7 +33,6 @@ private:
     AVFilterContext *buffersink_ctx;
     const AVFilter *buffersrc;
     const AVFilter *buffersink;
-    //char args[512];
     std::string args;
     AVFilterInOut *outputs;
     AVFilterInOut *inputs;

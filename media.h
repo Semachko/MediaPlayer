@@ -29,6 +29,7 @@ class Media : public QObject
 
 public:
     Media();
+    ~Media();
 
     void set_file(const QUrl& filename,QVideoSink* videosink);
     void resume_pause();
@@ -55,14 +56,11 @@ signals:
     void lowChanged(qreal);
     void midChanged(qreal);
     void highChanged(qreal);
-
-// private:
-//     void fill_packetQueue();
-//     bool push_packet_to_queues();
-
+private:
+    void delete_members();
 public:
-    VideoContext* video = nullptr;
-    AudioContext* audio = nullptr;
+    AudioContext* audio;
+    VideoContext* video;
     Demuxer* demuxer;
 private:
     AVFormatContext* format_context = nullptr;

@@ -4,13 +4,19 @@
 constexpr auto OUTPUT = "\033[34m[Output]\033[0m";
 
 ImageFrame::ImageFrame(QVideoFrame&& videoframe, qint64 time)
-    : image(videoframe),
+    :
+    image(videoframe),
     time(time)
 {}
 
-FrameOutput::FrameOutput(Synchronizer * sync, QVideoSink * videosink)
-    : sync(sync), videosink(videosink), imageQueue(5)
-    {}
+FrameOutput::FrameOutput(QVideoSink * videosink, Synchronizer * sync,  qint64 queueSize)
+    :
+    sync(sync),
+    videosink(videosink),
+    imageQueue(queueSize)
+{}
+FrameOutput::~FrameOutput()
+{}
 
 void FrameOutput::start_output()
 {
@@ -24,7 +30,6 @@ void FrameOutput::start_output()
             //qDebug()<<OUTPUT<<"Queue is empty, waiting for images";
             imageReady.wait(&conditionMutex);
         }
-
 
         QMutexLocker f(&queueMutex);
         if (imageQueue.empty())

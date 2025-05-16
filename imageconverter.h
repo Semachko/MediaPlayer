@@ -16,8 +16,9 @@ class ImageConverter
 {
 public:
     ImageConverter(AVCodecContext* codec_context);
-    Frame convert(Frame input);
+    ~ImageConverter();
 
+    Frame convert(Frame input);
 private:
     Frame output;
     SwsContext* converter;

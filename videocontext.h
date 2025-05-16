@@ -23,14 +23,16 @@ class VideoContext : public IMediaContext
 {
     Q_OBJECT
 public:
-    VideoContext(AVFormatContext* format_context, Synchronizer* sync, QVideoSink* videosink);
+    VideoContext(QVideoSink* videosink, AVFormatContext* format_context, Synchronizer* sync, qreal bufferization_time);
+    ~VideoContext();
 
-    void push_frame_to_buffer() override;
+    void decode_and_output() override;
+    qint64 buffer_available() override;
     void set_brightness(qreal value);
     void set_contrast(qreal value);
     void set_saturation(qreal value);
 private:
-    void convert_and_push_images();
+    void filter_and_output();
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
 public:
@@ -41,15 +43,13 @@ public:
     QMutex decodingMutex;
 private:
     QThread* outputThread;
-    AVCodecParameters* codec_parameters;
-    AVRational time_base;
+    QVideoSink* videosink;
 
     Filters* filters;
     ImageConverter* converter;
     Synchronizer* sync;
     QWaitCondition* imageReady;
-
-    QVideoSink* videosink;
+    qint64 maxBufferSize;
 };
 
 #endif // VIDEOCONTEXT_H

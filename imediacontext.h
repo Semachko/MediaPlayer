@@ -9,14 +9,20 @@ class IMediaContext : public QObject
 {
     Q_OBJECT
 public:
-    IMediaContext(int queue_capacity) : packetQueue(queue_capacity) {}
+    IMediaContext(qint64 queue_size)
+        : packetQueue(queue_size)
+    {}
 
-    virtual void push_frame_to_buffer() = 0;
+    virtual void decode_and_output() = 0;
+    virtual qint64 buffer_available() = 0;
 signals:
     void requestPacket();
     void newPacketArrived();
 
+protected:
+    qint64 maxBufferSize;
 public:
+    AVRational timeBase;
     Queue<Packet> packetQueue;
 };
 

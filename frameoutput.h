@@ -26,7 +26,9 @@ class FrameOutput: public QObject
 {
     Q_OBJECT
 public:
-    FrameOutput(Synchronizer*,QVideoSink*);
+    FrameOutput(QVideoSink*, Synchronizer*, qint64 queueSize);
+    ~FrameOutput();
+
     void start_output();
 signals:
     //void imageToOutput(QVideoFrame frame);

@@ -22,6 +22,11 @@ SampleConverter::SampleConverter(AVCodecContext* input, SampleFormat output) : o
     }
 }
 
+SampleConverter::~SampleConverter()
+{
+    swr_free(&converter_context);
+}
+
 
 Frame SampleConverter::convert(Frame input)
 {

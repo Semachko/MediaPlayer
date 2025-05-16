@@ -10,7 +10,7 @@ class Clock : QObject
 {
     Q_OBJECT
 public:
-    Clock(QObject* parent);
+    Clock();
     void start(qint64 pts);
     void pause();
     void resume();

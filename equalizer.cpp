@@ -8,24 +8,15 @@ Equalizer::Equalizer(AVCodecContext* cod_ctx) : codec_context(cod_ctx){
         +":channel_layout=stereo"
         +":channels="+std::to_string(codec_context->ch_layout.nb_channels);
 
-    //av_log_set_level(AV_LOG_DEBUG);
-
     update_equalizer();
 }
 
 Frame Equalizer::applyEqualizer(Frame frame)
 {
     QMutexLocker _(&mutex);
-    //qDebug()<<"Input frame format:"<<frame->format;
-
     Frame equalized_frame = make_shared_frame();
     av_buffersrc_add_frame(buffersrc_ctx, frame.get());
-    // while (av_buffersink_get_frame(buffersink_ctx, filtered_frame.get()) >= 0) {
-    // }
     av_buffersink_get_frame(buffersink_ctx, equalized_frame.get());
-
-    //qDebug()<<"Equalized format:"<<equalized_frame->format;
-
     return equalized_frame;
 }
 
@@ -87,10 +78,16 @@ void Equalizer::update_equalizer()
         + ",equalizer=f=1000:width_type=h:width=2000:g=" + std::to_string(mid)
         + ",equalizer=f=8000:width_type=h:width=8000:g=" + std::to_string(high);
 
-    //qDebug() << "filter_descr:" << filter_descr.c_str();
-
     if (avfilter_graph_parse_ptr(filter_graph, filter_descr.c_str(), &inputs, &outputs, nullptr) < 0)
         qDebug() << "Error to resolve filter";
     if (avfilter_graph_config(filter_graph, nullptr) < 0)
         qDebug() << "Error to configure graph";
+}
+
+
+Equalizer::~Equalizer()
+{
+    avfilter_graph_free(&filter_graph);
+    avfilter_inout_free(&inputs);
+    avfilter_inout_free(&outputs);
 }

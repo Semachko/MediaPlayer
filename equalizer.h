@@ -18,6 +18,8 @@ class Equalizer
 {
 public:
     explicit Equalizer(AVCodecContext* codec_context);
+    ~Equalizer();
+
     Frame applyEqualizer(Frame frame);
     void set_low(qreal value);
     void set_mid(qreal value);

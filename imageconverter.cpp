@@ -23,6 +23,11 @@ ImageConverter::ImageConverter(AVCodecContext* codec_context) {
 
 }
 
+ImageConverter::~ImageConverter()
+{
+    sws_freeContext(converter);
+}
+
 Frame ImageConverter::convert(Frame input)
 {
     sws_scale(

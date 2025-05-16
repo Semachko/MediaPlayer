@@ -7,19 +7,26 @@
 constexpr auto DECODING = "\033[31m[Decoding]\033[0m";
 constexpr auto SAMPLE = "\033[35m[Sample]\033[0m";
 
-AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync) : IMediaContext(16), sync(sync)
+AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync, qreal bufferization_time)
+    :
+    IMediaContext(20),
+    sync(sync)
 {
+    // Finding audio STREAM
     stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
     if (stream_id<0)
         return;
 
+    timeBase = format_context->streams[stream_id]->time_base;
+
+    // Initiating CODEC
     AVCodecParameters* codec_parameters = format_context->streams[stream_id]->codecpar;
     const AVCodec* codec = avcodec_find_decoder(codec_parameters->codec_id);
-
     codec_context = avcodec_alloc_context3(codec);
     avcodec_parameters_to_context(codec_context, codec_parameters);
     avcodec_open2(codec_context, codec, nullptr);
 
+    // Initiating output audio device FORMAT
     format = QMediaDevices::defaultAudioOutput().preferredFormat();
     qDebug() << "Preferred format:";
     qDebug() << "Sample format:" << format.sampleFormat();
@@ -33,57 +40,82 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync) 
 
     equalizer = new Equalizer(codec_context);
 
+    // Initiating output audio CONVERTER
     AVChannelLayout outlayout;
     av_channel_layout_default(&outlayout, format.channelCount());
     SampleFormat outputFormat{convert_to_AVFormat(format.sampleFormat()),format.sampleRate(),outlayout};
     converter = new SampleConverter(codec_context,outputFormat);
 
+    // Getting MAX SIZE of audio output buffer
+    qint64 bytesPerSample = av_get_bytes_per_sample((AVSampleFormat)outputFormat.format);
+    qint64 bytesPerSecond = bytesPerSample * outputFormat.layout.nb_channels * outputFormat.sample_rate;
+    maxBufferSize = bytesPerSecond * bufferization_time;
+
+
+    // Initiating audio output DEVICE
     audioDevice = new AudioIODevice(sync,this);
     audioSink = new QAudioSink(format, this);
     audioSink->setVolume(last_volume);
     audioSink->start(audioDevice);
     audioSink->suspend();
 
-    connect(this, &AudioContext::newPacketArrived, this,&AudioContext::push_frame_to_buffer, Qt::QueuedConnection);
-    connect(audioDevice, &AudioIODevice::dataReaded, this,&AudioContext::push_frame_to_buffer, Qt::QueuedConnection);
+    connect(this, &AudioContext::newPacketArrived, this,&AudioContext::decode_and_output, Qt::QueuedConnection);
+    connect(audioDevice, &AudioIODevice::dataReaded, this,&AudioContext::decode_and_output, Qt::QueuedConnection);
 }
 
+AudioContext::~AudioContext()
+{
+    delete converter;
+    delete equalizer;
+    delete audioSink;
+    delete audioDevice;
+    delete codec_context;
+}
 
-void AudioContext::push_frame_to_buffer()
+void AudioContext::decode_and_output()
 {
     sync->check_pause();
     QMutexLocker _(&audioMutex);
-    //qDebug()<<DECODING<<"New packet arrived. Popping it";
-    // qDebug()<<DECODING<<"Audio device buffer size ="<<audioDevice->buffer.size();
-    // qDebug()<<DECODING<<"Audio device buffer size ="<<audioDevice->max_buffer_size;
-    // qDebug()<<DECODING<<"Audio device buffer REAL size ="<<audioSink->bufferSize();
-    if (audioDevice->buffer.size()>=audioDevice->max_buffer_size){
-        //qDebug()<<DECODING<<"Audio device buffer is full, skipping...";
+
+    if (buffer_available() == 0)
         return;
-    }
-    if (packetQueue.size()==0){
+
+    if (packetQueue.size() == 0){
         emit requestPacket();
         return;
     }
 
     Packet packet = packetQueue.pop();
     emit requestPacket();
-    //qDebug()<<DECODING<<"Audio packet size = "<<packet->size;
-    int ret = avcodec_send_packet(codec_context, packet.get());
-    if (ret < 0) {
-        qDebug()<<"Error sending audio packet: "<<ret;
+
+    int result = avcodec_send_packet(codec_context, packet.get());;
+    if (result < 0) {
+        qDebug()<<"Error decoding audio packet: "<<result;
         return;
     }
 
+    equalizer_and_output();
+}
+
+void AudioContext::equalizer_and_output()
+{
     Frame frame = make_shared_frame();
     while (avcodec_receive_frame(codec_context, frame.get()) == 0)
     {
-        Frame filtered_frame = equalizer->applyEqualizer(frame);
-        Frame coverted_frame = converter->convert(filtered_frame);
-        int size = coverted_frame->nb_samples * coverted_frame->ch_layout.nb_channels * format.bytesPerSample();
-        audioDevice->appendData(QByteArray((const char*)coverted_frame->data[0], size));
+        Frame equalized_frame = equalizer->applyEqualizer(frame);
+        Frame converted_frame = converter->convert(equalized_frame);
+        int size = converted_frame->nb_samples * converted_frame->ch_layout.nb_channels * format.bytesPerSample();
+        audioDevice->appendData(QByteArray((const char*)converted_frame->data[0], size));
         av_frame_unref(frame.get());
     }
+}
+
+qint64 AudioContext::buffer_available()
+{
+    qint64 available_bytes = maxBufferSize - audioDevice->bytesAvailable();
+    if (available_bytes <= 0)
+        return 0;
+    return available_bytes;
 }
 
 void AudioContext::set_low(qreal value)
@@ -101,6 +133,7 @@ void AudioContext::set_high(qreal value)
     equalizer->set_high(value);
 }
 
+
 AVSampleFormat AudioContext::convert_to_AVFormat(QAudioFormat::SampleFormat format)
 {
     switch (format) {
@@ -112,28 +145,4 @@ AVSampleFormat AudioContext::convert_to_AVFormat(QAudioFormat::SampleFormat form
     }
 }
 
-// qDebug()<<SAMPLE<<"Raw sample:";
-// qDebug()<<"format ="<<frame->format;
-// qDebug()<<"rate ="<<frame->sample_rate;
-// qDebug()<<"bytes per sample="<<av_get_bytes_per_sample(codec_context->sample_fmt) * 8;
-// qDebug()<<"channels ="<<frame->ch_layout.nb_channels;
 
-
-// qDebug()<<SAMPLE<<"Filtered sample:";
-// qDebug()<<"format ="<<filtered_frame->format;
-// qDebug()<<"rate ="<<filtered_frame->sample_rate;
-// qDebug()<<"bytes per sample="<<av_get_bytes_per_sample(static_cast<AVSampleFormat>(filtered_frame->format)) * 8;
-// qDebug()<<"channels ="<<filtered_frame->ch_layout.nb_channels;
-
-
-// qDebug()<<SAMPLE<<"Output sample:";
-// qDebug()<<"format ="<<result->format;
-// qDebug()<<"rate ="<<result->sample_rate;
-// qDebug()<<"bytes per sample="<<av_get_bytes_per_sample(static_cast<AVSampleFormat>(result->format)) * 8;
-// qDebug()<<"channels ="<<result->ch_layout.nb_channels;
-
-// qDebug()<<SAMPLE<<"Device sample:";
-// qDebug()<<"format ="<<convert_to_AVFormat(format.sampleFormat());
-// qDebug()<<"rate ="<<format.sampleRate();
-// qDebug()<<"bytes per sample="<<av_get_bytes_per_sample(convert_to_AVFormat(format.sampleFormat())) * 8;
-// qDebug()<<"channels ="<<format.channelCount();

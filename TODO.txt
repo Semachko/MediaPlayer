@@ -1,14 +1,17 @@
 delete max buffer sizes everywhere
 setting multiple files
+make pop() in queue exception safe
 +-5 sec buttons
 next/prev media buttons
 speed up/down
 hot keys
+menu bar covers mouse area
 preload images on setting file
 preload images on seeking
 zooming images
 rotating images
 volume changes slowly ??
+refactor project folder
+in qualizer filters i use ONLY STEREO
 
-
-find out how sound in sample works
+find out how works volume in samples

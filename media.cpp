@@ -14,23 +14,23 @@ Media::Media(){
     connect(this,&Media::timeChanged,this,&Media::change_time);
 
 }
+Media::~Media()
+{ delete_members(); }
 
 void Media::set_file(const QUrl &filename,QVideoSink* sink)
 {
-    videosink = sink;
+    if (format_context != nullptr)
+        delete_members();
 
+    videosink = sink;
     qDebug()<<filename.toLocalFile();
-    if (format_context!=nullptr){
-        delete video;
-        delete audio;
-        avformat_close_input(&format_context);
-    }
+
     avformat_open_input(&format_context, filename.toLocalFile().toStdString().c_str(), nullptr, nullptr);
     avformat_find_stream_info(format_context, nullptr);
 
     emit outputGlobalTime(format_context->duration/1000);
 
-    sync = new Synchronizer(this);
+    sync = new Synchronizer();
 
     updateTimer = new QTimer(this);
     connect(updateTimer, &QTimer::timeout, this, [this]() {
@@ -40,14 +40,15 @@ void Media::set_file(const QUrl &filename,QVideoSink* sink)
     });
     updateTimer->start(100);
 
-    // How many milliseconds forward we want to bufferize
-    const qint64 bufferization_time = 500;
-    demuxer = new Demuxer(format_context, sync, formatMutex, bufferization_time);
+    // How many seconds forward we want to bufferize
+    const qreal bufferization_time = 0.2;
+
+    demuxer = new Demuxer(format_context, sync, formatMutex);
     demuxerThread = new QThread(this);
     demuxer->moveToThread(demuxerThread);
     demuxerThread->start();
 
-    video = new VideoContext(format_context, sync, videosink);
+    video = new VideoContext(videosink, format_context, sync, bufferization_time);
     if (video->stream_id >= 0){
         videoThread = new QThread(this);
         video->moveToThread(videoThread);
@@ -55,7 +56,7 @@ void Media::set_file(const QUrl &filename,QVideoSink* sink)
         demuxer->add_context(video->stream_id, video);
     }
 
-    audio = new AudioContext(format_context, sync);
+    audio = new AudioContext(format_context, sync, bufferization_time);
     if (audio->stream_id >= 0){
         audioThread = new QThread(this);
         audio->moveToThread(audioThread);
@@ -156,6 +157,30 @@ void Media::change_time(qreal position)
         resume_pause();
         isTemporaryPaused=false;
     }
+}
+
+void Media::delete_members()
+{
+    audioThread->quit();
+    videoThread->quit();
+    demuxerThread->quit();
+
+    audioThread->wait();
+    videoThread->wait();
+    demuxerThread->wait();
+
+    audioThread->deleteLater();
+    videoThread->deleteLater();
+    demuxerThread->deleteLater();
+
+    audio->deleteLater();
+    video->deleteLater();
+    demuxer->deleteLater();
+
+    audiosink->deleteLater();
+    avformat_close_input(&format_context);
+    sync->deleteLater();
+    updateTimer->deleteLater();
 }
 
 

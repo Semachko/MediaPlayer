@@ -12,6 +12,8 @@ class Player: public QObject
 
 public:
     Player();
+    ~Player();
+
     QVideoSink* videoSink() const;
     void setVideoSink(QVideoSink* sink);
     qreal currentPosition() const;

@@ -9,14 +9,18 @@ Player::Player() {
 
     connect(mediacontext,&Media::outputGlobalTime,this,&Player::globalTime);
     connect(mediacontext,&Media::outputTime,this,[this](qint64 time,qreal pos){
-        // qDebug()<<"curr_time ="<<time;
-        // qDebug()<<"pos ="<<pos;
         emit newTime(time);
-
         m_currentPosition=pos;
         emit currentPositionChanged(m_currentPosition);
     });
-    //connect(mediacontext,&MediaContext::moveSliderPosition,this,&Media::sliderPositionChanged);
+}
+
+Player::~Player()
+{
+    mediaThread->quit();
+    mediaThread->wait();
+    mediacontext->deleteLater();
+    mediaThread->deleteLater();
 }
 
 QVideoSink *Player::videoSink() const

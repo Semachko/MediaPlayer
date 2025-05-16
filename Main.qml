@@ -37,7 +37,6 @@ Window {
         id: videoOutput
         anchors.fill: parent
     }
-
     MouseArea {
         id: mouseTracker
         anchors.fill: parent

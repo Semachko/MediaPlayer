@@ -1,10 +1,15 @@
 #include "synchronizer.h"
 
-Synchronizer::Synchronizer(QObject * parent)
-    : QObject(parent),
-    clock(new Clock(this))
+Synchronizer::Synchronizer()
+    :
+    clock(new Clock())
 {
     clock->start(0);
+}
+
+Synchronizer::~Synchronizer()
+{
+    delete clock;
 }
 
 void Synchronizer::play_or_pause()

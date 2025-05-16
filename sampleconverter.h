@@ -23,9 +23,10 @@ class SampleConverter
 {
 public:
     SampleConverter(AVCodecContext* input, SampleFormat output);
+    ~SampleConverter();
+
     Frame convert(Frame input);
     Frame flush();
-
 private:
     SwrContext* converter_context;
     SampleFormat output_format;

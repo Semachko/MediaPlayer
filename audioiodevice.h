@@ -12,6 +12,7 @@ class AudioIODevice : public QIODevice {
     Q_OBJECT
 public:
     explicit AudioIODevice(Synchronizer* sync, QObject* parent = nullptr);
+    ~AudioIODevice();
 
     void appendData(const QByteArray& data);
     void clear();
@@ -24,8 +25,8 @@ signals:
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
 public:
-    const int max_buffer_size = 163840;
     QByteArray buffer;
+    bool isStarted = false;
 private:
     Synchronizer* sync;
     mutable QMutex clearAvailable;

@@ -12,7 +12,8 @@ class Synchronizer : public QObject
 {
     Q_OBJECT
 public:
-    Synchronizer(QObject* parent = nullptr);
+    Synchronizer();
+    ~Synchronizer();
 
     void play_or_pause();
     void check_pause();

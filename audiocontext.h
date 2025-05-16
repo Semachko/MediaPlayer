@@ -31,14 +31,17 @@ class AudioContext : public IMediaContext
 {
     Q_OBJECT
 public:
-    AudioContext(AVFormatContext* format_context, Synchronizer* sync);
+    AudioContext(AVFormatContext* format_context, Synchronizer* sync, qreal bufferization_time);
+    ~AudioContext();
 
-    void push_frame_to_buffer() override;
+    void decode_and_output() override;
+    qint64 buffer_available() override;
     void set_low(qreal value);
     void set_mid(qreal value);
     void set_high(qreal value);
 
 private:
+    void equalizer_and_output();
     AVSampleFormat convert_to_AVFormat(QAudioFormat::SampleFormat format);
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
@@ -57,6 +60,7 @@ private:
     Equalizer* equalizer;
 
     Synchronizer* sync;
+    qint64 maxBufferSize;
 };
 
 #endif // AUDIOCONTEXT_H
