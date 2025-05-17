@@ -40,56 +40,6 @@ void Player::setFile(const QUrl &filename, bool isPlaying)
     emit media->fileChanged(filename,m_videoSink,isPlaying);
 }
 
-void Player::output_image(QVideoFrame frame)
-{
-    m_videoSink->setVideoFrame(frame);
-}
-
-void Player::playORpause()
-{
-    emit media->playORpause();
-}
-
-void Player::muteORunmute()
-{
-    emit media->muteORunmute();
-}
-
-void Player::volumeChanged(qreal volume)
-{
-    emit media->volumeChanged(volume);
-}
-
-void Player::timeChanged(qreal time)
-{
-    emit media->timeChanged(time);
-}
-
-void Player::sliderPause()
-{
-    emit media->sliderPause();
-}
-
-void Player::add5sec()
-{
-
-}
-
-void Player::subtruct5sec()
-{
-
-}
-
-void Player::repeatMedia()
-{
-
-}
-
-void Player::shuffleMedia()
-{
-
-}
-
 void Player::changeBrightness(qreal value)
 {
     // from -1 to 1
@@ -131,6 +81,61 @@ void Player::changeHighSounds(qreal value)
     qreal dB = value * 56.0 - 28.0;
     emit media->highChanged(dB);
 }
+
+void Player::shuffleMedia()
+{
+
+}
+void Player::repeatMedia()
+{
+
+}
+
+
+void Player::prevMedia()
+{
+
+}
+void Player::subtruct5sec()
+{
+    emit media->subtruct5sec();
+}
+void Player::playORpause()
+{
+    emit media->playORpause();
+}
+void Player::add5sec()
+{
+    emit media->add5sec();
+}
+void Player::nextMedia()
+{
+
+}
+
+void Player::changeSpeed(qreal speed)
+{
+    emit media->change_speed(speed);
+}
+
+void Player::muteORunmute()
+{
+    emit media->muteORunmute();
+}
+void Player::volumeChanged(qreal volume)
+{
+    emit media->volumeChanged(volume);
+}
+
+void Player::timeChanged(qreal time)
+{
+    emit media->timeChanged(time);
+}
+void Player::sliderPause()
+{
+    emit media->sliderPause();
+}
+
 
 
 qreal Player::currentPosition() const

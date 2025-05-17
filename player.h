@@ -19,17 +19,6 @@ public:
     qreal currentPosition() const;
 
     Q_INVOKABLE void setFile(const QUrl& filename, bool isPlaying);
-    Q_INVOKABLE void playORpause();
-    Q_INVOKABLE void muteORunmute();
-    Q_INVOKABLE void volumeChanged(qreal volume);
-    Q_INVOKABLE void timeChanged(qreal time);
-
-    Q_INVOKABLE void sliderPause();
-
-    Q_INVOKABLE void add5sec();
-    Q_INVOKABLE void subtruct5sec();
-    Q_INVOKABLE void repeatMedia();
-    Q_INVOKABLE void shuffleMedia();
 
     Q_INVOKABLE void changeBrightness(qreal value);
     Q_INVOKABLE void changeContrast(qreal value);
@@ -38,13 +27,31 @@ public:
     Q_INVOKABLE void changeLowSounds(qreal value);
     Q_INVOKABLE void changeMidSounds(qreal value);
     Q_INVOKABLE void changeHighSounds(qreal value);
+
+    Q_INVOKABLE void repeatMedia();
+    Q_INVOKABLE void shuffleMedia();
+
+    Q_INVOKABLE void prevMedia();
+    Q_INVOKABLE void subtruct5sec();
+    Q_INVOKABLE void playORpause();
+    Q_INVOKABLE void add5sec();
+    Q_INVOKABLE void nextMedia();
+
+    Q_INVOKABLE void changeSpeed(qreal speed);
+
+    Q_INVOKABLE void muteORunmute();
+    Q_INVOKABLE void volumeChanged(qreal volume);
+
+    Q_INVOKABLE void timeChanged(qreal time);
+    Q_INVOKABLE void sliderPause();
+
+
 signals:
     Q_SIGNAL void globalTime(qint64 time);
     Q_SIGNAL void newTime(qint64 time);
     Q_SIGNAL void currentPositionChanged(qreal pos);
-
 private:
-    void output_image(QVideoFrame frame);
+
 private:
     Media* media;
     QVideoSink* m_videoSink;

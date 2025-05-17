@@ -37,27 +37,39 @@ public:
     void mute_unmute();
     void change_volume(qreal);
     void change_time(qreal);
+    void add_5sec();
+    void subtruct_5sec();
+    void change_speed(qreal);
 
 signals:
     void fileChanged(const QUrl,QVideoSink*,bool);
-    void playORpause();
-    void sliderPause();
-    void muteORunmute();
-    void volumeChanged(qreal);
-    void timeChanged(qreal);
-
-    void outputTime(qint64,qreal);
-    void outputGlobalTime(qint64);
 
     void brightnessChanged(qreal);
     void contrastChanged(qreal);
     void saturationChanged(qreal);
-
     void lowChanged(qreal);
     void midChanged(qreal);
     void highChanged(qreal);
+
+    void subtruct5sec();
+    void playORpause();
+    void add5sec();
+
+    void speedChanged(qreal);
+
+    void muteORunmute();
+    void volumeChanged(qreal);
+
+    void timeChanged(qreal);
+
+    void sliderPause();
+    void outputTime(qint64,qreal);
+    void outputGlobalTime(qint64);
+
+
 private:
     void delete_members();
+    void seek_time(int64_t);
 public:
     AudioContext* audio;
     VideoContext* video;

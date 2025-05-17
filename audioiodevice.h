@@ -26,7 +26,6 @@ signals:
 ///////////////////////////////////////////////
 public:
     QByteArray buffer;
-    bool isStarted = false;
 private:
     Synchronizer* sync;
     mutable QMutex clearAvailable;

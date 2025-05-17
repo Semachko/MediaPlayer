@@ -14,7 +14,8 @@ Slider {
     width: 200
     height: 28
     value: 0.2
-
+    stepSize: 0.01
+    snapMode: Slider.SnapAlways
     background: Item {
         Rectangle {
             x: leftPadding

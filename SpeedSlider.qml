@@ -5,8 +5,12 @@ Slider {
     id: root
     width: 28
     height: 200
-    value: 0.5
     orientation: Qt.Vertical
+    from: 2.0
+    to: 0.5
+    stepSize: 0.25
+    value: 1.0
+    snapMode: Slider.SnapAlways
     background: Item {
         Rectangle {
             x: leftPadding + (availableWidth - width) / 2
@@ -16,25 +20,21 @@ Slider {
             radius: 9999
             color: "#E0E0E0"
             clip: true
-
             Rectangle {
-                // x: 0
-                // y: parent.height - height
                 width: parent.width
                 height: visualPosition * parent.height
-                color: "#4B99D2"
+                color: "#66EAB1"
                 radius: 9999
             }
         }
     }
-
     handle: Rectangle {
         y: topPadding + visualPosition * (availableHeight - height)
         x: (root.width - width) / 2
         width: root.width
         height: root.width
         radius: 9999
-        color: "#203A47"
+        color: "#284331"
         border.color: "white"
         border.width: pressed ? height * 0.3 : hovered ? height * 0.25 : height * 0.2
     }

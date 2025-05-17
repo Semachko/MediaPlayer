@@ -35,17 +35,17 @@ qt_add_qml_module(appMediaPlayer
 
     QML_FILES
     Main.qml
-    ChangeMediaButton.ui.qml
-    ChangeTimeButtonLeft.ui.qml
-    ChangeTimeButtonRight.ui.qml
-    MenuBar.ui.qml
-    MuteButton.ui.qml
-    OptionsButton.ui.qml
-    PlayButton.ui.qml
-    ResizeButton.ui.qml
-    TimelineSlider.ui.qml
-    ToolsMenu.ui.qml
-    VolumeSlider.ui.qml
+    ChangeMediaButton.qml
+    ChangeTimeButtonLeft.qml
+    ChangeTimeButtonRight.qml
+    MenuBar.qml
+    MuteButton.qml
+    OptionsButton.qml
+    PlayButton.qml
+    ResizeButton.qml
+    TimelineSlider.qml
+    ToolsMenu.qml
+    VolumeSlider.qml
     FilenameBar.qml
     FiltersWindow.qml
     ToolsMenuButton.qml

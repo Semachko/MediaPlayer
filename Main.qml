@@ -188,10 +188,12 @@ Window {
             ChangeMediaButton {
                 Layout.fillWidth: true
                 scale: -0.6
+                onClicked: player.prevMedia()
             }
             ChangeTimeButtonLeft {
                 Layout.fillWidth: true
                 scale: 0.8
+                onClicked: player.subtruct5sec()
             }
             PlayButton {
                 id: playbutton
@@ -204,10 +206,12 @@ Window {
             ChangeTimeButtonRight {
                 Layout.fillWidth: true
                 scale: 0.8
+                onClicked: player.add5sec()
             }
             ChangeMediaButton {
                 Layout.fillWidth: true
                 scale: 0.6
+                onClicked: player.nextMedia()
             }
         }
 
@@ -227,6 +231,7 @@ Window {
                 id: speedbutton
                 scale: 0.8
                 SpeedSlider{
+                    id: speedslider
                     visible: speedbutton.checked
                     anchors.bottom: speedbutton.top
                     anchors.bottomMargin: 5
@@ -234,6 +239,9 @@ Window {
                     width: speedbutton.width*0.4
                     height: 250
                     scale: -1
+                    onMoved:{
+                        player.changeSpeed(speedslider.value)
+                    }
                 }
             }
 

@@ -103,7 +103,11 @@ void AudioContext::equalizer_and_output()
     while (avcodec_receive_frame(codec_context, frame.get()) == 0)
     {
         Frame equalized_frame = equalizer->applyEqualizer(frame);
+        if (!equalized_frame)
+            continue;
         Frame converted_frame = converter->convert(equalized_frame);
+        if (!converted_frame)
+            continue;
         int size = converted_frame->nb_samples * converted_frame->ch_layout.nb_channels * format.bytesPerSample();
         audioDevice->appendData(QByteArray((const char*)converted_frame->data[0], size));
         av_frame_unref(frame.get());
@@ -122,15 +126,17 @@ void AudioContext::set_low(qreal value)
 {
     equalizer->set_low(value);
 }
-
 void AudioContext::set_mid(qreal value)
 {
     equalizer->set_mid(value);
 }
-
 void AudioContext::set_high(qreal value)
 {
     equalizer->set_high(value);
+}
+void AudioContext::set_speed(qreal speed)
+{
+    equalizer->set_speed(speed);
 }
 
 

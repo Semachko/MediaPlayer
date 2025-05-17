@@ -39,6 +39,7 @@ public:
     void set_low(qreal value);
     void set_mid(qreal value);
     void set_high(qreal value);
+    void set_speed(qreal speed);
 
 private:
     void equalizer_and_output();

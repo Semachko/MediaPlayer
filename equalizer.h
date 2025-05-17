@@ -24,6 +24,7 @@ public:
     void set_low(qreal value);
     void set_mid(qreal value);
     void set_high(qreal value);
+    void set_speed(qreal value);
 private:
     void update_equalizer();
 private:
@@ -40,6 +41,7 @@ private:
     qreal low  = 0.0;
     qreal mid  = 0.0;
     qreal high = 0.0;
+    qreal speed = 1.0;
 
     QMutex mutex;
 };

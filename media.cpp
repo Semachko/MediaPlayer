@@ -12,7 +12,9 @@ Media::Media(){
     connect(this,&Media::volumeChanged,this,&Media::change_volume);
     connect(this,&Media::muteORunmute,this,&Media::mute_unmute);
     connect(this,&Media::timeChanged,this,&Media::change_time);
-
+    connect(this,&Media::subtruct5sec,this,&Media::subtruct_5sec);
+    connect(this,&Media::add5sec,this,&Media::add_5sec);
+    connect(this,&Media::speedChanged,this,&Media::change_speed);
 }
 Media::~Media()
 { delete_members(); }
@@ -125,11 +127,20 @@ void Media::mute_unmute()
 }
 
 
-void Media::change_time(qreal position)
+void Media::seek_time(int64_t seek_target)
 {
     QMutexLocker f(&formatMutex);
     QMutexLocker v(&video->decodingMutex);
     QMutexLocker a(&audio->audioMutex);
+
+    audio->audioSink->stop();
+    QAudioSink* oldSink = audio->audioSink;
+    oldSink->deleteLater();
+    audio->audioSink = new QAudioSink(audio->format, this);
+    audio->audioSink->setVolume(audio->last_volume);
+    audio->audioSink->start(audio->audioDevice);
+    audio->audioSink->suspend();
+
     video->packetQueue.clear();
     audio->packetQueue.clear();
 
@@ -141,15 +152,6 @@ void Media::change_time(qreal position)
     //audio->audioDevice->clear();
     audio->audioDevice->readAll();
 
-    audio->audioSink->stop();
-    QAudioSink* oldSink = audio->audioSink;
-    oldSink->deleteLater();
-    audio->audioSink = new QAudioSink(audio->format, this);
-    audio->audioSink->setVolume(audio->last_volume);
-    audio->audioSink->start(audio->audioDevice);
-    audio->audioSink->suspend();
-
-    int64_t seek_target = format_context->duration * position;
     sync->clock->set_time(seek_target/1000);
 
     int res = av_seek_frame(format_context, -1, seek_target, AVSEEK_FLAG_BACKWARD);
@@ -161,6 +163,36 @@ void Media::change_time(qreal position)
         resume_pause();
         isTemporaryPaused=false;
     }
+}
+
+void Media::change_time(qreal position)
+{
+    int64_t seek_target = format_context->duration * position;
+    seek_time(seek_target);
+}
+
+void Media::add_5sec()
+{
+    int64_t sec5 = AV_TIME_BASE * 5;
+    int64_t seek_target = (sync->get_time()*1000) + sec5;
+    if (seek_target > format_context->duration)
+        seek_target = format_context->duration;
+    seek_time(seek_target);
+}
+
+void Media::subtruct_5sec()
+{
+    int64_t sec5 = AV_TIME_BASE * 5;
+    int64_t seek_target = (sync->get_time()*1000) - sec5;
+    if (seek_target < 0)
+        seek_target = 0;
+    seek_time(seek_target);
+}
+
+void Media::change_speed(qreal speed)
+{
+    sync->clock->setSpeed(speed);
+    audio->set_speed(speed);
 }
 
 void Media::delete_members()

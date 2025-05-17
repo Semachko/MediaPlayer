@@ -42,6 +42,7 @@ void FrameOutput::start_output()
         if (delay>0)
             QThread::msleep(delay);
 
+        qDebug()<<"Current time in seconds:"<<sync->get_time()/1000.0;
         videosink->setVideoFrame(imageFrame.image);
         emit imageOutputted();
     }
