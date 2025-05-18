@@ -1,16 +1,18 @@
-speed up/down
-next/prev media buttons
-shuffle/repeat buttons
-hot keys
+
 zooming images
 rotating images
 improve design
+repeat buttons
 menu bar covers mouse area
+make cleaning buffers synced in audio/video. Add cleaning in (speed up/down)
+bug time changing when changing speed
+make correct destroying frameoutput loop
+look like in videocontext destructors i dont check if members are nullptr (happen after only audio file to video file)
 preload images on setting file
 preload images on seeking
 make pop() in queue exception safe
 volume changes slowly ??
 refactor project folder
+make general instance of UI properties with Back End
 in qualizer filters i use ONLY STEREO
-
 find out how works volume in samples

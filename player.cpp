@@ -35,9 +35,12 @@ void Player::setVideoSink(QVideoSink *sink)
     m_videoSink = sink;
 }
 
-void Player::setFile(const QUrl &filename, bool isPlaying)
+void Player::setFile(QUrl filepath, bool isPlaying)
 {
-    emit media->fileChanged(filename,m_videoSink,isPlaying);
+    QString newFile = playlist.set_new_file(filepath);
+    if(newFile.isEmpty())
+        return;
+    emit media->fileChanged(newFile,m_videoSink,isPlaying);
 }
 
 void Player::changeBrightness(qreal value)
@@ -82,9 +85,9 @@ void Player::changeHighSounds(qreal value)
     emit media->highChanged(dB);
 }
 
-void Player::shuffleMedia()
+void Player::shuffleMedia(bool isPlaying)
 {
-
+    emit media->set_file(playlist.shuffle_playlist(), m_videoSink,isPlaying);
 }
 void Player::repeatMedia()
 {
@@ -92,9 +95,9 @@ void Player::repeatMedia()
 }
 
 
-void Player::prevMedia()
+void Player::prevMedia(bool isPlaying)
 {
-
+    emit media->set_file(playlist.prev_file(), m_videoSink,isPlaying);
 }
 void Player::subtruct5sec()
 {
@@ -108,14 +111,16 @@ void Player::add5sec()
 {
     emit media->add5sec();
 }
-void Player::nextMedia()
+void Player::nextMedia(bool isPlaying)
 {
-
+    QString next_file = playlist.next_file();
+    qDebug()<<"Setting file:"<<next_file;
+    emit media->set_file(next_file, m_videoSink,isPlaying);
 }
 
 void Player::changeSpeed(qreal speed)
 {
-    emit media->change_speed(speed);
+    emit media->speedChanged(speed);
 }
 
 void Player::muteORunmute()

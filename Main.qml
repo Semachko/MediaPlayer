@@ -48,25 +48,36 @@ Window {
             hideControlsTimer.restart()
         }
     }
+    WheelHandler {
+        onWheel: (wheel)=> {
+            if (wheel.modifiers & Qt.ControlModifier)
+            {
+                console.log("Zooming");
+            }
+            else if (wheel.modifiers & Qt.ShiftModifier)
+            {
+                if (wheel.angleDelta.y > 0)
+                    speedslider.increase();
+                else
+                    speedslider.decrease();
+                speedslider.moved()
+            }
+            else
+            {
+                if (wheel.angleDelta.y > 0)
+                    volumeslider.increase();
+                else
+                    volumeslider.decrease();
+                volumeslider.moved()
+            }
+        }
+    }
     Timer {
         id: hideControlsTimer
         interval: 3000
         repeat: false
         onTriggered: controls_menu.opacity = 0.0
 
-    }
-    Connections{
-        target: player
-        onNewTime: {
-            timelinebar.enabled = true
-            mediacontrolsbar.enabled = true
-            toolsmenu.enabled = true
-            speed_volume_resize_bar.enabled = true
-        }
-
-        // function onNewTime(time) {
-        //     current_time.text = root.get_time_by_ms(time)
-        // }
     }
 
     Item{
@@ -142,12 +153,14 @@ Window {
         }
         RowLayout{
             id: optionsbar
-            anchors.top: timelinebar.bottom
-            anchors.bottom: menubar_background.bottom
-            anchors.left: menubar_background.left
-            anchors.right: mediacontrolsbar.left
-            anchors.margins: 5
-            anchors.leftMargin: 20
+            anchors{
+                top: timelinebar.bottom
+                bottom: menubar_background.bottom
+                left: menubar_background.left
+                right: mediacontrolsbar.left
+                margins: 5
+                leftMargin: 20
+            }
             spacing: 2
             FilenameBar{
                 id: filenamebar
@@ -161,9 +174,13 @@ Window {
                     onAccepted: {
                         console.log("Selected file:", fileDialog.selectedFile)
                         filenamebar.text = fileDialog.selectedFile.toString().split("/").pop().split(".")[0]
-
                         player.videoSink = videoOutput.videoSink
                         player.setFile(fileDialog.selectedFile,playbutton.checked)
+
+                        timelinebar.enabled = true
+                        mediacontrolsbar.enabled = true
+                        toolsmenu.enabled = true
+                        speed_volume_resize_bar.enabled = true
                     }
                 }
             }
@@ -173,6 +190,16 @@ Window {
                 Layout.fillWidth: true
                 onFiltersClicked: filterswindow.visible = true
                 onEqualizerClicked: equalizerwindow.visible = true
+                onShuffleClicked: player.shuffleMedia(playbutton.checked)
+                //onRepeatClicked: player.repeatMedia()
+                Shortcut {
+                    sequence: "A"
+                    onActivated: equalizerwindow.visible = !equalizerwindow.visible
+                }
+                Shortcut {
+                    sequence: "V"
+                    onActivated: filterswindow.visible = !filterswindow.visible
+                }
             }
 
         }
@@ -186,14 +213,24 @@ Window {
             }
             spacing: 0
             ChangeMediaButton {
+                id: changemediabtnleft
                 Layout.fillWidth: true
                 scale: -0.6
-                onClicked: player.prevMedia()
+                onClicked: player.prevMedia(playbutton.checked)
+                Shortcut {
+                    sequence: "ctrl+left"
+                    onActivated: changemediabtnleft.click()
+                }
             }
             ChangeTimeButtonLeft {
+                id: changetimebtnleft
                 Layout.fillWidth: true
                 scale: 0.8
                 onClicked: player.subtruct5sec()
+                Shortcut {
+                    sequence: "left"
+                    onActivated: changetimebtnleft.click()
+                }
             }
             PlayButton {
                 id: playbutton
@@ -202,16 +239,30 @@ Window {
                 onPressed: {
                     player.playORpause()
                 }
+                Shortcut {
+                    sequence: "space"
+                    onActivated: playbutton.click()
+                }
             }
             ChangeTimeButtonRight {
+                id: changetimebtnright
                 Layout.fillWidth: true
                 scale: 0.8
                 onClicked: player.add5sec()
+                Shortcut {
+                    sequence: "right"
+                    onActivated: changetimebtnright.click()
+                }
             }
             ChangeMediaButton {
+                id: changemediabtnright
                 Layout.fillWidth: true
                 scale: 0.6
-                onClicked: player.nextMedia()
+                onClicked: player.nextMedia(playbutton.checked)
+                Shortcut {
+                    sequence: "ctrl+right"
+                    onActivated: changemediabtnright.click()
+                }
             }
         }
 
@@ -251,6 +302,10 @@ Window {
                 onPressed: {
                     player.muteORunmute()
                 }
+                Shortcut {
+                    sequence: "M"
+                    onActivated: mutebutton.click()
+                }
             }
 
             VolumeSlider{
@@ -289,6 +344,10 @@ Window {
                         prevHeight = root.height
                         root.showFullScreen()
                     }
+                }
+                Shortcut {
+                    sequence: "F"
+                    onActivated: resizebutton.click()
                 }
             }
         }

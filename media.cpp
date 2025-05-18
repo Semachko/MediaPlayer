@@ -19,15 +19,15 @@ Media::Media(){
 Media::~Media()
 { delete_members(); }
 
-void Media::set_file(const QUrl &filename,QVideoSink* sink,bool isPlaying)
+void Media::set_file(QString filename, QVideoSink* sink, bool isPlaying)
 {
     if (format_context != nullptr)
         delete_members();
 
     videosink = sink;
-    qDebug()<<filename.toLocalFile();
+    qDebug()<<filename;
 
-    avformat_open_input(&format_context, filename.toLocalFile().toStdString().c_str(), nullptr, nullptr);
+    avformat_open_input(&format_context, filename.toStdString().c_str(), nullptr, nullptr);
     avformat_find_stream_info(format_context, nullptr);
 
     emit outputGlobalTime(format_context->duration/1000);
@@ -191,8 +191,16 @@ void Media::subtruct_5sec()
 
 void Media::change_speed(qreal speed)
 {
-    sync->clock->setSpeed(speed);
+    if(!sync->isPaused){
+        sync->play_or_pause();
+
+        audio->set_speed(speed);
+        sync->clock->setSpeed(speed);
+
+        sync->play_or_pause();
+    }
     audio->set_speed(speed);
+    sync->clock->setSpeed(speed);
 }
 
 void Media::delete_members()

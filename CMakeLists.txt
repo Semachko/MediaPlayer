@@ -53,6 +53,7 @@ qt_add_qml_module(appMediaPlayer
     SpeedButton.qml
     SpeedSlider.qml
     SOURCES imediacontext.h
+    SOURCES playlist.h playlist.cpp
 )
 
 qt_add_resources(appMediaPlayer

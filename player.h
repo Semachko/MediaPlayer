@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include "media.h"
+#include "playlist.h"
 
 class Player: public QObject
 {
@@ -18,7 +19,7 @@ public:
     void setVideoSink(QVideoSink* sink);
     qreal currentPosition() const;
 
-    Q_INVOKABLE void setFile(const QUrl& filename, bool isPlaying);
+    Q_INVOKABLE void setFile(QUrl filepath, bool isPlaying);
 
     Q_INVOKABLE void changeBrightness(qreal value);
     Q_INVOKABLE void changeContrast(qreal value);
@@ -29,13 +30,13 @@ public:
     Q_INVOKABLE void changeHighSounds(qreal value);
 
     Q_INVOKABLE void repeatMedia();
-    Q_INVOKABLE void shuffleMedia();
+    Q_INVOKABLE void shuffleMedia(bool isPlaying);
 
-    Q_INVOKABLE void prevMedia();
+    Q_INVOKABLE void prevMedia(bool isPlaying);
     Q_INVOKABLE void subtruct5sec();
     Q_INVOKABLE void playORpause();
     Q_INVOKABLE void add5sec();
-    Q_INVOKABLE void nextMedia();
+    Q_INVOKABLE void nextMedia(bool isPlaying);
 
     Q_INVOKABLE void changeSpeed(qreal speed);
 
@@ -54,8 +55,9 @@ private:
 
 private:
     Media* media;
-    QVideoSink* m_videoSink;
     QThread* mediaThread;
+    QVideoSink* m_videoSink;
+    Playlist playlist;
 
     qreal m_currentPosition;
 };

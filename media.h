@@ -31,18 +31,21 @@ public:
     Media();
     ~Media();
 
-    void set_file(const QUrl& filename,QVideoSink* videosink,bool isPlaying);
+    void set_file(QString filename,QVideoSink* videosink,bool isPlaying);
+
+    void add_5sec();
     void resume_pause();
-    void slider_pause();
+    void subtruct_5sec();
+
+    void change_speed(qreal);
     void mute_unmute();
     void change_volume(qreal);
+
     void change_time(qreal);
-    void add_5sec();
-    void subtruct_5sec();
-    void change_speed(qreal);
+    void slider_pause();
 
 signals:
-    void fileChanged(const QUrl,QVideoSink*,bool);
+    void fileChanged(QString,QVideoSink*,bool);
 
     void brightnessChanged(qreal);
     void contrastChanged(qreal);
