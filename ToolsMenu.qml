@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls.Basic
+import QtQuick.Layouts
 
 Item {
     id: root
@@ -19,30 +20,31 @@ Item {
 
     signal filtersClicked
     signal equalizerClicked
+    signal rotateClicked
     signal shuffleClicked
     signal repeatClicked
     Popup {
         id: popup
-        implicitWidth: 230
-        implicitHeight: 200
         modal: false
         focus: true
         background: Rectangle {
             id: background
-            anchors.fill: parent
+            anchors.fill: elements
             color: "black"
             radius: 10
             opacity: 0.5
         }
-        contentItem: Column {
-            anchors.fill: parent
+        contentItem: ColumnLayout {
+            id: elements
+            spacing: 0
+            //Layout.fillHeight: true
             ToolsMenuButton {
                 id: filters
                 label: "Filters"
                 iconSRC: "qrc:/images/filters.svg"
                 onClicked: {
                     popup.close()
-                    root.onFiltersClicked()
+                    root.filtersClicked()
                 }
             }
             ToolsMenuButton {
@@ -51,7 +53,17 @@ Item {
                 iconSRC: "qrc:/images/equalizer.svg"
                 onClicked: {
                     popup.close()
-                    root.onEqualizerClicked()
+                    root.equalizerClicked()
+                }
+            }
+            ToolsMenuButton {
+                id: rotate
+                label: "Rotate"
+                iconSRC: "qrc:/images/rotate.svg"
+                onClicked: {
+                    console.log("ROT CLICKED!!!");
+                    popup.close()
+                    root.rotateClicked()
                 }
             }
             ToolsMenuButton {
@@ -60,7 +72,7 @@ Item {
                 iconSRC: "qrc:/images/shuffle.svg"
                 onClicked: {
                     popup.close()
-                    root.onShuffleClicked()
+                    root.shuffleClicked()
                 }
             }
             ToolsMenuButton {
@@ -69,7 +81,7 @@ Item {
                 iconSRC: "qrc:/images/repeat.svg"
                 onClicked: {
                     popup.close()
-                    root.onRepeatClicked()
+                    root.repeatClicked()
                 }
             }
         }

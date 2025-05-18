@@ -24,6 +24,8 @@ qt_add_executable(appMediaPlayer
     equalizer.h equalizer.cpp
     sampleconverter.h sampleconverter.cpp
     imageconverter.h imageconverter.cpp
+    playlist.h playlist.cpp
+    imediacontext.h
     queue.h
     frame.h
     packet.h
@@ -52,8 +54,6 @@ qt_add_qml_module(appMediaPlayer
     EqualizerWindow.qml
     SpeedButton.qml
     SpeedSlider.qml
-    SOURCES imediacontext.h
-    SOURCES playlist.h playlist.cpp
 )
 
 qt_add_resources(appMediaPlayer
@@ -79,6 +79,7 @@ qt_add_resources(appMediaPlayer
     images/shuffle.svg
     images/repeat.svg
     images/Speed.svg
+    images/rotate.svg
     TODO.txt
 )
 

@@ -32,46 +32,72 @@ Window {
         scale: 2.5
         source: "qrc:/images/BackGroundLogo.svg"
     }
-
-    VideoOutput {
-        id: videoOutput
-        anchors.fill: parent
+    Item {
+        id: video
+        width: parent.width
+        height: parent.height
+        transformOrigin: Item.TopLeft
+        VideoOutput {
+            id: videoOutput
+            transformOrigin: Item.Center
+            width: parent.width
+            height: parent.height
+        }
     }
     MouseArea {
-        id: mouseTracker
+        id: mouse
         anchors.fill: parent
         hoverEnabled: true
-
+        property real mouse_x: 0
+        property real mouse_y: 0
         onPositionChanged: {
             if (controls_menu.opacity === 0.0)
-                controls_menu.opacity = 1.0
-            hideControlsTimer.restart()
+                controls_menu.opacity = 1.0;
+            hideControlsTimer.restart();
+            mouse_x = mouse.mouseX;
+            mouse_y = mouse.mouseY;
+        }
+        WheelHandler {
+            onWheel: (wheel)=> {
+                if (wheel.modifiers & Qt.ControlModifier)
+                {
+                    const oldZoom = video.scale;
+                    const scale = wheel.angleDelta.y > 0 ? 0.1 : -0.1;
+                    const newZoom = oldZoom + scale
+                    if (newZoom < 1) {
+                        video.x = 0;
+                        video.y = 0;
+                        video.scale = 1.0
+                        return;
+                    }
+                    video.scale = Math.min(newZoom, 5.0);
+                    const scaling = video.scale / oldZoom - 1;
+
+                    const dx = mouse.mouse_x - video.x;
+                    const dy = mouse.mouse_y - video.y;
+                    video.x -= dx * scaling;
+                    video.y -= dy * scaling;
+                }
+                else if (wheel.modifiers & Qt.ShiftModifier)
+                {
+                    if (wheel.angleDelta.y > 0)
+                        speedslider.increase();
+                    else
+                        speedslider.decrease();
+                    speedslider.moved()
+                }
+                else
+                {
+                    if (wheel.angleDelta.y > 0)
+                        volumeslider.increase();
+                    else
+                        volumeslider.decrease();
+                    volumeslider.moved()
+                }
+            }
         }
     }
-    WheelHandler {
-        onWheel: (wheel)=> {
-            if (wheel.modifiers & Qt.ControlModifier)
-            {
-                console.log("Zooming");
-            }
-            else if (wheel.modifiers & Qt.ShiftModifier)
-            {
-                if (wheel.angleDelta.y > 0)
-                    speedslider.increase();
-                else
-                    speedslider.decrease();
-                speedslider.moved()
-            }
-            else
-            {
-                if (wheel.angleDelta.y > 0)
-                    volumeslider.increase();
-                else
-                    volumeslider.decrease();
-                volumeslider.moved()
-            }
-        }
-    }
+
     Timer {
         id: hideControlsTimer
         interval: 3000
@@ -183,6 +209,10 @@ Window {
                         speed_volume_resize_bar.enabled = true
                     }
                 }
+                Shortcut {
+                    sequence: "C"
+                    onActivated: filenamebar.click()
+                }
             }
             ToolsMenu{
                 id: toolsmenu
@@ -190,8 +220,9 @@ Window {
                 Layout.fillWidth: true
                 onFiltersClicked: filterswindow.visible = true
                 onEqualizerClicked: equalizerwindow.visible = true
+                onRotateClicked: videoOutput.rotation += 90
                 onShuffleClicked: player.shuffleMedia(playbutton.checked)
-                //onRepeatClicked: player.repeatMedia()
+                //onRepeatClicked:
                 Shortcut {
                     sequence: "A"
                     onActivated: equalizerwindow.visible = !equalizerwindow.visible
@@ -324,8 +355,7 @@ Window {
                 property int prevWidth: 900
                 property int prevHeight: 600
                 property bool isMaximized: false
-                onPressed: {
-                    checked=!checked
+                onClicked: {
                     if (root.visibility == Window.FullScreen){
                         if (isMaximized)
                             root.showMaximized()
@@ -348,6 +378,10 @@ Window {
                 Shortcut {
                     sequence: "F"
                     onActivated: resizebutton.click()
+                }
+                Shortcut {
+                    sequence: "ESC"
+                    onActivated: if (root.visibility == Window.FullScreen) resizebutton.click()
                 }
             }
         }

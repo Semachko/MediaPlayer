@@ -1,8 +1,5 @@
-
-zooming images
-rotating images
 improve design
-repeat buttons
+repeat button
 menu bar covers mouse area
 make cleaning buffers synced in audio/video. Add cleaning in (speed up/down)
 bug time changing when changing speed
@@ -10,6 +7,7 @@ make correct destroying frameoutput loop
 look like in videocontext destructors i dont check if members are nullptr (happen after only audio file to video file)
 preload images on setting file
 preload images on seeking
+when shuffle, media name in UI is old
 make pop() in queue exception safe
 volume changes slowly ??
 refactor project folder
