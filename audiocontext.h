@@ -62,6 +62,7 @@ private:
 
     Synchronizer* sync;
     qint64 maxBufferSize;
+    qreal bufferization_time;
 };
 
 #endif // AUDIOCONTEXT_H

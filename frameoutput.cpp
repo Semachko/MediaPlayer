@@ -24,17 +24,17 @@ void FrameOutput::start_output()
     {
         sync->check_pause();
         QMutexLocker q(&conditionMutex);
-        qDebug()<<OUTPUT<<"Checking is image queue empty";
-        qDebug()<<OUTPUT<<"Image queue size ="<<imageQueue.size();
+        // qDebug()<<OUTPUT<<"Checking is image queue empty";
+        // qDebug()<<OUTPUT<<"Image queue size ="<<imageQueue.size();
         while(imageQueue.empty()){
-            qDebug()<<OUTPUT<<"Queue is empty, waiting for images";
+            // qDebug()<<OUTPUT<<"Queue is empty, waiting for images";
             imageReady.wait(&conditionMutex);
         }
 
         QMutexLocker f(&queueMutex);
         if (imageQueue.empty())
              continue;
-        qDebug()<<OUTPUT<<"Queue contain image, outputing";
+        // qDebug()<<OUTPUT<<"Queue contain image, outputing";
         ImageFrame imageFrame = imageQueue.pop();
 
         qint64 delay = imageFrame.time - sync->get_time();

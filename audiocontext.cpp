@@ -10,6 +10,7 @@ constexpr auto SAMPLE = "\033[35m[Sample]\033[0m";
 AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync, qreal bufferization_time)
     :
     IMediaContext(20),
+    bufferization_time(bufferization_time),
     sync(sync)
 {
     // Finding audio STREAM
@@ -87,6 +88,14 @@ void AudioContext::decode_and_output()
 
     Packet packet = packetQueue.pop();
     emit requestPacket();
+
+    qreal packetTime = packet->pts * av_q2d(timeBase);
+    qreal currTime = sync->get_time() / 1000.0;
+    qreal diff = currTime - packetTime;
+    if (diff > 0.2){
+        qDebug("audio is lating");
+        return;
+    }
 
     int result = avcodec_send_packet(codec_context, packet.get());;
     if (result < 0) {

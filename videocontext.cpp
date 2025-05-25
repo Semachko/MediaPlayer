@@ -77,6 +77,14 @@ void VideoContext::decode_and_output()
     Packet packet = packetQueue.pop();
     emit requestPacket();
 
+    qreal packetTime = packet->pts * av_q2d(timeBase);
+    qreal currTime = sync->get_time() / 1000.0;
+    qreal diff = currTime - packetTime;
+    if (diff > 0.2){
+        qDebug("video is lating");
+        return;
+    }
+
     int ret = avcodec_send_packet(codec_context, packet.get());
     if (ret < 0) {
         qDebug()<<"Error decoding video packet: "<<ret;
