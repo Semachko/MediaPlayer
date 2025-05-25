@@ -90,6 +90,8 @@ private:
     QMutex formatMutex;
     bool isTemporaryPaused = false;
 
+    bool isRepeating = false;
+
     QTimer* updateTimer;
 };
 

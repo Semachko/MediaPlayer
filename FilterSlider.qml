@@ -3,8 +3,8 @@ import QtQuick.Controls.Basic
 
 Slider {
     id: root
-    width: 200
-    height: 28
+    implicitWidth: 200
+    implicitHeight: 28
     value: 0.2
     stepSize: 0.01
     snapMode: Slider.SnapAlways
@@ -20,7 +20,7 @@ Slider {
             Rectangle {
                 width: visualPosition * parent.width
                 height: parent.height
-                color: "#4B99D2"
+                color: "#FF963A"
                 radius: 9999
             }
         }
@@ -31,7 +31,7 @@ Slider {
         height: root.height
         width: root.height
         radius: 9999
-        color: "#203A47"
+        color: "#A45108"
         border.color: "white"
         border.width: pressed ? width * 0.3 : hovered ? width * 0.25 : width * 0.2
     }

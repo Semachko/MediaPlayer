@@ -44,10 +44,19 @@ Window {
             height: parent.height
         }
     }
+
+
     MouseArea {
         id: mouse
         anchors.fill: parent
         hoverEnabled: true
+
+        Timer {
+            id: hideControlsTimer
+            interval: 4000
+            repeat: false
+            onTriggered: controls_menu.opacity = 0.0
+        }
         property real mouse_x: 0
         property real mouse_y: 0
         onPositionChanged: {
@@ -98,13 +107,6 @@ Window {
         }
     }
 
-    Timer {
-        id: hideControlsTimer
-        interval: 3000
-        repeat: false
-        onTriggered: controls_menu.opacity = 0.0
-
-    }
 
     Item{
         id: controls_menu
@@ -222,7 +224,7 @@ Window {
                 onEqualizerClicked: equalizerwindow.visible = true
                 onRotateClicked: videoOutput.rotation += 90
                 onShuffleClicked: player.shuffleMedia(playbutton.checked)
-                //onRepeatClicked:
+                onRepeatClicked: player.repeatChanged()
                 Shortcut {
                     sequence: "A"
                     onActivated: equalizerwindow.visible = !equalizerwindow.visible
@@ -319,8 +321,7 @@ Window {
                     anchors.bottomMargin: 5
                     anchors.horizontalCenter: speedbutton.horizontalCenter
                     width: speedbutton.width*0.4
-                    height: 250
-                    scale: -1
+                    height: 230
                     onMoved:{
                         player.changeSpeed(speedslider.value)
                     }

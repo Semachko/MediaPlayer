@@ -27,17 +27,17 @@ Item{
             leftMargin: 30
             rightMargin: 30
         }
-        height: parent.height * 0.6
-        spacing: 30
+        height: parent.height * 0.65
+        spacing: 15
 
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            Slider {
+            EqualizerSlider {
                 id: low_slider
-                Layout.fillWidth: true
-                orientation: Qt.Vertical
+                Layout.fillHeight: true
+                Layout.alignment: Qt.AlignHCenter
                 value: 0.5
             }
             Text {
@@ -54,10 +54,10 @@ Item{
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            Slider {
+            EqualizerSlider {
                 id: mid_slider
-                Layout.fillWidth: true
-                orientation: Qt.Vertical
+                Layout.fillHeight: true
+                Layout.alignment: Qt.AlignHCenter
                 value: 0.5
             }
             Text {
@@ -74,10 +74,10 @@ Item{
             Layout.fillWidth: true
             Layout.fillHeight: true
 
-            Slider {
+            EqualizerSlider {
                 id: high_slider
-                Layout.fillWidth: true
-                orientation: Qt.Vertical
+                Layout.fillHeight: true
+                Layout.alignment: Qt.AlignHCenter
                 value: 0.5
             }
             Text {

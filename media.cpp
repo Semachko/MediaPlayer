@@ -79,6 +79,12 @@ void Media::set_file(QString filename, QVideoSink* sink, bool isPlaying)
     connect(this,&Media::midChanged,audio,&AudioContext::set_mid);
     connect(this,&Media::highChanged,audio,&AudioContext::set_high);
 
+    connect(demuxer,&Demuxer::endReached,this,[this]()
+        {
+            if (isRepeating)
+                change_time(0);
+        });
+
     if(sync->isPaused != !isPlaying)
         sync->play_or_pause();
 

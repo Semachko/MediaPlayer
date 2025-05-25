@@ -1,8 +1,5 @@
-improve design
 repeat button
-menu bar covers mouse area
 make cleaning buffers synced in audio/video. Add cleaning in (speed up/down)
-bug time changing when changing speed
 make correct destroying frameoutput loop
 look like in videocontext destructors i dont check if members are nullptr (happen after only audio file to video file)
 preload images on setting file
@@ -13,4 +10,5 @@ volume changes slowly ??
 refactor project folder
 make general instance of UI properties with Back End
 in qualizer filters i use ONLY STEREO
+add tooltips (shortcuts)
 find out how works volume in samples

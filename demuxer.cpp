@@ -31,8 +31,11 @@ void Demuxer::push_packets_to_queues()
     {
         Packet packet = make_shared_packet();
         int res = av_read_frame(format_context, packet.get());
-        if (res<0)
+        if (res<0){
+            if (res == AVERROR_EOF)
+                emit endReached();
             return;
+        }
 
         if (medias.contains(packet->stream_index)){
             IMediaContext* media = medias[packet->stream_index];

@@ -21,7 +21,7 @@ public:
 public:
 
 private:
-    QElapsedTimer startTime;
+    QElapsedTimer timer;
     qint64 pausedTime {0};
     qint64 baseTime {0};
     double speed;

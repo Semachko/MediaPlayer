@@ -46,7 +46,7 @@ Item{
                     font.pointSize: 16
                 }
             }
-            Slider {
+            FilterSlider {
                 id: brightness_slider
                 Layout.fillWidth: true
                 value: 0.5
@@ -68,7 +68,7 @@ Item{
                     font.pointSize: 16
                 }
             }
-            Slider {
+            FilterSlider {
                 id: contrast_slider
                 Layout.fillWidth: true
                 value: 0.5
@@ -90,7 +90,7 @@ Item{
                     font.pointSize: 16
                 }
             }
-            Slider {
+            FilterSlider {
                 id: saturation_slider
                 Layout.fillWidth: true
                 value: 0.5

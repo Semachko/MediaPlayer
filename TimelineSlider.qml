@@ -35,11 +35,12 @@ Slider {
 
     handle: Rectangle {
         x: leftPadding + visualPosition * (availableWidth - width) - 1
-        height: root.height
-        width: root.height / 1.8
+        anchors.verticalCenter: root.verticalCenter
+        height: root.height * 0.9
+        width: root.height * 0.5
         radius: 5
         color: "#203A47"
         border.color: "white"
-        border.width: pressed ? width * 0.35 : hovered ? width * 0.3 : width * 0.25
+        border.width: pressed ? width * 0.3 : hovered ? width * 0.28 : width * 0.25
     }
 }
