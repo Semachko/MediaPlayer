@@ -22,11 +22,9 @@ public:
 
     void add_context(int stream_id, IMediaContext* context);
     void demuxe_packets();
-    void push_packets_to_queues();
+    bool push_packet_to_queues();
 signals:
     void endReached();
-private:
-    bool is_queues_full();
     ///////////////////////////////////////////////
     ///////////////////////////////////////////////
 private:

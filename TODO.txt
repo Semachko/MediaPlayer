@@ -9,6 +9,6 @@ make pop() in queue exception safe
 volume changes slowly ??
 refactor project folder
 make general instance of UI properties with Back End
-in qualizer filters i use ONLY STEREO
+in equalizer filters i use ONLY STEREO
 add tooltips (shortcuts)
 find out how works volume in samples

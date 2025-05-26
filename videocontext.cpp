@@ -12,7 +12,7 @@ constexpr auto IMAGE = "\033[35m[Image]\033[0m";
 
 VideoContext::VideoContext(QVideoSink* videosink, AVFormatContext* format_context, Synchronizer* sync, qreal bufferization_time)
     :
-    IMediaContext(16),
+    IMediaContext(10),
     videosink(videosink),
     sync(sync)
 {
@@ -64,7 +64,7 @@ VideoContext::~VideoContext()
 
 void VideoContext::decode_and_output()
 {
-    sync->check_pause();
+    //sync->check_pause();
     QMutexLocker _(&decodingMutex);
 
     if (buffer_available() == 0)
@@ -80,10 +80,8 @@ void VideoContext::decode_and_output()
     qreal packetTime = packet->pts * av_q2d(timeBase);
     qreal currTime = sync->get_time() / 1000.0;
     qreal diff = currTime - packetTime;
-    if (diff > 0.2){
-        qDebug("video is lating");
+    if (diff > 0.1)
         return;
-    }
 
     int ret = avcodec_send_packet(codec_context, packet.get());
     if (ret < 0) {

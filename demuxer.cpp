@@ -20,39 +20,31 @@ void Demuxer::add_context(int stream_id, IMediaContext* context)
 
 void Demuxer::demuxe_packets()
 {
-    sync->check_pause();
-    push_packets_to_queues();
+    //sync->check_pause();
+    for (auto& [_stream, context] : medias)
+        while (!context->packetQueue.is_full())
+            if (!push_packet_to_queues())
+                return;
 }
 
-void Demuxer::push_packets_to_queues()
+bool Demuxer::push_packet_to_queues()
 {
     QMutexLocker _(&formatMutex);
-    while(!is_queues_full())
-    {
-        Packet packet = make_shared_packet();
-        int res = av_read_frame(format_context, packet.get());
-        if (res<0){
-            if (res == AVERROR_EOF)
-                emit endReached();
-            return;
-        }
-
-        if (medias.contains(packet->stream_index)){
-            IMediaContext* media = medias[packet->stream_index];
-            media->packetQueue.push(std::move(packet));
-            emit media->newPacketArrived();
-        }
+    Packet packet = make_shared_packet();
+    int res = av_read_frame(format_context, packet.get());
+    if (res<0){
+        if (res == AVERROR_EOF)
+            emit endReached();
+        return false;
     }
-}
 
-bool Demuxer::is_queues_full()
-{
-    for (auto& [_stream, context] : medias)
-        if (!context->packetQueue.is_full())
-            return false;
+    if (medias.contains(packet->stream_index)){
+        IMediaContext* media = medias[packet->stream_index];
+        media->packetQueue.push(std::move(packet));
+        emit media->newPacketArrived();
+    }
     return true;
 }
-
 
 Demuxer::~Demuxer()
 {
