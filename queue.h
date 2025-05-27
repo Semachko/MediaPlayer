@@ -28,11 +28,17 @@ public:
         queue.pop();
         return val;
     }
-    T back(){
+    T& back(){
         QMutexLocker locker(&mutex);
-        if (queue.empty())
-            return T();
+        // if (queue.empty())
+        //     return T();
         return queue.back();
+    }
+    T& front(){
+        QMutexLocker locker(&mutex);
+        // if (queue.empty())
+        //     return T();
+        return queue.front();
     }
     bool empty() const{
         QMutexLocker locker(&mutex);

@@ -135,36 +135,52 @@ void Media::mute_unmute()
 
 void Media::seek_time(int64_t seek_target)
 {
-    QMutexLocker f(&formatMutex);
-    QMutexLocker v(&video->decodingMutex);
-    QMutexLocker a(&audio->audioMutex);
+    formatMutex.lock();
+    video->videoMutex.lock();
+    audio->audioMutex.lock();
+    video->output->queueMutex.lock();
 
-    audio->audioSink->stop();
-    QAudioSink* oldSink = audio->audioSink;
-    oldSink->deleteLater();
-    audio->audioSink = new QAudioSink(audio->format, this);
-    audio->audioSink->setVolume(audio->last_volume);
-    audio->audioSink->start(audio->audioDevice);
-    audio->audioSink->suspend();
-
-    video->packetQueue.clear();
-    audio->packetQueue.clear();
-
-    avcodec_flush_buffers(video->codec_context);
-    avcodec_flush_buffers(audio->codec_context);
-
-    QMutexLocker o(&video->output->queueMutex);
+    audio->audioDevice->buffer.clear();
     video->output->imageQueue.clear();
-    //audio->audioDevice->clear();
-    audio->audioDevice->readAll();
-
-    sync->clock->set_time(seek_target/1000);
 
     int res = av_seek_frame(format_context, -1, seek_target, AVSEEK_FLAG_BACKWARD);
     if (res) {
         qWarning() << "No such time";
         return;
     }
+
+    video->packetQueue.clear();
+    audio->packetQueue.clear();
+    for (auto& [_stream, context] : demuxer->medias)
+        while (!context->packetQueue.is_full())
+            if (!demuxer->push_packet_to_queues())
+                break;
+    Packet temp_packet = video->packetQueue.front();
+    qint64 seeked_time_ms = temp_packet->pts * av_q2d(format_context->streams[temp_packet->stream_index]->time_base) * 1000;
+
+    sync->clock->set_time(seeked_time_ms);
+
+    avcodec_flush_buffers(video->codec_context);
+    avcodec_flush_buffers(audio->codec_context);
+
+
+    formatMutex.unlock();
+    // audio->audioMutex.unlock();
+    // video->videoMutex.unlock();
+    // video->output->queueMutex.unlock();
+
+    // video->decode_and_output();
+    // audio->decode_and_output();
+
+    video->decode();
+    video->filter_and_output();
+    video->videoMutex.unlock();
+
+    audio->decode();
+    audio->equalizer_and_output();
+    audio->audioMutex.unlock();
+
+
     if(isTemporaryPaused){
         resume_pause();
         isTemporaryPaused=false;
@@ -197,14 +213,6 @@ void Media::subtruct_5sec()
 
 void Media::change_speed(qreal speed)
 {
-    if(!sync->isPaused){
-        sync->play_or_pause();
-
-        audio->set_speed(speed);
-        sync->clock->setSpeed(speed);
-
-        sync->play_or_pause();
-    }
     audio->set_speed(speed);
     sync->clock->setSpeed(speed);
 }

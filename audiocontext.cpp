@@ -56,6 +56,7 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync, 
     // Initiating audio output DEVICE
     audioDevice = new AudioIODevice(sync,this);
     audioSink = new QAudioSink(format, this);
+    audioSink->setBufferSize(4092);
     audioSink->setVolume(last_volume);
     audioSink->start(audioDevice);
     audioSink->suspend();
@@ -77,14 +78,18 @@ void AudioContext::decode_and_output()
 {
     //sync->check_pause();
     QMutexLocker _(&audioMutex);
-
     if (buffer_available() == 0)
         return;
     if (packetQueue.size() == 0){
         emit requestPacket();
         return;
     }
+    decode();
+    equalizer_and_output();
+}
 
+void AudioContext::decode()
+{
     Packet packet = packetQueue.pop();
     emit requestPacket();
 
@@ -99,8 +104,6 @@ void AudioContext::decode_and_output()
         qDebug()<<"Error decoding audio packet: "<<result;
         return;
     }
-
-    equalizer_and_output();
 }
 
 void AudioContext::equalizer_and_output()

@@ -41,8 +41,9 @@ public:
     void set_high(qreal value);
     void set_speed(qreal speed);
 
-private:
+    void decode();
     void equalizer_and_output();
+private:
     AVSampleFormat convert_to_AVFormat(QAudioFormat::SampleFormat format);
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////

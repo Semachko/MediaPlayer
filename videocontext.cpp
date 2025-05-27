@@ -65,7 +65,7 @@ VideoContext::~VideoContext()
 void VideoContext::decode_and_output()
 {
     //sync->check_pause();
-    QMutexLocker _(&decodingMutex);
+    QMutexLocker _(&videoMutex);
 
     if (buffer_available() == 0)
         return;
@@ -73,23 +73,26 @@ void VideoContext::decode_and_output()
         emit requestPacket();
         return;
     }
-
+    decode();
+    filter_and_output();
+}
+void VideoContext::decode()
+{
     Packet packet = packetQueue.pop();
     emit requestPacket();
 
     qreal packetTime = packet->pts * av_q2d(timeBase);
     qreal currTime = sync->get_time() / 1000.0;
     qreal diff = currTime - packetTime;
-    if (diff > 0.1)
+    if (diff > 0.1){
+        qDebug()<<"time ="<<currTime<<"Lating, skip.";
         return;
-
+    }
     int ret = avcodec_send_packet(codec_context, packet.get());
     if (ret < 0) {
         qDebug()<<"Error decoding video packet: "<<ret;
         return;
     }
-
-    filter_and_output();
 }
 
 void VideoContext::filter_and_output()

@@ -22,14 +22,15 @@ void Demuxer::demuxe_packets()
 {
     //sync->check_pause();
     for (auto& [_stream, context] : medias)
-        while (!context->packetQueue.is_full())
+        while (!context->packetQueue.is_full()){
+            QMutexLocker _(&formatMutex);
             if (!push_packet_to_queues())
                 return;
+        }
 }
 
 bool Demuxer::push_packet_to_queues()
 {
-    QMutexLocker _(&formatMutex);
     Packet packet = make_shared_packet();
     int res = av_read_frame(format_context, packet.get());
     if (res<0){

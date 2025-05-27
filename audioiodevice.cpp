@@ -31,7 +31,8 @@ void AudioIODevice::clear()
 
 qint64 AudioIODevice::readData(char *data, qint64 maxlen)
 {
-    //qDebug() << OUTPUT <<"ReadData requested" << maxlen << "bytes";
+    sync->check_pause();
+
     QMutexLocker _(&clearAvailable);
     qint64 len = qMin(maxlen, (qint64)buffer.size());
     if (len > 0) {

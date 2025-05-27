@@ -27,11 +27,12 @@ signals:
     void endReached();
     ///////////////////////////////////////////////
     ///////////////////////////////////////////////
+public:
+    std::unordered_map<int,IMediaContext*> medias;
 private:
     QMutex& formatMutex;
     AVFormatContext* format_context;
     Synchronizer* sync;
-    std::unordered_map<int,IMediaContext*> medias;
 };
 
 #endif // DEMUXER_H

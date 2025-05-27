@@ -31,8 +31,10 @@ public:
     void set_brightness(qreal value);
     void set_contrast(qreal value);
     void set_saturation(qreal value);
-private:
+
+    void decode();
     void filter_and_output();
+private:
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
 public:
@@ -40,7 +42,7 @@ public:
     FrameOutput* output;
     AVCodecContext* codec_context;
 
-    QMutex decodingMutex;
+    QMutex videoMutex;
 private:
     QThread* outputThread;
     QVideoSink* videosink;
