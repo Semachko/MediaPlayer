@@ -39,6 +39,7 @@ public:
     Queue<ImageFrame> imageQueue;
     QWaitCondition imageReady;
     QMutex queueMutex;
+    bool abort = false;
 private:
     QMutex conditionMutex;
     Synchronizer* sync;

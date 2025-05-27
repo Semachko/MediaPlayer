@@ -27,14 +27,18 @@ QString Playlist::next_file()
 {
     if (currentIndex + 1 < mediaFiles.size())
         return mediaFiles[++currentIndex].absoluteFilePath();
-    return mediaFiles[0].absoluteFilePath();
+
+    currentIndex = 0;
+    return mediaFiles[currentIndex].absoluteFilePath();
 }
 
 QString Playlist::prev_file()
 {
     if (currentIndex > 0)
         return mediaFiles[--currentIndex].absoluteFilePath();
-    return mediaFiles.back().absoluteFilePath();
+
+    currentIndex = mediaFiles.size()-1;
+    return mediaFiles[currentIndex].absoluteFilePath();;
 }
 
 QString Playlist::shuffle_playlist()

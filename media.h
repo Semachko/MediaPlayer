@@ -71,16 +71,18 @@ signals:
 
 
 private:
+    void lock_all_mutexes();
+    void unlock_all_mutexes();
+    void clear_all_buffers();
+    qint64 get_real_time_ms();
     void delete_members();
     void seek_time(int64_t);
 public:
-    AudioContext* audio;
-    VideoContext* video;
+    AudioContext* audio = nullptr;
+    VideoContext* video = nullptr;
     Demuxer* demuxer;
 private:
     AVFormatContext* format_context = nullptr;
-
-    QVideoSink* videosink;
 
     QThread* audioThread;
     QThread* videoThread;
@@ -88,10 +90,9 @@ private:
 
     Synchronizer* sync;
     QMutex formatMutex;
-    bool isTemporaryPaused = false;
 
     bool isRepeating = false;
-
+    bool isSliderPause = false;
     QTimer* updateTimer;
 };
 

@@ -31,7 +31,7 @@ class AudioContext : public IMediaContext
 {
     Q_OBJECT
 public:
-    AudioContext(AVFormatContext* format_context, Synchronizer* sync, qreal bufferization_time);
+    AudioContext(AVFormatContext* format_context, Synchronizer* sync, int stream_id, qreal bufferization_time);
     ~AudioContext();
 
     void decode_and_output() override;

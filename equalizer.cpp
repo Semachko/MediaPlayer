@@ -3,10 +3,12 @@
 
 Equalizer::Equalizer(AVCodecContext* cod_ctx) : codec_context(cod_ctx){
     //av_log_set_level(AV_LOG_DEBUG);
+    char buf[128];
+    av_channel_layout_describe(&codec_context->ch_layout, buf, sizeof(buf));
     args =
         "sample_rate="+std::to_string(codec_context->sample_rate)
         +":sample_fmt="+av_get_sample_fmt_name(codec_context->sample_fmt)
-        +":channel_layout=stereo"
+        +":channel_layout=" + buf
         +":channels="+std::to_string(codec_context->ch_layout.nb_channels);
     update_equalizer();
 }
@@ -67,7 +69,7 @@ void Equalizer::update_equalizer()
     buffersrc  = avfilter_get_by_name("abuffer");
     buffersink = avfilter_get_by_name("abuffersink");
 
-    qDebug()<<"Args: "<<args;
+    //qDebug()<<"Args: "<<args;
     if (avfilter_graph_create_filter(&buffersrc_ctx, buffersrc, "in", args.c_str(), nullptr, filter_graph) < 0)
         qDebug() << "Failed to create abuffer";
     if (avfilter_graph_create_filter(&buffersink_ctx, buffersink, "out", nullptr, nullptr, filter_graph) < 0)

@@ -23,7 +23,7 @@ class VideoContext : public IMediaContext
 {
     Q_OBJECT
 public:
-    VideoContext(QVideoSink* videosink, AVFormatContext* format_context, Synchronizer* sync, qreal bufferization_time);
+    VideoContext(QVideoSink* videosink, AVFormatContext* format_context, Synchronizer* sync, int stream_id, qreal bufferization_time);
     ~VideoContext();
 
     void decode_and_output() override;
@@ -43,9 +43,9 @@ public:
     AVCodecContext* codec_context;
 
     QMutex videoMutex;
+    QVideoSink* videosink;
 private:
     QThread* outputThread;
-    QVideoSink* videosink;
 
     Filters* filters;
     ImageConverter* converter;

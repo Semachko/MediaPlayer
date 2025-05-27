@@ -113,9 +113,7 @@ void Player::add5sec()
 }
 void Player::nextMedia(bool isPlaying)
 {
-    QString next_file = playlist.next_file();
-    qDebug()<<"Setting file:"<<next_file;
-    emit media->set_file(next_file, m_videoSink,isPlaying);
+    emit media->set_file(playlist.next_file(), m_videoSink,isPlaying);
 }
 
 void Player::changeSpeed(qreal speed)
@@ -140,8 +138,6 @@ void Player::sliderPause()
 {
     emit media->sliderPause();
 }
-
-
 
 qreal Player::currentPosition() const
 {

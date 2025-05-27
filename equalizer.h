@@ -4,6 +4,7 @@
 #define __STDC_CONSTANT_MACROS
 
 extern "C" {
+#include <libavutil/channel_layout.h>
 #include <libavfilter/avfilter.h>
 #include <libavfilter/buffersink.h>
 #include <libavfilter/buffersrc.h>

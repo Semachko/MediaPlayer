@@ -1,12 +1,12 @@
 repeat button
-make correct destroying frameoutput loop
-look like in videocontext destructors i dont check if members are nullptr (happen after only audio file to video file)
 preload images on setting file
 preload images on seeking
-when shuffle, media name in UI is old
 make pop() in queue exception safe
-refactor project folder
 make general instance of UI properties with Back End
-in equalizer filters i use ONLY STEREO
+when shuffle, media name in UI is old
+make correct destroying frameoutput loop (QML VideoSink destroys first)
+
 add tooltips (shortcuts)
+refactor project folder
+
 find out how works volume in samples

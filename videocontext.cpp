@@ -10,25 +10,21 @@
 constexpr auto DECODING = "\033[31m[Decoding]\033[0m";
 constexpr auto IMAGE = "\033[35m[Image]\033[0m";
 
-VideoContext::VideoContext(QVideoSink* videosink, AVFormatContext* format_context, Synchronizer* sync, qreal bufferization_time)
+VideoContext::VideoContext(QVideoSink* videosink, AVFormatContext* format_context, Synchronizer* sync, int stream_id, qreal bufferization_time)
     :
     IMediaContext(10),
     videosink(videosink),
+    stream_id(stream_id),
     sync(sync)
 {
-    stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
-    if (stream_id<0)
-        return;
-
     timeBase = format_context->streams[stream_id]->time_base;
 
+    // Initiating CODEC
     AVCodecParameters* codec_parameters = format_context->streams[stream_id]->codecpar;
     const AVCodec* codec = avcodec_find_decoder(codec_parameters->codec_id);
-
     codec_context = avcodec_alloc_context3(codec);
     avcodec_parameters_to_context(codec_context, codec_parameters);
     avcodec_open2(codec_context, codec, nullptr);
-
 
     filters = new Filters(codec_parameters,timeBase);
     converter = new ImageConverter(codec_context);
@@ -49,10 +45,13 @@ VideoContext::VideoContext(QVideoSink* videosink, AVFormatContext* format_contex
 
 VideoContext::~VideoContext()
 {
+    if (stream_id<0)
+        return;
     avcodec_free_context(&codec_context);
     delete filters;
     delete converter;
 
+    output->imageReady.wakeAll();
     outputThread->quit();
     outputThread->wait();
     output->deleteLater();

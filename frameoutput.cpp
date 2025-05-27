@@ -20,7 +20,7 @@ FrameOutput::~FrameOutput()
 
 void FrameOutput::start_output()
 {
-    while(true)
+    while(!abort)
     {
         sync->check_pause();
         QMutexLocker q(&conditionMutex);
@@ -30,7 +30,6 @@ void FrameOutput::start_output()
             // qDebug()<<OUTPUT<<"Queue is empty, waiting for images";
             imageReady.wait(&conditionMutex);
         }
-
         QMutexLocker f(&queueMutex);
         if (imageQueue.empty())
              continue;
@@ -42,6 +41,8 @@ void FrameOutput::start_output()
         if (delay>0)
             QThread::msleep(delay);
 
+        if (abort)
+            return;
         //qDebug()<<"Current time in seconds:"<<sync->get_time()/1000.0;
         videosink->setVideoFrame(imageFrame.image);
         emit imageOutputted();

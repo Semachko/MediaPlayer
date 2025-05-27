@@ -7,17 +7,13 @@
 constexpr auto DECODING = "\033[31m[Decoding]\033[0m";
 constexpr auto SAMPLE = "\033[35m[Sample]\033[0m";
 
-AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync, qreal bufferization_time)
+AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync, int stream_id, qreal bufferization_time)
     :
     IMediaContext(10),
     bufferization_time(bufferization_time),
+    stream_id(stream_id),
     sync(sync)
 {
-    // Finding audio STREAM
-    stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
-    if (stream_id<0)
-        return;
-
     timeBase = format_context->streams[stream_id]->time_base;
 
     // Initiating CODEC
@@ -35,8 +31,7 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync, 
     qDebug() << "Channel count:" << format.channelCount();
     if (!QMediaDevices::defaultAudioOutput().isFormatSupported(format)) {
         qWarning() << "Error with supporting default audio device!";
-        stream_id = -1;
-        return;
+        throw;
     }
 
     equalizer = new Equalizer(codec_context);
@@ -51,7 +46,6 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync, 
     qint64 bytesPerSample = av_get_bytes_per_sample((AVSampleFormat)outputFormat.format);
     qint64 bytesPerSecond = bytesPerSample * outputFormat.layout.nb_channels * outputFormat.sample_rate;
     maxBufferSize = bytesPerSecond * bufferization_time;
-
 
     // Initiating audio output DEVICE
     audioDevice = new AudioIODevice(sync,this);
@@ -96,8 +90,10 @@ void AudioContext::decode()
     qreal packetTime = packet->pts * av_q2d(timeBase);
     qreal currTime = sync->get_time() / 1000.0;
     qreal diff = currTime - packetTime;
-    if (diff > 0.1)
+    if (diff > 0.1){
+        qDebug()<<"Packet is lating skipping:"<<diff<<"sec";
         return;
+    }
 
     int result = avcodec_send_packet(codec_context, packet.get());;
     if (result < 0) {
@@ -126,8 +122,10 @@ void AudioContext::equalizer_and_output()
 qint64 AudioContext::buffer_available()
 {
     qint64 available_bytes = maxBufferSize - audioDevice->bytesAvailable();
-    if (available_bytes <= 0)
+    if (available_bytes <= 0){
+        emit audioDevice->readyRead();
         return 0;
+    }
     return available_bytes;
 }
 

@@ -32,6 +32,9 @@ Window {
         scale: 2.5
         source: "qrc:/images/BackGroundLogo.svg"
     }
+    // Component.onCompleted: {
+    //     player.setVideoSink(videoOutput.videoSink)
+    // }
     Item {
         id: video
         width: parent.width
@@ -155,10 +158,12 @@ Window {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 value: player.currentPosition
+                //property bool sliderpause: false
                 onPressedChanged:{
                     if (pressed) {
-                        if (playbutton.checked)
+                        if (playbutton.checked){
                             player.sliderPause()
+                        }
                     } else {
                         player.timeChanged(position)
                     }
