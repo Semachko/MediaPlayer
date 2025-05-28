@@ -10,7 +10,6 @@ constexpr auto SAMPLE = "\033[35m[Sample]\033[0m";
 AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync, int stream_id, qreal bufferization_time)
     :
     IMediaContext(10),
-    bufferization_time(bufferization_time),
     stream_id(stream_id),
     sync(sync)
 {
@@ -48,9 +47,9 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync, 
     maxBufferSize = bytesPerSecond * bufferization_time;
 
     // Initiating audio output DEVICE
-    audioDevice = new AudioIODevice(sync,this);
+    audioDevice = new AudioIODevice(this);
     audioSink = new QAudioSink(format, this);
-    audioSink->setBufferSize(4092);
+    audioSink->setBufferSize(MIN_BUFFER_SIZE);
     audioSink->setVolume(last_volume);
     audioSink->start(audioDevice);
     audioSink->suspend();
@@ -70,7 +69,6 @@ AudioContext::~AudioContext()
 
 void AudioContext::decode_and_output()
 {
-    //sync->check_pause();
     QMutexLocker _(&audioMutex);
     if (buffer_available() == 0)
         return;
@@ -114,7 +112,10 @@ void AudioContext::equalizer_and_output()
         if (!converted_frame)
             continue;
         int size = converted_frame->nb_samples * converted_frame->ch_layout.nb_channels * format.bytesPerSample();
-        audioDevice->appendData(QByteArray((const char*)converted_frame->data[0], size));
+        audioDevice->append(QByteArray((const char*)converted_frame->data[0], size));
+        if (audioDevice->bytesAvailable() >= MIN_BUFFER_SIZE && !sync->isPaused)
+            emit audioDevice->readyRead();
+
         av_frame_unref(frame.get());
     }
 }
@@ -122,10 +123,8 @@ void AudioContext::equalizer_and_output()
 qint64 AudioContext::buffer_available()
 {
     qint64 available_bytes = maxBufferSize - audioDevice->bytesAvailable();
-    if (available_bytes <= 0){
+    if (available_bytes <= 0 && !sync->isPaused)
         emit audioDevice->readyRead();
-        return 0;
-    }
     return available_bytes;
 }
 

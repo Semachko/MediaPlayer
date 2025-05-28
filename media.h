@@ -71,6 +71,7 @@ signals:
 
 
 private:
+    void output_one_image();
     void lock_all_mutexes();
     void unlock_all_mutexes();
     void clear_all_buffers();

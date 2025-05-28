@@ -32,9 +32,9 @@ Window {
         scale: 2.5
         source: "qrc:/images/BackGroundLogo.svg"
     }
-    // Component.onCompleted: {
-    //     player.setVideoSink(videoOutput.videoSink)
-    // }
+    Component.onCompleted: {
+        player.videoSink = videoOutput.videoSink
+    }
     Item {
         id: video
         width: parent.width
@@ -207,7 +207,7 @@ Window {
                     onAccepted: {
                         console.log("Selected file:", fileDialog.selectedFile)
                         filenamebar.text = fileDialog.selectedFile.toString().split("/").pop().split(".")[0]
-                        player.videoSink = videoOutput.videoSink
+                        //player.videoSink = videoOutput.videoSink
                         player.setFile(fileDialog.selectedFile,playbutton.checked)
 
                         timelinebar.enabled = true

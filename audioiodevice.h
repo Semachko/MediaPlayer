@@ -6,29 +6,24 @@
 #include <QMutex>
 #include <QWaitCondition>
 
-#include "synchronizer.h"
-
 class AudioIODevice : public QIODevice {
     Q_OBJECT
 public:
-    explicit AudioIODevice(Synchronizer* sync, QObject* parent = nullptr);
-    ~AudioIODevice();
+    explicit AudioIODevice(QObject* parent = nullptr);
 
-    void appendData(const QByteArray& data);
     void clear();
+    void append(const QByteArray& data);
     qint64 bytesAvailable() const override;
 protected:
     qint64 readData(char* data, qint64 maxlen) override;
-    qint64 writeData(const char*, qint64) override;
+    qint64 writeData(const char *data, qint64 maxSize) override;
 signals:
     void dataReaded();
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
-public:
-    QByteArray buffer;
 private:
-    Synchronizer* sync;
-    mutable QMutex clearAvailable;
+    mutable QMutex mutex;
+    QByteArray buffer;
 };
 
 #endif // AUDIOIODEVICE_H

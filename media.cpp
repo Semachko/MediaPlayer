@@ -96,8 +96,10 @@ void Media::resume_pause()
     }
     else{
         updateTimer->start(100);
-        if (audio)
+        if (audio){
             audio->audioSink->resume();
+            emit audio->audioDevice->readyRead();
+        }
     }
 }
 
@@ -108,6 +110,7 @@ void Media::slider_pause()
         isSliderPause=true;
     }
 }
+
 
 void Media::change_volume(qreal value)
 {
@@ -167,8 +170,11 @@ void Media::seek_time(int64_t seek_target)
     av_seek_frame(format_context, -1, seek_target, AVSEEK_FLAG_BACKWARD);
     qint64 current_time = get_real_time_ms();
     sync->clock->set_time(current_time);
-    if (video)
+
+    if (video){
         emit video->requestPacket();
+        output_one_image();
+    }
     if (audio)
         emit audio->requestPacket();
 
@@ -180,11 +186,26 @@ void Media::seek_time(int64_t seek_target)
     }
 }
 
+
+void Media::output_one_image()
+{
+    while(video->output->imageQueue.empty()){
+        while(video->packetQueue.empty()){
+            demuxer->push_packet_to_queues();
+        }
+        video->decode();
+        video->filter_and_output();
+    }
+    ImageFrame imageFrame = video->output->imageQueue.pop();
+    video->videosink->setVideoFrame(imageFrame.image);
+}
+
+
 void Media::clear_all_buffers()
 {
     if(audio){
         audio->packetQueue.clear();
-        audio->audioDevice->buffer.clear();
+        audio->audioDevice->clear();
         avcodec_flush_buffers(audio->codec_context);
     }
     if(video){
@@ -193,16 +214,18 @@ void Media::clear_all_buffers()
         avcodec_flush_buffers(video->codec_context);
     }
 }
-
 qint64 Media::get_real_time_ms()
 {
-    Packet temp_packet = make_shared_packet();
-    av_read_frame(format_context, temp_packet.get());
-    qint64 seeked_time_ms = temp_packet->pts * av_q2d(format_context->streams[temp_packet->stream_index]->time_base) * 1000;
-    if (demuxer->medias.contains(temp_packet->stream_index)){
-        IMediaContext* media = demuxer->medias[temp_packet->stream_index];
-        media->packetQueue.push(std::move(temp_packet));
-        emit media->newPacketArrived();
+    qint64 seeked_time_ms = -1;
+    while (video->packetQueue.empty() && audio->packetQueue.empty()){
+        Packet temp_packet = make_shared_packet();
+        av_read_frame(format_context, temp_packet.get());
+        seeked_time_ms = temp_packet->pts * av_q2d(format_context->streams[temp_packet->stream_index]->time_base) * 1000;
+        if (demuxer->medias.contains(temp_packet->stream_index)){
+            IMediaContext* media = demuxer->medias[temp_packet->stream_index];
+            media->packetQueue.push(std::move(temp_packet));
+            emit media->newPacketArrived();
+        }
     }
     return seeked_time_ms;
 }

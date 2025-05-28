@@ -4,6 +4,7 @@ preload images on seeking
 make pop() in queue exception safe
 make general instance of UI properties with Back End
 when shuffle, media name in UI is old
+mouse area is under ALL ui elements
 make correct destroying frameoutput loop (QML VideoSink destroys first)
 
 add tooltips (shortcuts)

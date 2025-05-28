@@ -97,7 +97,8 @@ void VideoContext::decode()
 void VideoContext::filter_and_output()
 {
     Frame frame = make_shared_frame();
-    while (avcodec_receive_frame(codec_context, frame.get()) == 0)
+    int res;
+    while ((res = avcodec_receive_frame(codec_context, frame.get())) == 0)
     {
         Frame filtered_frame = filters->applyFilters(frame);
         Frame output_frame = converter->convert(filtered_frame);
