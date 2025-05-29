@@ -280,7 +280,6 @@ Window {
                 scale: 0.7
                 onCheckedChanged: {
                     player.isPaused = !playbutton.checked
-                    console.log("pause is:", !playbutton.checked)
                 }
                 Shortcut {
                     sequence: "space"

@@ -30,9 +30,12 @@ void FrameOutput::start_output()
             // qDebug()<<OUTPUT<<"Queue is empty, waiting for images";
             imageReady.wait(&conditionMutex);
         }
-        QMutexLocker f(&queueMutex);
-        if (imageQueue.empty())
-             continue;
+
+        {
+            QMutexLocker f(&queueMutex);
+            if (imageQueue.empty())
+                continue;
+        }
         // qDebug()<<OUTPUT<<"Queue contain image, outputing";
         ImageFrame imageFrame = imageQueue.pop();
 

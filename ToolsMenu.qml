@@ -40,7 +40,7 @@ Item {
             //Layout.fillHeight: true
             ToolsMenuButton {
                 id: filters
-                label: "Filters"
+                label: "Filters (V)"
                 iconSRC: "qrc:/images/filters.svg"
                 checkable: false
                 onClicked: {
@@ -50,7 +50,7 @@ Item {
             }
             ToolsMenuButton {
                 id: equalizer
-                label: "Equalizer"
+                label: "Equalizer (E)"
                 iconSRC: "qrc:/images/equalizer.svg"
                 checkable: false
                 onClicked: {
@@ -60,23 +60,30 @@ Item {
             }
             ToolsMenuButton {
                 id: rotate
-                label: "Rotate"
+                label: "Rotate (R)"
                 iconSRC: "qrc:/images/rotate.svg"
                 checkable: false
                 onClicked: {
-                    console.log("ROT CLICKED!!!");
                     popup.close()
                     root.rotateClicked()
+                }
+                Shortcut {
+                    sequence: "R"
+                    onActivated: rotate.click()
                 }
             }
             ToolsMenuButton {
                 id: shuffle
-                label: "Shuffle"
+                label: "Shuffle (S)"
                 iconSRC: "qrc:/images/shuffle.svg"
                 checkable: false
                 onClicked: {
                     popup.close()
                     root.shuffleClicked()
+                }
+                Shortcut {
+                    sequence: "S"
+                    onActivated: shuffle.click()
                 }
             }
             ToolsMenuButton {

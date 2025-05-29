@@ -14,6 +14,7 @@ Media::Media(){
     connect(this,&Media::subtruct5sec,this,&Media::subtruct_5sec);
     connect(this,&Media::add5sec,this,&Media::add_5sec);
     connect(this,&Media::speedChanged,this,&Media::change_speed);
+    connect(this,&Media::repeatingChanged,this,&Media::change_repeating);
 }
 Media::~Media()
 { delete_members(); }
@@ -111,6 +112,15 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
 void Media::resume_pause()
 {
     sync->play_or_pause();
+    if(sync->isPaused)
+        QMetaObject::invokeMethod(updateTimer, [this]() {
+            updateTimer->stop();
+        }, Qt::QueuedConnection);
+    else
+        QMetaObject::invokeMethod(updateTimer, [this]() {
+            updateTimer->start(100);
+        }, Qt::QueuedConnection);
+
     if (audio){
         if(sync->isPaused)
             audio->audioSink->suspend();
@@ -127,6 +137,11 @@ void Media::slider_pause()
         resume_pause();
         isSliderPause=true;
     }
+}
+
+void Media::change_repeating()
+{
+    isRepeating=!isRepeating;
 }
 
 void Media::change_volume(qreal value)
@@ -232,11 +247,11 @@ void Media::clear_all_buffers()
 qint64 Media::get_real_time_ms()
 {
     qint64 seeked_time_ms = -1;
-    while (video->packetQueue.empty() && audio->packetQueue.empty()){
+    while (seeked_time_ms == -1){
         Packet temp_packet = make_shared_packet();
         av_read_frame(format_context, temp_packet.get());
-        seeked_time_ms = temp_packet->pts * av_q2d(format_context->streams[temp_packet->stream_index]->time_base) * 1000;
         if (demuxer->medias.contains(temp_packet->stream_index)){
+            seeked_time_ms = temp_packet->pts * av_q2d(format_context->streams[temp_packet->stream_index]->time_base) * 1000;
             IMediaContext* media = demuxer->medias[temp_packet->stream_index];
             media->packetQueue.push(std::move(temp_packet));
             emit media->newPacketArrived();
@@ -244,6 +259,7 @@ qint64 Media::get_real_time_ms()
     }
     return seeked_time_ms;
 }
+
 void Media::lock_all_mutexes()
 {
     formatMutex.lock();

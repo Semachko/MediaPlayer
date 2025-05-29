@@ -141,7 +141,6 @@ bool Player::isPaused() const{
 void Player::setIsPaused(bool newIsPaused)
 {
     m_isPaused = newIsPaused;
-    qDebug()<<"We setted isPaused to"<<m_isPaused;
     emit media->playORpause();
     emit isPausedChanged();
 }
@@ -152,6 +151,7 @@ bool Player::isRepeating() const{
 void Player::setIsRepeating(bool newIsRepeating)
 {
     m_isRepeating = newIsRepeating;
+    emit media->repeatingChanged();
     emit isRepeatingChanged();
 }
 
@@ -223,8 +223,8 @@ qreal Player::saturation() const{
 }
 void Player::setSaturation(qreal newSaturation)
 {
-    // from 0 to 3
-    m_saturation = newSaturation * 3.0;
+    // from 0 to 2
+    m_saturation = newSaturation * 2.0;
     emit media->saturationChanged(m_saturation);
     emit saturationChanged();
 }

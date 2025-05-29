@@ -44,7 +44,7 @@ public:
 
     void change_time(qreal);
     void slider_pause();
-
+    void change_repeating();
 signals:
     void fileChanged(QString,QVideoSink*,bool);
 
@@ -69,7 +69,7 @@ signals:
     void sliderPause();
     void outputTime(qint64,qreal);
     void outputGlobalTime(qint64);
-
+    void repeatingChanged();
 
 private:
     void output_one_image();
