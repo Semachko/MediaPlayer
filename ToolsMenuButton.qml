@@ -7,6 +7,7 @@ Button {
     id: button
     implicitWidth: 200
     height: 50
+    checkable: true
     contentItem: Text {
         verticalAlignment: Text.AlignVCenter
         leftPadding: 50
@@ -15,7 +16,16 @@ Button {
         color: "white"
         font.pointSize: 18
     }
-    background: Rectangle {
+    background: Item{
+        Rectangle {
+            id: rect
+            anchors.fill: parent
+            radius: 5
+            color: button.hovered ? "#9D9D9D" : checked ? "#4A4A4A" : "transparent"
+            opacity: 0.5
+            border.width: button.pressed ? 3 : 0
+            border.color: "white"
+        }
         Image {
             scale: 0.8
             anchors.verticalCenter: parent.verticalCenter
@@ -24,9 +34,5 @@ Button {
             source: button.iconSRC
             fillMode: Image.PreserveAspectFit
         }
-        radius: 5
-        color: button.hovered ? "#5C5D5D" : "transparent"
-        border.width: button.pressed ? 3 : 0
-        border.color: "white"
     }
 }

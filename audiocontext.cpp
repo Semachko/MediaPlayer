@@ -70,7 +70,7 @@ AudioContext::~AudioContext()
 void AudioContext::decode_and_output()
 {
     QMutexLocker _(&audioMutex);
-    if (buffer_available() == 0)
+    if (buffer_available() <= 0)
         return;
     if (packetQueue.size() == 0){
         emit requestPacket();

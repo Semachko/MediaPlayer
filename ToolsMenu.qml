@@ -42,6 +42,7 @@ Item {
                 id: filters
                 label: "Filters"
                 iconSRC: "qrc:/images/filters.svg"
+                checkable: false
                 onClicked: {
                     popup.close()
                     root.filtersClicked()
@@ -51,6 +52,7 @@ Item {
                 id: equalizer
                 label: "Equalizer"
                 iconSRC: "qrc:/images/equalizer.svg"
+                checkable: false
                 onClicked: {
                     popup.close()
                     root.equalizerClicked()
@@ -60,6 +62,7 @@ Item {
                 id: rotate
                 label: "Rotate"
                 iconSRC: "qrc:/images/rotate.svg"
+                checkable: false
                 onClicked: {
                     console.log("ROT CLICKED!!!");
                     popup.close()
@@ -70,6 +73,7 @@ Item {
                 id: shuffle
                 label: "Shuffle"
                 iconSRC: "qrc:/images/shuffle.svg"
+                checkable: false
                 onClicked: {
                     popup.close()
                     root.shuffleClicked()
