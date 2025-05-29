@@ -27,7 +27,6 @@ Frame Equalizer::applyEqualizer(Frame frame)
         qDebug() << "av_buffersink_get_frame error:" << ret;
         return nullptr;
     }
-    qDebug()<<"successfully equalized, low:"<<low;
     return equalized_frame;
 }
 

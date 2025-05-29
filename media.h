@@ -22,6 +22,7 @@ extern "C" {
 #include "demuxer.h"
 #include "clock.h"
 #include "synchronizer.h"
+#include "mediaparameters.h"
 
 class Media : public QObject
 {
@@ -31,7 +32,7 @@ public:
     Media();
     ~Media();
 
-    void set_file(QString filename,QVideoSink* videosink,bool isPlaying);
+    void set_file(MediaParameters& parameters, QVideoSink* videosink);
 
     void add_5sec();
     void resume_pause();

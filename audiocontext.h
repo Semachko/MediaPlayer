@@ -40,6 +40,7 @@ public:
     void set_mid(qreal value);
     void set_high(qreal value);
     void set_speed(qreal speed);
+    void set_volume(qreal volume);
 
     void decode();
     void equalizer_and_output();

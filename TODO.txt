@@ -6,6 +6,7 @@ when shuffle, media name in UI is old
 after changing media through >nextMedia, seeking works wrong
 mouse area is under ALL ui elements
 make correct destroying frameoutput loop (QML VideoSink destroys first)
+fix global time timer (to stop on pauses)
 
 add tooltips (shortcuts)
 refactor project folder

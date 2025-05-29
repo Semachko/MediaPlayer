@@ -38,7 +38,9 @@ Item{
                 id: low_slider
                 Layout.fillHeight: true
                 Layout.alignment: Qt.AlignHCenter
-                value: 0.5
+                from: -12
+                to: 12
+                value: 0
             }
             Text {
                 Layout.fillWidth: true
@@ -58,7 +60,9 @@ Item{
                 id: mid_slider
                 Layout.fillHeight: true
                 Layout.alignment: Qt.AlignHCenter
-                value: 0.5
+                from: -12
+                to: 12
+                value: 0
             }
             Text {
                 Layout.fillWidth: true
@@ -78,7 +82,9 @@ Item{
                 id: high_slider
                 Layout.fillHeight: true
                 Layout.alignment: Qt.AlignHCenter
-                value: 0.5
+                from: -12
+                to: 12
+                value: 0
             }
             Text {
                 Layout.fillWidth: true
@@ -128,9 +134,9 @@ Item{
             }
 
             onClicked: {
-                low_slider.value = 0.5
-                mid_slider.value = 0.5
-                high_slider.value = 0.5
+                low_slider.value = 0
+                mid_slider.value = 0
+                high_slider.value = 0
             }
         }
 

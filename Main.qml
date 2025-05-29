@@ -158,7 +158,6 @@ Window {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 value: player.currentPosition
-                //property bool sliderpause: false
                 onPressedChanged:{
                     if (pressed) {
                         if (playbutton.checked){
@@ -207,7 +206,6 @@ Window {
                     onAccepted: {
                         console.log("Selected file:", fileDialog.selectedFile)
                         filenamebar.text = fileDialog.selectedFile.toString().split("/").pop().split(".")[0]
-                        //player.videoSink = videoOutput.videoSink
                         player.setFile(fileDialog.selectedFile,playbutton.checked)
 
                         timelinebar.enabled = true
@@ -229,7 +227,7 @@ Window {
                 onEqualizerClicked: equalizerwindow.visible = true
                 onRotateClicked: videoOutput.rotation += 90
                 onShuffleClicked: player.shuffleMedia(playbutton.checked)
-                onRepeatClicked: player.repeatChanged()
+                onRepeatClicked: player.isRepeating = toolsmenu.isRepeating
                 Shortcut {
                     sequence: "A"
                     onActivated: equalizerwindow.visible = !equalizerwindow.visible
@@ -274,8 +272,9 @@ Window {
                 id: playbutton
                 Layout.fillWidth: true
                 scale: 0.7
-                onPressed: {
-                    player.playORpause()
+                onCheckedChanged: {
+                    player.isPaused = !playbutton.checked
+                    console.log("pause is:", !playbutton.checked)
                 }
                 Shortcut {
                     sequence: "space"
@@ -328,7 +327,7 @@ Window {
                     width: speedbutton.width*0.4
                     height: 230
                     onMoved:{
-                        player.changeSpeed(speedslider.value)
+                        player.speed = speedslider.value
                     }
                 }
             }
@@ -337,7 +336,7 @@ Window {
                 id: mutebutton
                 scale: 0.75
                 onPressed: {
-                    player.muteORunmute()
+                    player.isMuted = mutebutton.checked
                 }
                 Shortcut {
                     sequence: "M"
@@ -352,7 +351,7 @@ Window {
                 Layout.leftMargin: -15
                 Layout.rightMargin: 12
                 onMoved:{
-                    player.volumeChanged(volumeslider.value)
+                    player.volume = volumeslider.value
                 }
             }
             ResizeButton{
@@ -396,19 +395,17 @@ Window {
             id: filterswindow
             visible: false
             anchors.centerIn: parent
-
-            onBrightnessChanged: player.changeBrightness(filterswindow.brightness)
-            onContrastChanged: player.changeContrast(filterswindow.contrast)
-            onSaturationChanged: player.changeSaturation(filterswindow.saturation)
+            onBrightnessChanged: player.brightness = filterswindow.brightness
+            onContrastChanged: player.contrast = filterswindow.contrast
+            onSaturationChanged: player.saturation = filterswindow.saturation
         }
         EqualizerWindow{
             id: equalizerwindow
             visible: false
             anchors.centerIn: parent
-
-            onLowChanged: player.changeLowSounds(equalizerwindow.low)
-            onMidChanged: player.changeMidSounds(equalizerwindow.mid)
-            onHighChanged: player.changeHighSounds(equalizerwindow.high)
+            onLowChanged: player.low = equalizerwindow.low
+            onMidChanged: player.mid = equalizerwindow.mid
+            onHighChanged: player.high = equalizerwindow.high
         }
     }
 }

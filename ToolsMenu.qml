@@ -17,12 +17,12 @@ Item {
             }
         }
     }
-
     signal filtersClicked
     signal equalizerClicked
     signal rotateClicked
     signal shuffleClicked
     signal repeatClicked
+    property bool isRepeating: false
     Popup {
         id: popup
         modal: false
@@ -85,6 +85,7 @@ Item {
                 iconSRC: "qrc:/images/repeat.svg"
                 onClicked: {
                     popup.close()
+                    isRepeating = !isRepeating
                     root.repeatClicked()
                 }
             }

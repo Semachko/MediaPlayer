@@ -128,21 +128,22 @@ qint64 AudioContext::buffer_available()
     return available_bytes;
 }
 
-void AudioContext::set_low(qreal value)
-{
+void AudioContext::set_low(qreal value){
     equalizer->set_low(value);
 }
-void AudioContext::set_mid(qreal value)
-{
+void AudioContext::set_mid(qreal value){
     equalizer->set_mid(value);
 }
-void AudioContext::set_high(qreal value)
-{
+void AudioContext::set_high(qreal value){
     equalizer->set_high(value);
 }
-void AudioContext::set_speed(qreal speed)
-{
+void AudioContext::set_speed(qreal speed){
     equalizer->set_speed(speed);
+}
+void AudioContext::set_volume(qreal value){
+    last_volume=value;
+    if (!isMuted)
+        audioSink->setVolume(value);
 }
 
 

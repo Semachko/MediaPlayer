@@ -84,7 +84,7 @@ void VideoContext::decode()
     qreal currTime = sync->get_time() / 1000.0;
     qreal diff = currTime - packetTime;
     if (diff > 0.1){
-        qDebug()<<"time ="<<currTime<<"Lating, skip.";
+        qDebug()<<"diff ="<<diff<<"Lating, skip.";
         return;
     }
     int ret = avcodec_send_packet(codec_context, packet.get());

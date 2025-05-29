@@ -6,7 +6,6 @@
 #include "media.h"
 
 Media::Media(){
-    connect(this,&Media::fileChanged,this,&Media::set_file);
     connect(this,&Media::playORpause,this,&Media::resume_pause);
     connect(this,&Media::sliderPause,this,&Media::slider_pause);
     connect(this,&Media::volumeChanged,this,&Media::change_volume);
@@ -19,14 +18,14 @@ Media::Media(){
 Media::~Media()
 { delete_members(); }
 
-void Media::set_file(QString filename, QVideoSink* videosink, bool isPlaying)
+void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
 {
     if (format_context != nullptr){
         delete_members();
         videosink->setVideoFrame(QVideoFrame());
     }
 
-    avformat_open_input(&format_context, filename.toStdString().c_str(), nullptr, nullptr);
+    avformat_open_input(&format_context, parameters.filepath.toStdString().c_str(), nullptr, nullptr);
     avformat_find_stream_info(format_context, nullptr);
 
     emit outputGlobalTime(format_context->duration/1000);
@@ -56,6 +55,10 @@ void Media::set_file(QString filename, QVideoSink* videosink, bool isPlaying)
         videoThread = new QThread(this);
         video->moveToThread(videoThread);
         videoThread->start();
+        video->set_contrast(parameters.filters.contrast);
+        video->set_brightness(parameters.filters.brightness);
+        video->set_saturation(parameters.filters.saturation);
+
         demuxer->add_context(video->stream_id, video);
         connect(video,&VideoContext::requestPacket,demuxer,&Demuxer::demuxe_packets);
         connect(this,&Media::brightnessChanged,video,&VideoContext::set_brightness);
@@ -69,6 +72,14 @@ void Media::set_file(QString filename, QVideoSink* videosink, bool isPlaying)
         audioThread = new QThread(this);
         audio->moveToThread(audioThread);
         audioThread->start();
+        audio->set_low(parameters.equalizer.low);
+        audio->set_mid(parameters.equalizer.mid);
+        audio->set_high(parameters.equalizer.high);
+        audio->set_speed(parameters.speed);
+        audio->set_volume(parameters.volume);
+        if(audio->isMuted != parameters.isMuted)
+            mute_unmute();
+
         demuxer->add_context(audio->stream_id, audio);
         connect(audio,&AudioContext::requestPacket,demuxer,&Demuxer::demuxe_packets);
         connect(this,&Media::lowChanged,audio,&AudioContext::set_low);
@@ -76,8 +87,11 @@ void Media::set_file(QString filename, QVideoSink* videosink, bool isPlaying)
         connect(this,&Media::highChanged,audio,&AudioContext::set_high);
     }
 
-    if(sync->isPaused != !isPlaying)
-        sync->play_or_pause();
+    bool isPaused = sync->isPaused;
+    if(isPaused != parameters.isPaused)
+        resume_pause();
+    isRepeating = parameters.isRepeating;
+    change_speed(parameters.speed);
 
     connect(demuxer,&Demuxer::endReached,this,[this]() {
         if (isRepeating)
@@ -95,14 +109,10 @@ void Media::set_file(QString filename, QVideoSink* videosink, bool isPlaying)
 void Media::resume_pause()
 {
     sync->play_or_pause();
-    if(sync->isPaused){
-        updateTimer->stop();
-        if (audio)
+    if (audio){
+        if(sync->isPaused)
             audio->audioSink->suspend();
-    }
-    else{
-        updateTimer->start(100);
-        if (audio){
+        else{
             audio->audioSink->resume();
             emit audio->audioDevice->readyRead();
         }
@@ -117,14 +127,10 @@ void Media::slider_pause()
     }
 }
 
-
 void Media::change_volume(qreal value)
 {
-    if (audio){
-        audio->last_volume=value;
-        if (!audio->isMuted)
-            audio->audioSink->setVolume(value);
-    }
+    if (audio)
+        audio->set_volume(value);
 }
 
 void Media::mute_unmute()
@@ -136,11 +142,7 @@ void Media::mute_unmute()
     audio->isMuted=!audio->isMuted;
 }
 
-void Media::change_time(qreal position)
-{
-    int64_t seek_target = format_context->duration * position;
-    seek_time(seek_target);
-}
+
 
 void Media::add_5sec()
 {
@@ -167,6 +169,11 @@ void Media::change_speed(qreal speed)
     sync->clock->setSpeed(speed);
 }
 
+void Media::change_time(qreal position)
+{
+    int64_t seek_target = format_context->duration * position;
+    seek_time(seek_target);
+}
 
 void Media::seek_time(int64_t seek_target)
 {
