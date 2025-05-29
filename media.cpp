@@ -83,6 +83,12 @@ void Media::set_file(QString filename, QVideoSink* videosink, bool isPlaying)
         if (isRepeating)
             change_time(0);
     });
+
+    if (video){
+        lock_all_mutexes();
+        output_one_image();
+        unlock_all_mutexes();
+    }
     QMetaObject::invokeMethod(demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
 }
 

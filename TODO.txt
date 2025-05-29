@@ -1,5 +1,4 @@
 repeat button
-preload images on setting file
 preload images on seeking
 make pop() in queue exception safe
 make general instance of UI properties with Back End
