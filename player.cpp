@@ -35,13 +35,8 @@ void Player::setVideoSink(QVideoSink *sink)
         return;
     m_videoSink = sink;
 }
-
-void Player::setFile(QUrl filepath, bool isPlaying)
+void Player::update_params()
 {
-    QString newFile = playlist.set_new_file(filepath);
-    if(newFile.isEmpty())
-        return;
-    params.filepath = newFile;
     params.timePosition = m_currentPosition;
     params.volume = m_volume;
     params.speed = m_speed;
@@ -50,26 +45,43 @@ void Player::setFile(QUrl filepath, bool isPlaying)
     params.isRepeating = m_isRepeating;
     params.filters = FiltersParameters{m_brightness,m_contrast,m_saturation};
     params.equalizer = EqualizerParameters{m_low,m_mid,m_high};
+}
 
+void Player::setFile(QUrl filepath, bool isPlaying)
+{
+    update_params();
+    QString newFile = playlist.set_new_file(filepath);
+    if(newFile.isEmpty())
+        return;
+    params.filepath = newFile;
     media->set_file(params,m_videoSink);
 }
 
 void Player::shuffleMedia(bool isPlaying){
+    update_params();
     params.filepath = playlist.shuffle_playlist();
+    m_filename = params.filepath;
+    emit fileNameChanged(QFileInfo(m_filename).fileName());
     media->set_file(params,m_videoSink);
 }
 
 void Player::nextMedia(bool isPlaying){
+    update_params();
     params.filepath = playlist.next_file();
+    m_filename = params.filepath;
+    emit fileNameChanged(QFileInfo(m_filename).fileName());
     media->set_file(params, m_videoSink);
 }
 void Player::prevMedia(bool isPlaying){
+    update_params();
     params.filepath = playlist.prev_file();
+    m_filename = params.filepath;
+    emit fileNameChanged(QFileInfo(m_filename).fileName());
     media->set_file(params, m_videoSink);
 }
 
 void Player::add5sec(){
-    media->add5sec();
+    emit media->add5sec();
 }
 void Player::subtruct5sec(){
     emit media->subtruct5sec();
@@ -216,3 +228,9 @@ void Player::setSaturation(qreal newSaturation)
     emit media->saturationChanged(m_saturation);
     emit saturationChanged();
 }
+
+QString Player::filename() const
+{
+    return m_filename;
+}
+

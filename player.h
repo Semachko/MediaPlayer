@@ -10,6 +10,7 @@ class Player: public QObject
     Q_OBJECT
     Q_PROPERTY(QVideoSink* videoSink READ videoSink WRITE setVideoSink)
 
+    Q_PROPERTY(QString filename READ filename NOTIFY fileNameChanged)
     Q_PROPERTY(qreal currentPosition READ currentPosition NOTIFY currentPositionChanged)
     Q_PROPERTY(qreal volume READ volume WRITE setVolume NOTIFY volumeChanged)
     Q_PROPERTY(qreal speed READ speed WRITE setSpeed NOTIFY speedChanged)
@@ -65,9 +66,12 @@ public:
     void setContrast(qreal newContrast);
     qreal saturation() const;
     void setSaturation(qreal newSaturation);
+    QString filename() const;
+
 signals:
     Q_SIGNAL void globalTime(qint64 time);
     Q_SIGNAL void newTime(qint64 time);
+    Q_SIGNAL void fileNameChanged(QString filename);
 
     void currentPositionChanged();
     void volumeChanged();
@@ -84,6 +88,8 @@ signals:
     void contrastChanged();
     void saturationChanged();
 
+private:
+    void update_params();
 private:
     Media* media;
     QThread* mediaThread;
@@ -105,6 +111,7 @@ private:
     qreal m_brightness = 0.0;
     qreal m_contrast = 1.0;
     qreal m_saturation = 1.0;
+    QString m_filename;
 };
 
 #endif // PLAYER_H

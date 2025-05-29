@@ -6,7 +6,7 @@ Button {
     id: root
     width: 100
     height: 50
-    text: qsTr("Choose file")
+    text: qsTr("CHOOSE FILE")
     contentItem: Item {
         anchors.fill: parent
         Text {

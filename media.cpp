@@ -34,9 +34,11 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
 
     updateTimer = new QTimer(this);
     connect(updateTimer, &QTimer::timeout, this, [this]() {
-        qint64 curr_time = sync->get_time();
-        qreal pos = curr_time/(format_context->duration/1000.0);
-        emit outputTime(curr_time, pos);
+        if(!sync->isPaused){
+            qint64 curr_time = sync->get_time();
+            qreal pos = curr_time/(format_context->duration/1000.0);
+            emit outputTime(curr_time, pos);
+        }
     });
     updateTimer->start(100);
 
