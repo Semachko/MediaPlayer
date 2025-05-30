@@ -88,12 +88,16 @@ Item {
             }
             ToolsMenuButton {
                 id: repeat
-                label: "Repeat"
+                label: "Repeat (T)"
                 iconSRC: "qrc:/images/repeat.svg"
                 onClicked: {
                     popup.close()
                     isRepeating = !isRepeating
                     root.repeatClicked()
+                }
+                Shortcut {
+                    sequence: "T"
+                    onActivated: shuffle.click()
                 }
             }
         }

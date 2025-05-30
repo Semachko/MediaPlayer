@@ -1,16 +1,15 @@
-preload images on seeking
-make pop() in queue exception safe
-mouse area is under ALL ui elements
-make correct destroying frameoutput loop (QML VideoSink destroys first)
-limit openning only media type file extensions
-make filtering on pause
-make opening via context menu
-mute is broken when next media
+//make pop() in queue exception safe
+//limit openning only media type file extensions
+//mouse area is under ALL ui elements
+//mute is broken when next media
 
+make opening via context menu
+preload images on seeking
 add tooltips (shortcuts)
 change speed design
-improve filters/equalizer design
 add stretching
+make correct destroying frameoutput loop (QML VideoSink destroys first)
+make filtering on pause
 
 refactor project folder
 find out how works volume in samples

@@ -40,6 +40,7 @@ Item{
                 Layout.alignment: Qt.AlignHCenter
                 from: -12
                 to: 12
+                stepSize: 1
                 value: 0
             }
             Text {
@@ -62,6 +63,7 @@ Item{
                 Layout.alignment: Qt.AlignHCenter
                 from: -12
                 to: 12
+                stepSize: 1
                 value: 0
             }
             Text {
@@ -84,6 +86,7 @@ Item{
                 Layout.alignment: Qt.AlignHCenter
                 from: -12
                 to: 12
+                stepSize: 1
                 value: 0
             }
             Text {

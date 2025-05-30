@@ -96,7 +96,7 @@ void Equalizer::update_equalizer()
         + ",equalizer=f=8000:width_type=h:width=8000:g=" + std::to_string(high);
 
 
-    qDebug()<<"filter_descr:"<<filter_descr;
+    //qDebug()<<"filter_descr:"<<filter_descr;
     if (avfilter_graph_parse_ptr(filter_graph, filter_descr.c_str(), &inputs, &outputs, nullptr) < 0)
         qDebug() << "Error to resolve filter";
     if (avfilter_graph_config(filter_graph, nullptr) < 0)

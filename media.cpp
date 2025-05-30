@@ -90,8 +90,7 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
         connect(this,&Media::highChanged,audio,&AudioContext::set_high);
     }
 
-    bool isPaused = sync->isPaused;
-    if(isPaused != parameters.isPaused)
+    if(sync->isPaused != parameters.isPaused)
         resume_pause();
     isRepeating = parameters.isRepeating;
     change_speed(parameters.speed);
@@ -223,10 +222,13 @@ void Media::output_one_image()
         while(video->packetQueue.empty()){
             demuxer->push_packet_to_queues();
         }
-        video->decode();
+        Packet packet;
+        video->packetQueue.pop(packet);
+        video->decode(packet);
         video->filter_and_output();
     }
-    ImageFrame imageFrame = video->output->imageQueue.pop();
+    ImageFrame imageFrame;
+    video->output->imageQueue.pop(imageFrame);
     video->videosink->setVideoFrame(imageFrame.image);
 }
 

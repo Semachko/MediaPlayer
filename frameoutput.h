@@ -14,6 +14,7 @@
 struct ImageFrame
 {
     ImageFrame(QVideoFrame&&,qint64);
+    ImageFrame() = default;
     ImageFrame(ImageFrame&) = default;
     ImageFrame(ImageFrame&&) = default;
     ImageFrame& operator=(ImageFrame&) = default;
@@ -31,7 +32,6 @@ public:
 
     void start_output();
 signals:
-    //void imageToOutput(QVideoFrame frame);
     void imageOutputted();
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////

@@ -20,25 +20,27 @@ public:
         QMutexLocker locker(&mutex);
         queue.push(std::move(value));
     }
-    T pop(){
+    bool pop(T& out) {
         QMutexLocker locker(&mutex);
-        // if (queue.empty())
-        //     return nullptr;
-        T val = std::move(queue.front());
+        if (queue.empty())
+            return false;
+        out = queue.front();
         queue.pop();
-        return val;
+        return true;
     }
-    T& back(){
+    bool front(T& out) const {
         QMutexLocker locker(&mutex);
-        // if (queue.empty())
-        //     return T();
-        return queue.back();
+        if (queue.empty())
+            return false;
+        out = queue.front();
+        return true;
     }
-    T& front(){
+    bool back(T& out) const {
         QMutexLocker locker(&mutex);
-        // if (queue.empty())
-        //     return T();
-        return queue.front();
+        if (queue.empty())
+            return false;
+        out = queue.back();
+        return true;
     }
     bool empty() const{
         QMutexLocker locker(&mutex);
@@ -54,9 +56,8 @@ public:
     }
     void clear(){
         QMutexLocker locker(&mutex);
-        while (!queue.empty()) {
-            queue.pop();
-        }
+        std::queue<T> empty;
+        std::swap(queue, empty);
     }
 
 private:

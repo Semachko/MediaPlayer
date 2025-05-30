@@ -14,6 +14,8 @@ Window {
     color: "#202020"
     visible: true
     title: "MediaPlayer"
+    property real mouseX: 0
+    property real mouseY: 0
 
     function get_time_by_ms(ms)
     {
@@ -47,69 +49,6 @@ Window {
             height: parent.height
         }
     }
-
-
-    MouseArea {
-        id: mouse
-        anchors.fill: parent
-        hoverEnabled: true
-
-        Timer {
-            id: hideControlsTimer
-            interval: 4000
-            repeat: false
-            onTriggered: controls_menu.opacity = 0.0
-        }
-        property real mouse_x: 0
-        property real mouse_y: 0
-        onPositionChanged: {
-            if (controls_menu.opacity === 0.0)
-                controls_menu.opacity = 1.0;
-            hideControlsTimer.restart();
-            mouse_x = mouse.mouseX;
-            mouse_y = mouse.mouseY;
-        }
-        WheelHandler {
-            onWheel: (wheel)=> {
-                if (wheel.modifiers & Qt.ControlModifier)
-                {
-                    const oldZoom = video.scale;
-                    const scale = wheel.angleDelta.y > 0 ? 0.1 : -0.1;
-                    const newZoom = oldZoom + scale
-                    if (newZoom < 1) {
-                        video.x = 0;
-                        video.y = 0;
-                        video.scale = 1.0
-                        return;
-                    }
-                    video.scale = Math.min(newZoom, 5.0);
-                    const scaling = video.scale / oldZoom - 1;
-
-                    const dx = mouse.mouse_x - video.x;
-                    const dy = mouse.mouse_y - video.y;
-                    video.x -= dx * scaling;
-                    video.y -= dy * scaling;
-                }
-                else if (wheel.modifiers & Qt.ShiftModifier)
-                {
-                    if (wheel.angleDelta.y > 0)
-                        speedslider.increase();
-                    else
-                        speedslider.decrease();
-                    speedslider.moved()
-                }
-                else
-                {
-                    if (wheel.angleDelta.y > 0)
-                        volumeslider.increase();
-                    else
-                        volumeslider.decrease();
-                    volumeslider.moved()
-                }
-            }
-        }
-    }
-
 
     Item{
         id: controls_menu
@@ -208,7 +147,11 @@ Window {
                 FileDialog {
                     id: fileDialog
                     title: "CHOOSE FILE"
-                    nameFilters: ["All (*)"]
+                    nameFilters: [
+                        "Media (*.mp4 *.mkv *.avi *.mov *.flv *.webm *.ts *.mpeg *.mpg *.3gp *.m4v *.wmv *.mp3 *.aac *.wav *.flac *.ogg *.opus *.wma *.alac *.ac3 *.dts)",
+                        "Video (*.mp4 *.mkv *.avi *.mov *.flv *.webm *.ts *.mpeg *.mpg *.3gp *.m4v *.wmv)",
+                        "Audio (*.mp3 *.aac *.wav *.flac *.ogg *.opus *.wma *.alac *.ac3 *.dts)"
+                    ]
                     onAccepted: {
                         console.log("Selected file:", fileDialog.selectedFile)
                         filenamebar.text = fileDialog.selectedFile.toString().split("/").pop().split(".")[0]
@@ -235,7 +178,7 @@ Window {
                 onShuffleClicked: player.shuffleMedia(playbutton.checked)
                 onRepeatClicked: player.isRepeating = toolsmenu.isRepeating
                 Shortcut {
-                    sequence: "A"
+                    sequence: "E"
                     onActivated: equalizerwindow.visible = !equalizerwindow.visible
                 }
                 Shortcut {
@@ -340,7 +283,7 @@ Window {
             MuteButton{
                 id: mutebutton
                 scale: 0.75
-                onPressed: {
+                onClicked: {
                     player.isMuted = mutebutton.checked
                 }
                 Shortcut {
@@ -411,6 +354,70 @@ Window {
             onLowChanged: player.low = equalizerwindow.low
             onMidChanged: player.mid = equalizerwindow.mid
             onHighChanged: player.high = equalizerwindow.high
+        }
+    }
+
+
+
+    Timer {
+        id: hideControlsTimer
+        interval: 3500
+        repeat: false
+        onTriggered: {
+            if (controls_menu.opacity === 1.0){
+                controls_menu.opacity = 0.0
+            }
+        }
+    }
+    HoverHandler {
+        id: hoverHandler
+        onPointChanged: {
+            if (point.position.x !== mouseX || point.position.y !== mouseY){
+                if (controls_menu.opacity === 0.0)
+                    controls_menu.opacity = 1.0;
+                hideControlsTimer.restart();
+            }
+            mouseX = point.position.x
+            mouseY = point.position.y
+        }
+    }
+    WheelHandler {
+        onWheel: (wheel)=> {
+            if (wheel.modifiers & Qt.ControlModifier)
+            {
+                const oldZoom = video.scale;
+                const scale = wheel.angleDelta.y > 0 ? 0.1 : -0.1;
+                const newZoom = oldZoom + scale
+                if (newZoom < 1) {
+                    video.x = 0;
+                    video.y = 0;
+                    video.scale = 1.0
+                    return;
+                }
+                video.scale = Math.min(newZoom, 5.0);
+                const scaling = video.scale / oldZoom - 1;
+
+                const dx = mouseX - video.x;
+                const dy = mouseY - video.y;
+                video.x -= dx * scaling;
+                video.y -= dy * scaling;
+            }
+            else if (wheel.modifiers & Qt.ShiftModifier)
+            {
+                if (wheel.angleDelta.y > 0)
+                    speedslider.increase();
+                else
+                    speedslider.decrease();
+                speedslider.moved()
+            }
+            else
+            {
+                if (wheel.angleDelta.y > 0)
+                    volumeslider.increase();
+                else
+                    volumeslider.decrease();
+                volumeslider.moved()
+            }
         }
     }
 }

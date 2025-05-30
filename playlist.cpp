@@ -15,7 +15,10 @@ QString Playlist::set_new_file(QUrl& filepath)
     QFileInfo fileInfo(filepath.toLocalFile());
 
     QDir dir(fileInfo.absolutePath());
-    const QStringList filters = {"*.mp3", "*.wav", "*.mp4", "*.flac", "*.avi", "*.mkv", "*.wmv"};
+    const QStringList filters = {
+        "*.mp4", "*.mkv", "*.avi", "*.mov", "*.flv", "*.webm", "*.ts", "*.mpeg", "*.mpg", "*.3gp", "*.m4v", "*.wmv",
+        "*.mp3", "*.aac", "*.wav", "*.flac", "*.ogg", "*.opus", "*.wma", "*.alac", "*.ac3", "*.dts"
+    };
 
     mediaFiles = dir.entryInfoList(filters, QDir::Files);
     currentIndex = mediaFiles.indexOf(fileInfo);

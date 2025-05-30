@@ -68,18 +68,16 @@ void VideoContext::decode_and_output()
 
     if (buffer_available() == 0)
         return;
-    if (packetQueue.empty()) {
+    Packet packet;
+    if(!packetQueue.pop(packet)){
         emit requestPacket();
         return;
     }
-    decode();
+    decode(packet);
     filter_and_output();
 }
-void VideoContext::decode()
+void VideoContext::decode(Packet& packet)
 {
-    Packet packet = packetQueue.pop();
-    emit requestPacket();
-
     qreal packetTime = packet->pts * av_q2d(timeBase);
     qreal currTime = sync->get_time() / 1000.0;
     qreal diff = currTime - packetTime;

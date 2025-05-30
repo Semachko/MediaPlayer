@@ -42,7 +42,7 @@ public:
     void set_speed(qreal speed);
     void set_volume(qreal volume);
 
-    void decode();
+    void decode(Packet& packet);
     void equalizer_and_output();
 private:
     AVSampleFormat convert_to_AVFormat(QAudioFormat::SampleFormat format);

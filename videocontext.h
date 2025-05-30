@@ -32,7 +32,7 @@ public:
     void set_contrast(qreal value);
     void set_saturation(qreal value);
 
-    void decode();
+    void decode(Packet& packet);
     void filter_and_output();
 private:
 //////////////////////////////////////////////////////////

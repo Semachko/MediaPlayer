@@ -72,19 +72,17 @@ void AudioContext::decode_and_output()
     QMutexLocker _(&audioMutex);
     if (buffer_available() <= 0)
         return;
-    if (packetQueue.size() == 0){
+    Packet packet;
+    if(!packetQueue.pop(packet)){
         emit requestPacket();
         return;
     }
-    decode();
+    decode(packet);
     equalizer_and_output();
 }
 
-void AudioContext::decode()
+void AudioContext::decode(Packet& packet)
 {
-    Packet packet = packetQueue.pop();
-    emit requestPacket();
-
     qreal packetTime = packet->pts * av_q2d(timeBase);
     qreal currTime = sync->get_time() / 1000.0;
     qreal diff = currTime - packetTime;
@@ -93,7 +91,7 @@ void AudioContext::decode()
         return;
     }
 
-    int result = avcodec_send_packet(codec_context, packet.get());;
+    int result = avcodec_send_packet(codec_context, packet.get());
     if (result < 0) {
         qDebug()<<"Error decoding audio packet: "<<result;
         return;

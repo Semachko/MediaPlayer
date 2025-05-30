@@ -5,8 +5,6 @@ Slider {
     id: root
     implicitWidth: 28
     implicitHeight: 200
-    value: 0.5
-    stepSize: 0.01
     snapMode: Slider.SnapAlways
     orientation: Qt.Vertical
 
