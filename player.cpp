@@ -47,7 +47,7 @@ void Player::update_params()
     params.equalizer = EqualizerParameters{m_low,m_mid,m_high};
 }
 
-void Player::setFile(QUrl filepath, bool isPlaying)
+void Player::setFile(QUrl filepath)
 {
     update_params();
     QString newFile = playlist.set_new_file(filepath);

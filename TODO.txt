@@ -1,8 +1,3 @@
-//make pop() in queue exception safe
-//limit openning only media type file extensions
-//mouse area is under ALL ui elements
-//mute is broken when next media
-
 make opening via context menu
 preload images on seeking
 add tooltips (shortcuts)

@@ -21,7 +21,13 @@ int main(int argc, char *argv[])
 
     Player* player = new Player();
     engine.rootContext()->setContextProperty("player", player);
-
     engine.loadFromModule("MediaPlayer", "Main");
+
+    QString fileToOpen;
+    if (argc > 1){
+        fileToOpen = QString::fromLocal8Bit(argv[1]);
+        player->setFile(fileToOpen);
+    }
+
     return app.exec();
 }

@@ -9,7 +9,12 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Qml Quick QuickTimeline Concurrent Multimedia ShaderTools)
 qt_standard_project_setup(REQUIRES 6.8)
 
-qt_add_executable(appMediaPlayer
+if(WIN32)
+    set(ICON_FILE "${CMAKE_CURRENT_SOURCE_DIR}/MediaPlayer.rc")
+endif()
+
+qt_add_executable(appMediaPlayer WIN32
+    ${ICON_FILE}
     main.cpp
     player.h player.cpp
     media.h media.cpp

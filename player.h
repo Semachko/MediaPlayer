@@ -32,7 +32,7 @@ public:
     QVideoSink* videoSink() const;
     void setVideoSink(QVideoSink* sink);
 
-    Q_INVOKABLE void setFile(QUrl filepath, bool isPlaying);
+    Q_INVOKABLE void setFile(QUrl filepath);
     Q_INVOKABLE void shuffleMedia(bool isPlaying);
     Q_INVOKABLE void prevMedia(bool isPlaying);
     Q_INVOKABLE void subtruct5sec();
@@ -90,12 +90,17 @@ signals:
 
 private:
     void update_params();
+    ////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////
+
+public:
+    MediaParameters params;
 private:
     Media* media;
     QThread* mediaThread;
     QVideoSink* m_videoSink;
     Playlist playlist;
-    MediaParameters params;
 
     qreal m_currentPosition;
     qreal m_volume = 0.2;
