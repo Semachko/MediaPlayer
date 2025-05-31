@@ -62,6 +62,7 @@ qt_add_qml_module(appMediaPlayer
     SpeedSlider.qml
     FilterSlider.qml
     EqualizerSlider.qml
+    QML_FILES HelpTip.qml
 )
 
 qt_add_resources(appMediaPlayer

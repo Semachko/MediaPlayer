@@ -92,12 +92,12 @@ Item {
                 iconSRC: "qrc:/images/repeat.svg"
                 onClicked: {
                     popup.close()
-                    isRepeating = !isRepeating
+                    isRepeating = repeat.checked
                     root.repeatClicked()
                 }
                 Shortcut {
                     sequence: "T"
-                    onActivated: shuffle.click()
+                    onActivated: repeat.click()
                 }
             }
         }

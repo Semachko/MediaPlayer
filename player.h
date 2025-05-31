@@ -10,7 +10,7 @@ class Player: public QObject
     Q_OBJECT
     Q_PROPERTY(QVideoSink* videoSink READ videoSink WRITE setVideoSink)
 
-    Q_PROPERTY(QString filename READ filename NOTIFY fileNameChanged)
+    Q_PROPERTY(QString filename READ filename WRITE setFilename NOTIFY filenameChanged)
     Q_PROPERTY(qreal currentPosition READ currentPosition NOTIFY currentPositionChanged)
     Q_PROPERTY(qreal volume READ volume WRITE setVolume NOTIFY volumeChanged)
     Q_PROPERTY(qreal speed READ speed WRITE setSpeed NOTIFY speedChanged)
@@ -71,8 +71,9 @@ public:
 signals:
     Q_SIGNAL void globalTime(qint64 time);
     Q_SIGNAL void newTime(qint64 time);
-    Q_SIGNAL void fileNameChanged(QString filename);
+    Q_SIGNAL void paused();
 
+    void filenameChanged();
     void currentPositionChanged();
     void volumeChanged();
     void speedChanged();
@@ -96,10 +97,14 @@ private:
 
 public:
     MediaParameters params;
+    void setFilename(const QString &newFilename);
+
 private:
     Media* media;
     QThread* mediaThread;
     QVideoSink* m_videoSink;
+
+    QString m_filename = "CHOOSE FILE";
     Playlist playlist;
 
     qreal m_currentPosition;
@@ -116,7 +121,6 @@ private:
     qreal m_brightness = 0.0;
     qreal m_contrast = 1.0;
     qreal m_saturation = 1.0;
-    QString m_filename;
 };
 
 #endif // PLAYER_H

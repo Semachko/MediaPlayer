@@ -12,6 +12,7 @@ public:
     QString next_file();
     QString prev_file();
     QString shuffle_playlist();
+    bool isEmpty();
 private:
     QFileInfoList mediaFiles;
     int currentIndex = 0;

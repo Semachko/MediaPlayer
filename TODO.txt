@@ -1,10 +1,9 @@
-make opening via context menu
 preload images on seeking
-add tooltips (shortcuts)
 change speed design
 add stretching
 make correct destroying frameoutput loop (QML VideoSink destroys first)
 make filtering on pause
 
+fix errors with timers in threads
 refactor project folder
 find out how works volume in samples

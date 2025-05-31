@@ -70,7 +70,6 @@ Window {
         }
         RowLayout{
             id: timelinebar
-            enabled: false
             height: timeslider.height
             anchors.top: menubar_background.top
             anchors.left: menubar_background.left
@@ -135,6 +134,7 @@ Window {
             spacing: 2
             FilenameBar{
                 id: filenamebar
+                text: player.filename
                 Layout.preferredWidth: parent.width * 0.7
                 Layout.preferredHeight: parent.height * 0.55
                 onClicked: fileDialog.open()
@@ -154,23 +154,18 @@ Window {
                     ]
                     onAccepted: {
                         console.log("Selected file:", fileDialog.selectedFile)
-                        filenamebar.text = fileDialog.selectedFile.toString().split("/").pop().split(".")[0]
+                        //filenamebar.text = fileDialog.selectedFile.toString().split("/").pop().split(".")[0]
                         player.setFile(fileDialog.selectedFile,playbutton.checked)
-
-                        timelinebar.enabled = true
-                        mediacontrolsbar.enabled = true
-                        toolsmenu.enabled = true
-                        speed_volume_resize_bar.enabled = true
                     }
                 }
                 Shortcut {
                     sequence: "C"
-                    onActivated: filenamebar.click()
+                    onActivated: {filenamebar.click();
+                    console.log("text: ",filenamebar.text)}
                 }
             }
             ToolsMenu{
                 id: toolsmenu
-                enabled: false
                 Layout.fillWidth: true
                 onFiltersClicked: filterswindow.visible = true
                 onEqualizerClicked: equalizerwindow.visible = true
@@ -186,11 +181,9 @@ Window {
                     onActivated: filterswindow.visible = !filterswindow.visible
                 }
             }
-
         }
         RowLayout {
             id: mediacontrolsbar
-            enabled: false
             anchors{
                 top: timelinebar.bottom
                 bottom: menubar_background.bottom
@@ -206,6 +199,12 @@ Window {
                     sequence: "ctrl+left"
                     onActivated: changemediabtnleft.click()
                 }
+                HelpTip{
+                    x: 157
+                    y: 148
+                    visible: parent.hovered
+                    text: "Previous file (Ctrl + ←)"
+                }
             }
             ChangeTimeButtonLeft {
                 id: changetimebtnleft
@@ -216,6 +215,12 @@ Window {
                     sequence: "left"
                     onActivated: changetimebtnleft.click()
                 }
+                HelpTip{
+                    x: -12
+                    y: -50
+                    visible: parent.hovered
+                    text: "-5 sec (←)"
+                }
             }
             PlayButton {
                 id: playbutton
@@ -224,10 +229,21 @@ Window {
                 onCheckedChanged: {
                     player.isPaused = !playbutton.checked
                 }
+                Connections {
+                    target: player
+                    onPaused: playbutton.click()
+                }
                 Shortcut {
                     sequence: "space"
                     onActivated: playbutton.click()
                 }
+                HelpTip{
+                    x: -28
+                    y: -60
+                    visible: parent.hovered
+                    text: parent.checked ? "Pause (SPACE)" : "Play    (SPACE)"
+                }
+
             }
             ChangeTimeButtonRight {
                 id: changetimebtnright
@@ -238,6 +254,13 @@ Window {
                     sequence: "right"
                     onActivated: changetimebtnright.click()
                 }
+                HelpTip{
+                    x: -12
+                    y: -50
+                    visible: parent.hovered
+                    text: "+5 sec (→)"
+                }
+
             }
             ChangeMediaButton {
                 id: changemediabtnright
@@ -248,13 +271,18 @@ Window {
                     sequence: "ctrl+right"
                     onActivated: changemediabtnright.click()
                 }
+                HelpTip{
+                    x: -65
+                    y: -75
+                    visible: parent.hovered
+                    text: "Next file (Ctrl + →)"
+                }
             }
         }
 
 
         RowLayout{
             id: speed_volume_resize_bar
-            enabled: false
             anchors.top: timelinebar.bottom
             anchors.bottom: menubar_background.bottom
             anchors.left: mediacontrolsbar.right
@@ -262,7 +290,6 @@ Window {
             anchors.margins: 5
             anchors.leftMargin: 40
             anchors.rightMargin: 20
-
             SpeedButton{
                 id: speedbutton
                 scale: 0.8
@@ -278,6 +305,12 @@ Window {
                         player.speed = speedslider.value
                     }
                 }
+                HelpTip{
+                    x: -30
+                    y: -50
+                    visible: parent.hovered
+                    text: "Speed (Shift + ↕ )"
+                }
             }
 
             MuteButton{
@@ -290,6 +323,12 @@ Window {
                     sequence: "M"
                     onActivated: mutebutton.click()
                 }
+                HelpTip{
+                    x: -12
+                    y: -50
+                    visible: parent.hovered
+                    text: mutebutton.checked ? "Unmute (M)" : "Mute     (M)"
+                }
             }
 
             VolumeSlider{
@@ -300,6 +339,12 @@ Window {
                 Layout.rightMargin: 12
                 onMoved:{
                     player.volume = volumeslider.value
+                }
+                HelpTip{
+                    x: parent.x - 160
+                    y: parent.y - 70
+                    visible: parent.hovered
+                    text: "Volume ( ↕ )"
                 }
             }
             ResizeButton{
@@ -335,6 +380,12 @@ Window {
                 Shortcut {
                     sequence: "ESC"
                     onActivated: if (root.visibility == Window.FullScreen) resizebutton.click()
+                }
+                HelpTip{
+                    x: resizebutton.checked ? parent.x - 650 : parent.x - 400
+                    y: parent.y - 60
+                    visible: parent.hovered
+                    text: resizebutton.checked ? "Exit fullscreen (F)" : "Full screen      (F)"
                 }
             }
         }

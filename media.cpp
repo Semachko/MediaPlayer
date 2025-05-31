@@ -5,18 +5,10 @@
 
 #include "media.h"
 
-Media::Media(){
-    connect(this,&Media::playORpause,this,&Media::resume_pause);
-    connect(this,&Media::sliderPause,this,&Media::slider_pause);
-    connect(this,&Media::volumeChanged,this,&Media::change_volume);
-    connect(this,&Media::muteORunmute,this,&Media::mute_unmute);
-    connect(this,&Media::timeChanged,this,&Media::change_time);
-    connect(this,&Media::subtruct5sec,this,&Media::subtruct_5sec);
-    connect(this,&Media::add5sec,this,&Media::add_5sec);
-    connect(this,&Media::speedChanged,this,&Media::change_speed);
-    connect(this,&Media::repeatingChanged,this,&Media::change_repeating);
-}
+Media::Media(){}
 Media::~Media()
+
+
 { delete_members(); }
 
 void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
@@ -96,8 +88,9 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
     change_speed(parameters.speed);
 
     connect(demuxer,&Demuxer::endReached,this,[this]() {
-        if (isRepeating)
-            change_time(0);
+        change_time(0);
+        if (!isRepeating)
+            emit endReached();
     });
 
     if (video){
@@ -105,6 +98,17 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
         output_one_image();
         unlock_all_mutexes();
     }
+
+
+    connect(this,&Media::playORpause,this,&Media::resume_pause);
+    connect(this,&Media::sliderPause,this,&Media::slider_pause);
+    connect(this,&Media::volumeChanged,this,&Media::change_volume);
+    connect(this,&Media::muteORunmute,this,&Media::mute_unmute);
+    connect(this,&Media::timeChanged,this,&Media::change_time);
+    connect(this,&Media::subtruct5sec,this,&Media::subtruct_5sec);
+    connect(this,&Media::add5sec,this,&Media::add_5sec);
+    connect(this,&Media::speedChanged,this,&Media::change_speed);
+    connect(this,&Media::repeatingChanged,this,&Media::change_repeating);
     QMetaObject::invokeMethod(demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
 }
 
@@ -114,18 +118,22 @@ void Media::resume_pause()
     if(sync->isPaused)
         QMetaObject::invokeMethod(updateTimer, [this]() {
             updateTimer->stop();
-        }, Qt::QueuedConnection);
+        });
     else
         QMetaObject::invokeMethod(updateTimer, [this]() {
             updateTimer->start(100);
-        }, Qt::QueuedConnection);
+        });
 
     if (audio){
         if(sync->isPaused)
-            audio->audioSink->suspend();
+            QMetaObject::invokeMethod(updateTimer, [this]() {
+                audio->audioSink->suspend();
+            });
         else{
-            audio->audioSink->resume();
-            emit audio->audioDevice->readyRead();
+            QMetaObject::invokeMethod(updateTimer, [this]() {
+                audio->audioSink->resume();
+                emit audio->audioDevice->readyRead();
+            });
         }
     }
 }

@@ -70,6 +70,7 @@ signals:
     void outputTime(qint64,qreal);
     void outputGlobalTime(qint64);
     void repeatingChanged();
+    void endReached();
 
 private:
     void output_one_image();

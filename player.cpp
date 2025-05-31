@@ -8,6 +8,7 @@ Player::Player() {
     media->moveToThread(mediaThread);
     mediaThread->start();
 
+    connect(media,&Media::endReached,this,&Player::paused);
     connect(media,&Media::outputGlobalTime,this,&Player::globalTime);
     connect(media,&Media::outputTime,this,[this](qint64 time,qreal pos){
         m_currentPosition=pos;
@@ -54,29 +55,32 @@ void Player::setFile(QUrl filepath)
     if(newFile.isEmpty())
         return;
     params.filepath = newFile;
+    setFilename(QFileInfo(params.filepath).fileName());
+    qDebug()<<m_filename;
     media->set_file(params,m_videoSink);
 }
 
 void Player::shuffleMedia(bool isPlaying){
     update_params();
     params.filepath = playlist.shuffle_playlist();
-    m_filename = params.filepath;
-    emit fileNameChanged(QFileInfo(m_filename).fileName());
+    setFilename(QFileInfo(params.filepath).fileName());
     media->set_file(params,m_videoSink);
 }
 
 void Player::nextMedia(bool isPlaying){
+    if (playlist.isEmpty())
+        return;
     update_params();
     params.filepath = playlist.next_file();
-    m_filename = params.filepath;
-    emit fileNameChanged(QFileInfo(m_filename).fileName());
+    setFilename(QFileInfo(params.filepath).fileName());
     media->set_file(params, m_videoSink);
 }
 void Player::prevMedia(bool isPlaying){
+    if (playlist.isEmpty())
+        return;
     update_params();
     params.filepath = playlist.prev_file();
-    m_filename = params.filepath;
-    emit fileNameChanged(QFileInfo(m_filename).fileName());
+    setFilename(QFileInfo(params.filepath).fileName());
     media->set_file(params, m_videoSink);
 }
 
@@ -234,3 +238,10 @@ QString Player::filename() const
     return m_filename;
 }
 
+void Player::setFilename(const QString &newFilename)
+{
+    if (m_filename == newFilename)
+        return;
+    m_filename = newFilename;
+    emit filenameChanged();
+}

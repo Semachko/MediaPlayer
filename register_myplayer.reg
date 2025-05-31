@@ -1,4 +1,53 @@
 Windows Registry Editor Version 5.00
 
-[HKEY_CLASSES_ROOT\Applications\MyPlayer.exe\shell\open\command]
-@="\"C:\\Path\\To\\MyPlayer.exe\" \"%1\""
+[HKEY_CLASSES_ROOT\Applications\appMediaPlayer.exe]
+"FriendlyAppName"="MediaPlayer"
+"ApplicationIcon"="C:\\_Project\\Qt\\MediaPlayer\\build\\Desktop_Qt_6_9_0_MSVC2022_64bit-Release\\appMediaPlayer.exe,0"
+[HKEY_CLASSES_ROOT\Applications\appMediaPlayer.exe\shell\open\command]
+@="\"C:\\_Project\\Qt\\MediaPlayer\\build\\Desktop_Qt_6_9_0_MSVC2022_64bit-Release\\appMediaPlayer.exe\" \"%1\""
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.mp4\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.mkv\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.avi\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.mov\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.flv\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.webm\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.ts\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.mpeg\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.mpg\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.3gp\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.m4v\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.wmv\OpenWithList]
+"a"="MyPlayer.exe"
+
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.mp3\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.aac\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.wav\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.flac\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.ogg\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.opus\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.wma\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.alac\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.ac3\OpenWithList]
+"a"="MyPlayer.exe"
+[HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\.dts\OpenWithList]
+"a"="MyPlayer.exe"

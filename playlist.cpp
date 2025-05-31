@@ -12,6 +12,7 @@ QString Playlist::set_new_file(QUrl& filepath)
     if (filepath.isEmpty())
         return QString{};
 
+    qDebug()<<filepath.toLocalFile();
     QFileInfo fileInfo(filepath.toLocalFile());
 
     QDir dir(fileInfo.absolutePath());
@@ -49,4 +50,9 @@ QString Playlist::shuffle_playlist()
 
     std::shuffle(mediaFiles.begin(), mediaFiles.end(), *QRandomGenerator::global());
     return mediaFiles[currentIndex].absoluteFilePath();
+}
+
+bool Playlist::isEmpty()
+{
+    return mediaFiles.empty();
 }
