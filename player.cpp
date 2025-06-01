@@ -4,9 +4,9 @@
 
 Player::Player() {
     media = new Media();
-    mediaThread = new QThread(this);
-    media->moveToThread(mediaThread);
-    mediaThread->start();
+    // mediaThread = new QThread(this);
+    // media->moveToThread(mediaThread);
+    // mediaThread->start();
 
     connect(media,&Media::endReached,this,&Player::paused);
     connect(media,&Media::outputGlobalTime,this,&Player::globalTime);
@@ -19,10 +19,10 @@ Player::Player() {
 
 Player::~Player()
 {
-    mediaThread->quit();
-    mediaThread->wait();
+    //mediaThread->quit();
+    //mediaThread->wait();
     media->deleteLater();
-    mediaThread->deleteLater();
+    //mediaThread->deleteLater();
 }
 
 QVideoSink *Player::videoSink() const

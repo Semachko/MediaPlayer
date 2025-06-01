@@ -138,12 +138,12 @@ Window {
                 Layout.preferredWidth: parent.width * 0.7
                 Layout.preferredHeight: parent.height * 0.55
                 onClicked: fileDialog.open()
-                Connections {
-                    target: player
-                    onFileNameChanged: (filename) => {
-                        filenamebar.text = filename
-                    }
-                }
+                // Connections {
+                //     target: player
+                //     onFilenameChanged: (filename) => {
+                //         filenamebar.text = filename
+                //     }
+                // }
                 FileDialog {
                     id: fileDialog
                     title: "CHOOSE FILE"

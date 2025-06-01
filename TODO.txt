@@ -1,9 +1,7 @@
-change speed design
 add stretching
 preload images on seeking
 make correct destroying frameoutput loop (QML VideoSink destroys first)
 make filtering on pause
 
-fix errors with timers in threads
 refactor project folder
 find out how works volume in samples

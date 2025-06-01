@@ -102,18 +102,19 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
 
     connect(this,&Media::playORpause,this,&Media::resume_pause);
     connect(this,&Media::sliderPause,this,&Media::slider_pause);
-    connect(this,&Media::volumeChanged,this,&Media::change_volume);
-    connect(this,&Media::muteORunmute,this,&Media::mute_unmute);
     connect(this,&Media::timeChanged,this,&Media::change_time);
     connect(this,&Media::subtruct5sec,this,&Media::subtruct_5sec);
     connect(this,&Media::add5sec,this,&Media::add_5sec);
     connect(this,&Media::speedChanged,this,&Media::change_speed);
     connect(this,&Media::repeatingChanged,this,&Media::change_repeating);
+    connect(this,&Media::volumeChanged,this,&Media::change_volume);
+    connect(this,&Media::muteORunmute,this,&Media::mute_unmute);
     QMetaObject::invokeMethod(demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
 }
 
 void Media::resume_pause()
 {
+    qDebug()<<"Pausing";
     sync->play_or_pause();
     if(sync->isPaused)
         QMetaObject::invokeMethod(updateTimer, [this]() {
@@ -126,16 +127,14 @@ void Media::resume_pause()
 
     if (audio){
         if(sync->isPaused)
-            QMetaObject::invokeMethod(updateTimer, [this]() {
+            QMetaObject::invokeMethod(audio, [this]() {
                 audio->audioSink->suspend();
             });
         else{
-            audio->audioSink->resume();
+            QMetaObject::invokeMethod(audio, [this]() {
+                audio->audioSink->resume();
+            });
             emit audio->audioDevice->readyRead();
-            // QMetaObject::invokeMethod(updateTimer, [this]() {
-            //     audio->audioSink->resume();
-            //     emit audio->audioDevice->readyRead();
-            // });
         }
     }
 }
@@ -296,8 +295,17 @@ void Media::unlock_all_mutexes()
 
 void Media::delete_members()
 {
-    if(sync->isPaused)
+    if(!sync->isPaused)
         sync->play_or_pause();
+    disconnect(this,&Media::playORpause,this,&Media::resume_pause);
+    disconnect(this,&Media::sliderPause,this,&Media::slider_pause);
+    disconnect(this,&Media::timeChanged,this,&Media::change_time);
+    disconnect(this,&Media::subtruct5sec,this,&Media::subtruct_5sec);
+    disconnect(this,&Media::add5sec,this,&Media::add_5sec);
+    disconnect(this,&Media::speedChanged,this,&Media::change_speed);
+    disconnect(this,&Media::repeatingChanged,this,&Media::change_repeating);
+    disconnect(this,&Media::volumeChanged,this,&Media::change_volume);
+    disconnect(this,&Media::muteORunmute,this,&Media::mute_unmute);
 
     if (audio) {
         audioThread->quit();
