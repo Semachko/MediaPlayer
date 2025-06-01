@@ -1,6 +1,6 @@
-preload images on seeking
 change speed design
 add stretching
+preload images on seeking
 make correct destroying frameoutput loop (QML VideoSink destroys first)
 make filtering on pause
 

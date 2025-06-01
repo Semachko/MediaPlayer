@@ -130,10 +130,12 @@ void Media::resume_pause()
                 audio->audioSink->suspend();
             });
         else{
-            QMetaObject::invokeMethod(updateTimer, [this]() {
-                audio->audioSink->resume();
-                emit audio->audioDevice->readyRead();
-            });
+            audio->audioSink->resume();
+            emit audio->audioDevice->readyRead();
+            // QMetaObject::invokeMethod(updateTimer, [this]() {
+            //     audio->audioSink->resume();
+            //     emit audio->audioDevice->readyRead();
+            // });
         }
     }
 }

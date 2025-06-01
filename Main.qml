@@ -293,18 +293,35 @@ Window {
             SpeedButton{
                 id: speedbutton
                 scale: 0.8
-                SpeedSlider{
-                    id: speedslider
+                ColumnLayout{
                     visible: speedbutton.checked
                     anchors.bottom: speedbutton.top
                     anchors.bottomMargin: 5
                     anchors.horizontalCenter: speedbutton.horizontalCenter
                     width: speedbutton.width*0.4
-                    height: 230
-                    onMoved:{
-                        player.speed = speedslider.value
+                    Item{
+                        Layout.fillWidth: true
+                        implicitHeight: textItem.implicitHeight
+                        Text{
+                            id: textItem
+                            text: speedslider.value+"x"
+                            color: "white"
+                            font.pointSize: 20
+                            font.bold: true
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                    }
+                    SpeedSlider{
+                        id: speedslider
+                        height: 230
+                        Layout.fillWidth: true
+                        onMoved:{
+                            player.speed = speedslider.value
+                        }
                     }
                 }
+
+
                 HelpTip{
                     x: -30
                     y: -50
