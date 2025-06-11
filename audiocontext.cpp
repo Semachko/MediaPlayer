@@ -101,7 +101,8 @@ void AudioContext::decode(Packet& packet)
 void AudioContext::equalizer_and_output()
 {
     Frame frame = make_shared_frame();
-    while (avcodec_receive_frame(codec_context, frame.get()) == 0)
+    int res;
+    while ((res = avcodec_receive_frame(codec_context, frame.get())) == 0)
     {
         Frame equalized_frame = equalizer->applyEqualizer(frame);
         if (!equalized_frame)

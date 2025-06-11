@@ -5,8 +5,8 @@ import QtQuick.Shapes
 Button {
     id: root
     text: ""
-    implicitWidth: 86
     implicitHeight: 86
+    implicitWidth: 86
     checkable: true
     background: Item {
         Rectangle {

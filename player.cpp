@@ -61,6 +61,8 @@ void Player::setFile(QUrl filepath)
 }
 
 void Player::shuffleMedia(bool isPlaying){
+    if (playlist.isEmpty())
+        return;
     update_params();
     params.filepath = playlist.shuffle_playlist();
     setFilename(QFileInfo(params.filepath).fileName());

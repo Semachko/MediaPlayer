@@ -7,8 +7,6 @@
 
 Media::Media(){}
 Media::~Media()
-
-
 { delete_members(); }
 
 void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
@@ -27,11 +25,9 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
 
     updateTimer = new QTimer(this);
     connect(updateTimer, &QTimer::timeout, this, [this]() {
-        if(!sync->isPaused){
-            qint64 curr_time = sync->get_time();
-            qreal pos = curr_time/(format_context->duration/1000.0);
-            emit outputTime(curr_time, pos);
-        }
+        qint64 curr_time = sync->get_time();
+        qreal pos = curr_time/(format_context->duration/1000.0);
+        emit outputTime(curr_time, pos);
     });
     updateTimer->start(100);
 
@@ -114,7 +110,6 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
 
 void Media::resume_pause()
 {
-    qDebug()<<"Pausing";
     sync->play_or_pause();
     if(sync->isPaused)
         QMetaObject::invokeMethod(updateTimer, [this]() {

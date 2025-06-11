@@ -138,12 +138,6 @@ Window {
                 Layout.preferredWidth: parent.width * 0.7
                 Layout.preferredHeight: parent.height * 0.55
                 onClicked: fileDialog.open()
-                // Connections {
-                //     target: player
-                //     onFilenameChanged: (filename) => {
-                //         filenamebar.text = filename
-                //     }
-                // }
                 FileDialog {
                     id: fileDialog
                     title: "CHOOSE FILE"
@@ -154,7 +148,6 @@ Window {
                     ]
                     onAccepted: {
                         console.log("Selected file:", fileDialog.selectedFile)
-                        //filenamebar.text = fileDialog.selectedFile.toString().split("/").pop().split(".")[0]
                         player.setFile(fileDialog.selectedFile,playbutton.checked)
                     }
                 }
@@ -192,8 +185,8 @@ Window {
             spacing: 0
             ChangeMediaButton {
                 id: changemediabtnleft
-                Layout.fillWidth: true
                 scale: -0.6
+                Layout.fillWidth: true
                 onClicked: player.prevMedia(playbutton.checked)
                 Shortcut {
                     sequence: "ctrl+left"
@@ -208,8 +201,8 @@ Window {
             }
             ChangeTimeButtonLeft {
                 id: changetimebtnleft
-                Layout.fillWidth: true
                 scale: 0.8
+                Layout.fillWidth: true
                 onClicked: player.subtruct5sec()
                 Shortcut {
                     sequence: "left"
@@ -222,10 +215,11 @@ Window {
                     text: "-5 sec (←)"
                 }
             }
+
             PlayButton {
                 id: playbutton
-                Layout.fillWidth: true
                 scale: 0.7
+                Layout.fillWidth: true
                 onCheckedChanged: {
                     player.isPaused = !playbutton.checked
                 }
@@ -247,8 +241,8 @@ Window {
             }
             ChangeTimeButtonRight {
                 id: changetimebtnright
-                Layout.fillWidth: true
                 scale: 0.8
+                Layout.fillWidth: true
                 onClicked: player.add5sec()
                 Shortcut {
                     sequence: "right"
@@ -264,8 +258,8 @@ Window {
             }
             ChangeMediaButton {
                 id: changemediabtnright
-                Layout.fillWidth: true
                 scale: 0.6
+                Layout.fillWidth: true
                 onClicked: player.nextMedia(playbutton.checked)
                 Shortcut {
                     sequence: "ctrl+right"
@@ -280,16 +274,18 @@ Window {
             }
         }
 
-
         RowLayout{
             id: speed_volume_resize_bar
-            anchors.top: timelinebar.bottom
-            anchors.bottom: menubar_background.bottom
-            anchors.left: mediacontrolsbar.right
-            anchors.right: menubar_background.right
-            anchors.margins: 5
-            anchors.leftMargin: 40
-            anchors.rightMargin: 20
+            anchors{
+                top: timelinebar.bottom
+                bottom: menubar_background.bottom
+                left: mediacontrolsbar.right
+                right: menubar_background.right
+                margins: 5
+                leftMargin: root.width * 0.02
+                rightMargin: 20
+            }
+            spacing: 0
             SpeedButton{
                 id: speedbutton
                 scale: 0.8
@@ -320,8 +316,6 @@ Window {
                         }
                     }
                 }
-
-
                 HelpTip{
                     x: -30
                     y: -50
@@ -333,6 +327,7 @@ Window {
             MuteButton{
                 id: mutebutton
                 scale: 0.75
+                Layout.leftMargin: -10
                 onClicked: {
                     player.isMuted = mutebutton.checked
                 }
@@ -351,9 +346,9 @@ Window {
             VolumeSlider{
                 id: volumeslider
                 Layout.fillWidth: true
-                Layout.preferredHeight: parent.height*0.3
+                Layout.preferredHeight: parent.height * 0.3
                 Layout.leftMargin: -15
-                Layout.rightMargin: 12
+                Layout.rightMargin: 14
                 onMoved:{
                     player.volume = volumeslider.value
                 }
