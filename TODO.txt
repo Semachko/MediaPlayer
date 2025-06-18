@@ -1,4 +1,3 @@
-fool lagging when high CPU usage
 add stretching
 preload images on seeking
 make correct destroying frameoutput loop (QML VideoSink destroys first)

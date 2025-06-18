@@ -99,17 +99,13 @@ set_target_properties(appMediaPlayer PROPERTIES
     WIN32_EXECUTABLE TRUE
 )
 
-set(FFMPEG_DIR "C:/libraries/ffmpeglibs")
-include_directories(${FFMPEG_DIR}/include)
-link_directories(${FFMPEG_DIR}/lib)
+
+message(TOOLCHAIN = ${CMAKE_TOOLCHAIN_FILE})
+find_package(FFmpeg REQUIRED COMPONENTS avcodec avformat avutil swscale swresample avfilter)
+target_include_directories(appMediaPlayer PRIVATE ${FFMPEG_INCLUDE_DIRS})
+target_link_directories(appMediaPlayer PRIVATE ${FFMPEG_LIBRARY_DIRS})
 target_link_libraries(appMediaPlayer PRIVATE
-    "C:/libraries/ffmpeglibs/lib/avutil.lib"
-    "C:/libraries/ffmpeglibs/lib/swscale.lib"
-    "C:/libraries/ffmpeglibs/lib/avcodec.lib"
-    "C:/libraries/ffmpeglibs/lib/avformat.lib"
-    "C:/libraries/ffmpeglibs/lib/postproc.lib"
-    "C:/libraries/ffmpeglibs/lib/avfilter.lib"
-    "C:/libraries/ffmpeglibs/lib/swresample.lib"
+    ${FFMPEG_LIBRARIES}
     Qt6::Multimedia
     Qt6::Concurrent
     Qt6::Quick

@@ -86,8 +86,9 @@ void AudioContext::decode(Packet& packet)
     qreal packetTime = packet->pts * av_q2d(timeBase);
     qreal currTime = sync->get_time() / 1000.0;
     qreal diff = currTime - packetTime;
-    if (diff > 0.1){
+    if (diff > 0.15){
         qDebug()<<"Packet is lating skipping:"<<diff<<"sec";
+        emit requestPacket();
         return;
     }
 

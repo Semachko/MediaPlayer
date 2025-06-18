@@ -26,7 +26,7 @@ void Demuxer::demuxe_packets()
             QMutexLocker _(&formatMutex);
             if (!push_packet_to_queues())
                 return;
-        }
+    }
 }
 
 bool Demuxer::push_packet_to_queues()
