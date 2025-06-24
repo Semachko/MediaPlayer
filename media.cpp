@@ -134,13 +134,6 @@ void Media::resume_pause()
     }
 }
 
-void Media::slider_pause()
-{
-    if(!sync->isPaused){
-        resume_pause();
-        isSliderPause=true;
-    }
-}
 
 void Media::change_repeating()
 {
@@ -189,10 +182,25 @@ void Media::change_speed(qreal speed)
     sync->clock->setSpeed(speed);
 }
 
-void Media::change_time(qreal position)
+void Media::slider_pause(qreal position)
 {
+    if(!isSliderPause)
+    {
+        if(!sync->isPaused){
+            resume_pause();
+            isSliderPause=true;
+        }
+    }
     int64_t seek_target = format_context->duration * position;
     seek_time(seek_target);
+}
+
+void Media::change_time(qreal position)
+{
+    if (isSliderPause) {
+        resume_pause();
+        isSliderPause=false;
+    }
 }
 
 void Media::seek_time(int64_t seek_target)
@@ -212,11 +220,6 @@ void Media::seek_time(int64_t seek_target)
         emit audio->requestPacket();
 
     unlock_all_mutexes();
-
-    if (isSliderPause) {
-        resume_pause();
-        isSliderPause=false;
-    }
 }
 
 
@@ -326,6 +329,3 @@ void Media::delete_members()
     sync->deleteLater();
     updateTimer->deleteLater();
 }
-
-
-

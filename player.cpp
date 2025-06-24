@@ -4,10 +4,6 @@
 
 Player::Player() {
     media = new Media();
-    // mediaThread = new QThread(this);
-    // media->moveToThread(mediaThread);
-    // mediaThread->start();
-
     connect(media,&Media::endReached,this,&Player::paused);
     connect(media,&Media::outputGlobalTime,this,&Player::globalTime);
     connect(media,&Media::outputTime,this,[this](qint64 time,qreal pos){
@@ -19,10 +15,7 @@ Player::Player() {
 
 Player::~Player()
 {
-    //mediaThread->quit();
-    //mediaThread->wait();
     media->deleteLater();
-    //mediaThread->deleteLater();
 }
 
 QVideoSink *Player::videoSink() const
@@ -56,7 +49,6 @@ void Player::setFile(QUrl filepath)
         return;
     params.filepath = newFile;
     setFilename(QFileInfo(params.filepath).fileName());
-    qDebug()<<m_filename;
     media->set_file(params,m_videoSink);
 }
 
@@ -77,6 +69,7 @@ void Player::nextMedia(bool isPlaying){
     setFilename(QFileInfo(params.filepath).fileName());
     media->set_file(params, m_videoSink);
 }
+
 void Player::prevMedia(bool isPlaying){
     if (playlist.isEmpty())
         return;
@@ -94,14 +87,15 @@ void Player::subtruct5sec(){
 }
 
 
+
+void Player::sliderPause(qreal time){
+    emit media->sliderPause(time);
+}
 void Player::timeChanged(qreal time){
     emit media->timeChanged(time);
 }
 qreal Player::currentPosition() const{
     return m_currentPosition;
-}
-void Player::sliderPause(){
-    emit media->sliderPause();
 }
 
 

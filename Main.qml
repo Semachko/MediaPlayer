@@ -96,14 +96,14 @@ Window {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 value: player.currentPosition
+                onMoved:{
+                    if (pressed)
+                        player.sliderPause(position)
+
+                }
                 onPressedChanged:{
-                    if (pressed) {
-                        if (playbutton.checked){
-                            player.sliderPause(position)
-                        }
-                    } else {
+                    if (!pressed)
                         player.timeChanged(position)
-                    }
                 }
             }
             Text{
@@ -143,18 +143,15 @@ Window {
                     title: "CHOOSE FILE"
                     nameFilters: [
                         "Media (*.mp4 *.mkv *.avi *.mov *.flv *.webm *.ts *.mpeg *.mpg *.3gp *.m4v *.wmv *.mp3 *.aac *.wav *.flac *.ogg *.opus *.wma *.alac *.ac3 *.dts)",
-                        "Video (*.mp4 *.mkv *.avi *.mov *.flv *.webm *.ts *.mpeg *.mpg *.3gp *.m4v *.wmv)",
                         "Audio (*.mp3 *.aac *.wav *.flac *.ogg *.opus *.wma *.alac *.ac3 *.dts)"
                     ]
                     onAccepted: {
-                        console.log("Selected file:", fileDialog.selectedFile)
                         player.setFile(fileDialog.selectedFile,playbutton.checked)
                     }
                 }
                 Shortcut {
                     sequence: "C"
-                    onActivated: {filenamebar.click();
-                    console.log("text: ",filenamebar.text)}
+                    onActivated: filenamebar.click();
                 }
             }
             ToolsMenu{
@@ -484,3 +481,4 @@ Window {
         }
     }
 }
+

@@ -1,4 +1,5 @@
-preload images on seeking
+//preload images on seeking
+lagging when seeking (move seeking into different threads)
 make filtering on pause
 make correct destroying frameoutput loop (QML VideoSink destroys first)
 refactor project folder

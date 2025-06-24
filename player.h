@@ -38,8 +38,8 @@ public:
     Q_INVOKABLE void subtruct5sec();
     Q_INVOKABLE void add5sec();
     Q_INVOKABLE void nextMedia(bool isPlaying);
+    Q_INVOKABLE void sliderPause(qreal time);
     Q_INVOKABLE void timeChanged(qreal time);
-    Q_INVOKABLE void sliderPause();
 
     qreal currentPosition() const;
     qreal volume() const;
