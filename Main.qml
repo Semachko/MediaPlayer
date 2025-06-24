@@ -99,7 +99,7 @@ Window {
                 onPressedChanged:{
                     if (pressed) {
                         if (playbutton.checked){
-                            player.sliderPause()
+                            player.sliderPause(position)
                         }
                     } else {
                         player.timeChanged(position)

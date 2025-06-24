@@ -62,7 +62,7 @@ qt_add_qml_module(appMediaPlayer
     SpeedSlider.qml
     FilterSlider.qml
     EqualizerSlider.qml
-    QML_FILES HelpTip.qml
+    HelpTip.qml
 )
 
 qt_add_resources(appMediaPlayer
@@ -100,7 +100,6 @@ set_target_properties(appMediaPlayer PROPERTIES
 )
 
 
-message(TOOLCHAIN = ${CMAKE_TOOLCHAIN_FILE})
 find_package(FFmpeg REQUIRED COMPONENTS avcodec avformat avutil swscale swresample avfilter)
 target_include_directories(appMediaPlayer PRIVATE ${FFMPEG_INCLUDE_DIRS})
 target_link_directories(appMediaPlayer PRIVATE ${FFMPEG_LIBRARY_DIRS})

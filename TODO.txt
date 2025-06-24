@@ -1,7 +1,7 @@
-add stretching
 preload images on seeking
-make correct destroying frameoutput loop (QML VideoSink destroys first)
 make filtering on pause
-
+make correct destroying frameoutput loop (QML VideoSink destroys first)
 refactor project folder
+
 find out how works volume in samples
+add stretching
