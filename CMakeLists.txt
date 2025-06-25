@@ -35,7 +35,7 @@ qt_add_resources(appMediaPlayer
     FILES
         ${ICONS}
     TODO.txt
-    .gitignore.txt
+    .gitignore
 )
 
 find_package(FFmpeg REQUIRED COMPONENTS avcodec avformat avutil swscale swresample avfilter)
