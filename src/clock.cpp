@@ -1,4 +1,4 @@
-#include "clock.h"
+﻿#include "sync/clock.h"
 
 Clock::Clock(): speed(1.0), paused(true), baseTime(0) {}
 

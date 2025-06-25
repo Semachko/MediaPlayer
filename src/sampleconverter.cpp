@@ -1,4 +1,4 @@
-#include "sampleconverter.h"
+﻿#include "audio/sampleconverter.h"
 #include <QDebug>
 
 SampleConverter::SampleConverter(AVCodecContext* input, SampleFormat output) : output_format(output)

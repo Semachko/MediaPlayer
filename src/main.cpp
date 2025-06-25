@@ -2,7 +2,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
-#include "player.h"
+#include "media/player.h"
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);

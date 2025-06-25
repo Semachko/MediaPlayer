@@ -17,12 +17,12 @@ extern "C" {
 #include <atomic>
 #include <condition_variable>
 
-#include "videocontext.h"
-#include "audiocontext.h"
-#include "demuxer.h"
-#include "clock.h"
-#include "synchronizer.h"
-#include "mediaparameters.h"
+#include "video/videocontext.h"
+#include "audio/audiocontext.h"
+#include "media/demuxer.h"
+#include "sync/clock.h"
+#include "sync/synchronizer.h"
+#include "media/mediaparameters.h"
 
 class Media : public QObject
 {

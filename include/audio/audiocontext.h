@@ -1,4 +1,4 @@
-#ifndef AUDIOCONTEXT_H
+﻿#ifndef AUDIOCONTEXT_H
 #define AUDIOCONTEXT_H
 
 #include <QAudioSink>
@@ -19,13 +19,13 @@ extern "C" {
 #include <libavfilter/buffersrc.h>
 }
 
-#include "imediacontext.h"
-#include "audioiodevice.h"
-#include "synchronizer.h"
+#include "media/imediacontext.h"
+#include "audio/audioiodevice.h"
+#include "sync/synchronizer.h"
+#include "audio/equalizer.h"
+#include "audio/sampleconverter.h"
 #include "queue.h"
 #include "packet.h"
-#include "equalizer.h"
-#include "sampleconverter.h"
 
 class AudioContext : public IMediaContext
 {

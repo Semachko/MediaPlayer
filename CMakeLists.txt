@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21.1)
+﻿cmake_minimum_required(VERSION 3.21.1)
 
 project(MediaPlayer VERSION 0.1 LANGUAGES CXX)
 
@@ -10,95 +10,33 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Qml Quick QuickTimeline Co
 qt_standard_project_setup(REQUIRES 6.8)
 
 if(WIN32)
-    set(ICON_FILE "${CMAKE_CURRENT_SOURCE_DIR}/MediaPlayer.rc")
+    set(ICON_FILE "${CMAKE_CURRENT_SOURCE_DIR}/resources/MediaPlayer.rc")
 endif()
 
+file(GLOB_RECURSE HEADER_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "include/*.h")
+file(GLOB_RECURSE CPP_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "src/*.cpp")
 qt_add_executable(appMediaPlayer WIN32
     ${ICON_FILE}
-    main.cpp
-    player.h player.cpp
-    media.h media.cpp
-    videocontext.h videocontext.cpp
-    frameoutput.h frameoutput.cpp
-    audiocontext.h audiocontext.cpp
-    audioiodevice.h audioiodevice.cpp
-    clock.h clock.cpp
-    synchronizer.h synchronizer.cpp
-    demuxer.h demuxer.cpp
-    filters.h filters.cpp
-    equalizer.h equalizer.cpp
-    sampleconverter.h sampleconverter.cpp
-    imageconverter.h imageconverter.cpp
-    playlist.h playlist.cpp
-    mediaparameters.h
-    imediacontext.h
-    packet.h
-    frame.h
-    queue.h
+    ${CPP_FILES}
+    ${HEADER_FILES}
 )
+target_include_directories(appMediaPlayer PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
+file(GLOB_RECURSE QML_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "gui/*.qml")
 qt_add_qml_module(appMediaPlayer
     URI MediaPlayer
     VERSION 1.0
-
-    QML_FILES
-    Main.qml
-    ChangeMediaButton.qml
-    ChangeTimeButtonLeft.qml
-    ChangeTimeButtonRight.qml
-    MenuBar.qml
-    MuteButton.qml
-    OptionsButton.qml
-    PlayButton.qml
-    ResizeButton.qml
-    TimelineSlider.qml
-    ToolsMenu.qml
-    VolumeSlider.qml
-    FilenameBar.qml
-    FiltersWindow.qml
-    ToolsMenuButton.qml
-    EqualizerWindow.qml
-    SpeedButton.qml
-    SpeedSlider.qml
-    FilterSlider.qml
-    EqualizerSlider.qml
-    HelpTip.qml
+    QML_FILES ${QML_FILES}
 )
 
+file(GLOB_RECURSE ICONS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "resources/icons/*.svg")
 qt_add_resources(appMediaPlayer
     PREFIX "/"
     FILES
-    images/BackGroundLogo.svg
-    images/BlackTriangle.svg
-    images/equalizer.svg
-    images/filters.svg
-    images/MediaSizeButton.svg
-    images/MediaSizeButtonChecked.svg
-    images/MediaSizeButtonCheckedHovered.svg
-    images/MediaSizeButtonCheckedPressed.svg
-    images/MediaSizeButtonHovered.svg
-    images/MediaSizeButtonPressed.svg
-    images/MutedBlack.svg
-    images/MutedWhite.svg
-    images/OptionsBlack.svg
-    images/OptionsWhite.svg
-    images/NotMutedBlack.svg
-    images/NotMutedWhite.svg
-    images/WhiteTriangle.svg
-    images/shuffle.svg
-    images/repeat.svg
-    images/Speed.svg
-    images/rotate.svg
+        ${ICONS}
     TODO.txt
+    .gitignore.txt
 )
-
-set_target_properties(appMediaPlayer PROPERTIES
-    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
-    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
-    MACOSX_BUNDLE TRUE
-    WIN32_EXECUTABLE TRUE
-)
-
 
 find_package(FFmpeg REQUIRED COMPONENTS avcodec avformat avutil swscale swresample avfilter)
 target_include_directories(appMediaPlayer PRIVATE ${FFMPEG_INCLUDE_DIRS})
@@ -111,6 +49,13 @@ target_link_libraries(appMediaPlayer PRIVATE
     Qt6::Widgets
 )
 
+
+set_target_properties(appMediaPlayer PROPERTIES
+    MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
+    MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
+    MACOSX_BUNDLE TRUE
+    WIN32_EXECUTABLE TRUE
+)
 include(GNUInstallDirs)
 install(TARGETS appMediaPlayer
     BUNDLE DESTINATION .

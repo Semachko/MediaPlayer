@@ -1,4 +1,4 @@
-#include "synchronizer.h"
+﻿#include "sync/synchronizer.h"
 
 Synchronizer::Synchronizer()
     :

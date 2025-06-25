@@ -1,8 +1,10 @@
-#include "filters.h"
+﻿#include "video/filters.h"
 #include <QDebug>
 
 Filters::Filters(AVCodecParameters* codec_parameters, AVRational time_base)
 {
+    av_log_set_level(AV_LOG_ERROR);
+
     args =
         "video_size="+std::to_string(codec_parameters->width)+"x"+std::to_string(codec_parameters->height)
         +":pix_fmt="+std::to_string(codec_parameters->format)

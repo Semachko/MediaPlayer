@@ -3,7 +3,7 @@
 #include <QVideoFrame>
 #include <utility>
 
-#include "media.h"
+#include "media/media.h"
 
 Media::Media(){}
 Media::~Media()
@@ -250,9 +250,13 @@ void Media::output_one_image()
         video->decode(packet);
         video->filter_and_output();
     }
-    ImageFrame imageFrame;
-    video->output->imageQueue.pop(imageFrame);
-    video->videosink->setVideoFrame(imageFrame.image);
+    Frame frame = make_shared_frame();
+    video->output->imageQueue.pop(frame);
+    Frame filtered_frame = video->output->filters->applyFilters(frame);
+    Frame output_frame = video->output->converter->convert(filtered_frame);
+    QImage image(output_frame->data[0], video->output->codec_context->width, video->output->codec_context->height, output_frame->linesize[0], QImage::Format_RGB32);
+    QVideoFrame videoframe = QVideoFrame(image);
+    video->videosink->setVideoFrame(videoframe);
 }
 
 

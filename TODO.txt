@@ -1,8 +1,8 @@
 ﻿make filtering on pause
-make correct destroying frameoutput loop (QML VideoSink destroys first)
 refactor project folder
 add multithread decoding
 lagging when seeking (move seeking into different threads)
+make correct destroying frameoutput loop (QML VideoSink destroys first)
 ui menubar hides when seeking
 add timebar above handle when seeking
 add preload image on seeking

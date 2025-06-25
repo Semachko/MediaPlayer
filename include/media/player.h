@@ -2,8 +2,8 @@
 #define PLAYER_H
 
 #include <QObject>
-#include "media.h"
-#include "playlist.h"
+#include "media/media.h"
+#include "media/playlist.h"
 
 class Player: public QObject
 {

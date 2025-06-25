@@ -1,4 +1,4 @@
-#include "equalizer.h"
+﻿#include "audio/equalizer.h"
 #include <QDebug>
 
 Equalizer::Equalizer(AVCodecContext* cod_ctx) : codec_context(cod_ctx){

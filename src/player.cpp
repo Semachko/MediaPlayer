@@ -1,5 +1,5 @@
-﻿#include "player.h"
-#include "mediaparameters.h"
+﻿#include "media/player.h"
+#include "media/mediaparameters.h"
 #include <QDebug>
 
 Player::Player() {

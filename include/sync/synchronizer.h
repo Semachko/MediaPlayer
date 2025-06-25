@@ -1,4 +1,4 @@
-#ifndef SYNCHRONIZER_H
+﻿#ifndef SYNCHRONIZER_H
 #define SYNCHRONIZER_H
 
 #include <QObject>
@@ -6,7 +6,7 @@
 #include <QWaitCondition>
 #include <queue>
 
-#include "clock.h"
+#include "sync/clock.h"
 
 class Synchronizer : public QObject
 {

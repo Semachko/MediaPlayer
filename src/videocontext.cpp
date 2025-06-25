@@ -4,7 +4,7 @@
 #include <QThread>
 #include <QtConcurrent>
 
-#include "videocontext.h"
+#include "video/videocontext.h"
 #include "frame.h"
 
 constexpr auto DECODING = "\033[31m[Decoding]\033[0m";
@@ -26,13 +26,17 @@ VideoContext::VideoContext(QVideoSink* videosink, AVFormatContext* format_contex
     avcodec_parameters_to_context(codec_context, codec_parameters);
     avcodec_open2(codec_context, codec, nullptr);
 
-    filters = new Filters(codec_parameters,timeBase);
-    converter = new ImageConverter(codec_context);
+
 
     qreal fps = av_q2d(format_context->streams[stream_id]->avg_frame_rate);
     maxBufferSize = fps * bufferization_time;
 
+
     output = new FrameOutput(videosink, sync, maxBufferSize);
+    output->filters = new Filters(codec_parameters,timeBase);
+    output->converter = new ImageConverter(codec_context);
+    output->codec_context = codec_context;
+    output->timebase = av_q2d(timeBase);
     outputThread = new QThread(this);
     output->moveToThread(outputThread);
     outputThread->start();
@@ -48,8 +52,8 @@ VideoContext::~VideoContext()
     if (stream_id<0)
         return;
     avcodec_free_context(&codec_context);
-    delete filters;
-    delete converter;
+    // delete filters;
+    // delete converter;
 
     output->imageReady.wakeAll();
     outputThread->quit();
@@ -98,17 +102,18 @@ void VideoContext::filter_and_output()
     int res;
     while ((res = avcodec_receive_frame(codec_context, frame.get())) == 0)
     {
-        Frame filtered_frame = filters->applyFilters(frame);
-        Frame output_frame = converter->convert(filtered_frame);
+        // Frame filtered_frame = filters->applyFilters(frame);
+        // Frame output_frame = converter->convert(filtered_frame);
 
-        QImage image(output_frame->data[0], codec_context->width, codec_context->height, output_frame->linesize[0], QImage::Format_RGB32);
-        qint64 imagetime = filtered_frame->best_effort_timestamp * 1000 * timeBase.num / timeBase.den;
-        ImageFrame imageFrame(std::move(QVideoFrame(image.copy())),imagetime);
-
-        output->imageQueue.push(std::move(imageFrame));
+        //QImage image(output_frame->data[0], codec_context->width, codec_context->height, output_frame->linesize[0], QImage::Format_RGB32);
+        //qint64 imagetime = filtered_frame->best_effort_timestamp * 1000 * timeBase.num / timeBase.den;
+        //ImageFrame imageFrame(std::move(QVideoFrame(image.copy())),imagetime);
+        Frame output_frame = make_shared_frame();
+        av_frame_move_ref(output_frame.get(), frame.get());
+        output->imageQueue.push(output_frame);
         output->imageReady.notify_all();
 
-        av_frame_unref(frame.get());
+        //av_frame_unref(frame.get());
     }
 }
 
@@ -122,15 +127,21 @@ qint64 VideoContext::buffer_available()
 
 void VideoContext::set_brightness(qreal value)
 {
-    filters->set_brightness(value);
+    output->filters->set_brightness(value);
+    if (sync->isPaused)
+        output->set_filters_on_currentFrame();
 }
 
 void VideoContext::set_contrast(qreal value)
 {
-    filters->set_contrast(value);
+    output->filters->set_contrast(value);
+    if (sync->isPaused)
+        output->set_filters_on_currentFrame();
 }
 
 void VideoContext::set_saturation(qreal value)
 {
-    filters->set_saturation(value);
+    output->filters->set_saturation(value);
+    if (sync->isPaused)
+        output->set_filters_on_currentFrame();
 }

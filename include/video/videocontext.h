@@ -13,11 +13,11 @@ extern "C" {
 #include <QVideoFrame>
 #include <QPair>
 
-#include "imediacontext.h"
-#include "synchronizer.h"
-#include "frameoutput.h"
-#include "filters.h"
-#include "imageconverter.h"
+#include "media/imediacontext.h"
+#include "sync/synchronizer.h"
+#include "video/frameoutput.h"
+#include "video/filters.h"
+#include "video/imageconverter.h"
 
 class VideoContext : public IMediaContext
 {
@@ -47,8 +47,8 @@ public:
 private:
     QThread* outputThread;
 
-    Filters* filters;
-    ImageConverter* converter;
+    // Filters* filters;
+    // ImageConverter* converter;
     Synchronizer* sync;
     QWaitCondition* imageReady;
     qint64 maxBufferSize;

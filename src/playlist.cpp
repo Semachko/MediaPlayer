@@ -1,4 +1,4 @@
-#include "playlist.h"
+﻿#include "media/playlist.h"
 
 #include <QRandomGenerator>
 #include <QFileDialog>

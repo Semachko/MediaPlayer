@@ -1,7 +1,7 @@
-#include <QDebug>
+﻿#include <QDebug>
 #include <QMediaDevices>
 
-#include "audiocontext.h"
+#include "audio/audiocontext.h"
 #include "frame.h"
 
 constexpr auto DECODING = "\033[31m[Decoding]\033[0m";

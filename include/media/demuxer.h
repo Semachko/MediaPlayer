@@ -1,4 +1,4 @@
-#ifndef DEMUXER_H
+﻿#ifndef DEMUXER_H
 #define DEMUXER_H
 
 extern "C" {
@@ -9,9 +9,9 @@ extern "C" {
 #include <vector>
 #include <unordered_map>
 
-#include "videocontext.h"
-#include "audiocontext.h"
-#include "synchronizer.h"
+#include "video/videocontext.h"
+#include "audio/audiocontext.h"
+#include "sync/synchronizer.h"
 
 class Demuxer : public QObject
 {

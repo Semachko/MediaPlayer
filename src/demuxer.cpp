@@ -1,6 +1,6 @@
-#include <QDebug>
+﻿#include <QDebug>
 
-#include "demuxer.h"
+#include "media/demuxer.h"
 #include "packet.h"
 
 constexpr auto PACKET = "\033[33m[Packet]\033[0m";
