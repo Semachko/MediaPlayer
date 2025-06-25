@@ -1,8 +1,13 @@
-//preload images on seeking
-lagging when seeking (move seeking into different threads)
-make filtering on pause
+﻿make filtering on pause
 make correct destroying frameoutput loop (QML VideoSink destroys first)
 refactor project folder
+add multithread decoding
+lagging when seeking (move seeking into different threads)
+ui menubar hides when seeking
+add timebar above handle when seeking
+add preload image on seeking
+fix ui resizing
 
 find out how works volume in samples
 add stretching
+check if i need flushing decoders (avcodec_send_frame(ctx, nullptr))

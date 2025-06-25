@@ -1,4 +1,4 @@
-#include <QtConcurrent>
+﻿#include <QtConcurrent>
 #include <QElapsedTimer>
 #include <QVideoFrame>
 #include <utility>
@@ -77,6 +77,19 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
         connect(this,&Media::midChanged,audio,&AudioContext::set_mid);
         connect(this,&Media::highChanged,audio,&AudioContext::set_high);
     }
+
+    if (video)
+    {
+        qreal total_seconds = format_context->duration / 1'000'000.0;
+        qreal fps = av_q2d(format_context->streams[video->stream_id]->avg_frame_rate);
+        qint64 total_frames = total_seconds * fps;
+        qreal timeStep = 1.0 / total_frames;
+        emit outputTimeStep(timeStep);
+    }else{
+        qreal timeStep = format_context->duration / 15'000;     // ~15ms step
+        emit outputTimeStep(timeStep);
+    }
+
 
     if(sync->isPaused != parameters.isPaused)
         resume_pause();
@@ -192,6 +205,9 @@ void Media::slider_pause(qreal position)
         }
     }
     int64_t seek_target = format_context->duration * position;
+    // QMetaObject::invokeMethod(demuxer, [this, seek_target]() {
+    //     seek_time(seek_target);
+    // });
     seek_time(seek_target);
 }
 

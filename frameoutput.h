@@ -1,4 +1,4 @@
-#ifndef FRAMEOUTPUT_H
+﻿#ifndef FRAMEOUTPUT_H
 #define FRAMEOUTPUT_H
 
 #include <QObject>
@@ -36,6 +36,7 @@ signals:
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
 public:
+
     Queue<ImageFrame> imageQueue;
     QWaitCondition imageReady;
     QMutex queueMutex;

@@ -1,4 +1,4 @@
-#ifndef VIDEOCONTEXT_H
+﻿#ifndef VIDEOCONTEXT_H
 #define VIDEOCONTEXT_H
 
 extern "C" {

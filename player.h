@@ -1,4 +1,4 @@
-#ifndef PLAYER_H
+﻿#ifndef PLAYER_H
 #define PLAYER_H
 
 #include <QObject>
@@ -12,6 +12,7 @@ class Player: public QObject
 
     Q_PROPERTY(QString filename READ filename WRITE setFilename NOTIFY filenameChanged)
     Q_PROPERTY(qreal currentPosition READ currentPosition NOTIFY currentPositionChanged)
+    Q_PROPERTY(qreal timeStep READ timeStep WRITE setTimeStep NOTIFY timeStepChanged)
     Q_PROPERTY(qreal volume READ volume WRITE setVolume NOTIFY volumeChanged)
     Q_PROPERTY(qreal speed READ speed WRITE setSpeed NOTIFY speedChanged)
     Q_PROPERTY(bool isMuted READ isMuted WRITE setIsMuted NOTIFY isMutedChanged)
@@ -89,6 +90,8 @@ signals:
     void contrastChanged();
     void saturationChanged();
 
+    void timeStepChanged();
+
 private:
     void update_params();
     ////////////////////////////////////////////////////////////////
@@ -99,6 +102,9 @@ public:
     MediaParameters params;
     void setFilename(const QString &newFilename);
 
+    qreal timeStep() const;
+    void setTimeStep(qreal newTimeStep);
+
 private:
     Media* media;
     QThread* mediaThread;
@@ -107,6 +113,7 @@ private:
     QString m_filename = "CHOOSE FILE";
     Playlist playlist;
 
+    qreal m_timeStep = 0.001;
     qreal m_currentPosition;
     qreal m_volume = 0.2;
     qreal m_speed = 1.0;

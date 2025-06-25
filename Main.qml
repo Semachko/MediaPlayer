@@ -1,4 +1,4 @@
-import QtQuick
+﻿ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import QtMultimedia
@@ -96,6 +96,7 @@ Window {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 value: player.currentPosition
+                stepSize: player.timeStep
                 onMoved:{
                     if (pressed)
                         player.sliderPause(position)

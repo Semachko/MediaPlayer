@@ -1,4 +1,4 @@
-#include <QImage>
+﻿#include <QImage>
 #include <QDebug>
 #include <QElapsedTimer>
 #include <QThread>
@@ -63,7 +63,6 @@ VideoContext::~VideoContext()
 
 void VideoContext::decode_and_output()
 {
-    //sync->check_pause();
     QMutexLocker _(&videoMutex);
 
     if (buffer_available() == 0)

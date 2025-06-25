@@ -1,4 +1,4 @@
-#ifndef MEDIA_H
+﻿#ifndef MEDIA_H
 #define MEDIA_H
 
 extern "C" {
@@ -47,6 +47,7 @@ public:
     void change_repeating();
 signals:
     void fileChanged(QString,QVideoSink*,bool);
+    void outputTimeStep(qreal);
 
     void brightnessChanged(qreal);
     void contrastChanged(qreal);

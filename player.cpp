@@ -1,4 +1,4 @@
-#include "player.h"
+﻿#include "player.h"
 #include "mediaparameters.h"
 #include <QDebug>
 
@@ -6,6 +6,9 @@ Player::Player() {
     media = new Media();
     connect(media,&Media::endReached,this,&Player::paused);
     connect(media,&Media::outputGlobalTime,this,&Player::globalTime);
+    connect(media,&Media::outputTimeStep,this,[this](qreal step){
+        m_timeStep = step;
+    });
     connect(media,&Media::outputTime,this,[this](qint64 time,qreal pos){
         m_currentPosition=pos;
         emit newTime(time);
@@ -240,4 +243,17 @@ void Player::setFilename(const QString &newFilename)
         return;
     m_filename = newFilename;
     emit filenameChanged();
+}
+
+qreal Player::timeStep() const
+{
+    return m_timeStep;
+}
+
+void Player::setTimeStep(qreal newTimeStep)
+{
+    if (qFuzzyCompare(m_timeStep, newTimeStep))
+        return;
+    m_timeStep = newTimeStep;
+    emit timeStepChanged();
 }
