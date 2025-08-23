@@ -1,4 +1,4 @@
-import QtQuick
+﻿import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Layouts
 
@@ -41,7 +41,7 @@ Item {
             ToolsMenuButton {
                 id: filters
                 label: "Filters (V)"
-                iconSRC: "qrc:/images/filters.svg"
+                iconSRC: "qrc:/resources/icons/filters.svg"
                 checkable: false
                 onClicked: {
                     popup.close()
@@ -51,7 +51,7 @@ Item {
             ToolsMenuButton {
                 id: equalizer
                 label: "Equalizer (E)"
-                iconSRC: "qrc:/images/equalizer.svg"
+                iconSRC: "qrc:/resources/icons/equalizer.svg"
                 checkable: false
                 onClicked: {
                     popup.close()
@@ -61,7 +61,7 @@ Item {
             ToolsMenuButton {
                 id: rotate
                 label: "Rotate (R)"
-                iconSRC: "qrc:/images/rotate.svg"
+                iconSRC: "qrc:/resources/icons/rotate.svg"
                 checkable: false
                 onClicked: {
                     popup.close()
@@ -75,7 +75,7 @@ Item {
             ToolsMenuButton {
                 id: shuffle
                 label: "Shuffle (S)"
-                iconSRC: "qrc:/images/shuffle.svg"
+                iconSRC: "qrc:/resources/icons/shuffle.svg"
                 checkable: false
                 onClicked: {
                     popup.close()
@@ -89,7 +89,7 @@ Item {
             ToolsMenuButton {
                 id: repeat
                 label: "Repeat (T)"
-                iconSRC: "qrc:/images/repeat.svg"
+                iconSRC: "qrc:/resources/icons/repeat.svg"
                 onClicked: {
                     popup.close()
                     isRepeating = repeat.checked

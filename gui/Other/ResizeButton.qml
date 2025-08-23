@@ -1,4 +1,4 @@
-
+﻿
 
 /*
 This is a UI file (.ui.qml) that is intended to be edited in Qt Design Studio only.
@@ -18,13 +18,13 @@ Button {
         Image {
             visible: !root.checked
             anchors.centerIn: parent
-            source: pressed ? "qrc:/images/MediaSizeButtonPressed.svg" : hovered ? "qrc:/images/MediaSizeButtonHovered.svg" : "qrc:/images/MediaSizeButton.svg"
+            source: pressed ? "qrc:/resources/icons/MediaSizeButtonPressed.svg" : hovered ? "qrc:/resources/icons/MediaSizeButtonHovered.svg" : "qrc:/resources/icons/MediaSizeButton.svg"
             fillMode: Image.PreserveAspectFit
         }
         Image {
             visible: root.checked
             anchors.centerIn: parent
-            source: pressed ? "qrc:/images/MediaSizeButtonCheckedPressed.svg" : hovered ? "qrc:/images/MediaSizeButtonCheckedHovered.svg" : "qrc:/images/MediaSizeButtonChecked.svg"
+            source: pressed ? "qrc:/resources/icons/MediaSizeButtonCheckedPressed.svg" : hovered ? "qrc:/resources/icons/MediaSizeButtonCheckedHovered.svg" : "qrc:/resources/icons/MediaSizeButtonChecked.svg"
             fillMode: Image.PreserveAspectFit
         }
     }

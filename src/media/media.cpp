@@ -142,7 +142,7 @@ void Media::resume_pause()
             QMetaObject::invokeMethod(audio, [this]() {
                 audio->audioSink->resume();
             });
-            emit audio->audioDevice->readyRead();
+        emit audio->audioDevice->readyRead();
         }
     }
 }
@@ -222,20 +222,27 @@ void Media::change_time(qreal position)
 void Media::seek_time(int64_t seek_target)
 {
     lock_all_mutexes();
-
     clear_all_buffers();
+
     av_seek_frame(format_context, -1, seek_target, AVSEEK_FLAG_BACKWARD);
     qint64 current_time = get_real_time_ms();
     sync->clock->set_time(current_time);
 
     if (video){
+        video->packetQueue.clear();
+        audio->audioDevice->clear();
+        avcodec_flush_buffers(audio->codec_context);
         emit video->requestPacket();
         output_one_image();
     }
-    if (audio)
+    if (audio){
+        audio->packetQueue.clear();
+        video->output->imageQueue.clear();
+        avcodec_flush_buffers(video->codec_context);
         emit audio->requestPacket();
+    }
 
-    unlock_all_mutexes();
+    //unlock_all_mutexes();
 }
 
 
@@ -245,13 +252,11 @@ void Media::output_one_image()
         while(video->packetQueue.empty()){
             demuxer->push_packet_to_queues();
         }
-        Packet packet;
-        video->packetQueue.pop(packet);
+        Packet packet = video->packetQueue.pop();
         video->decode(packet);
         video->filter_and_output();
     }
-    Frame frame = make_shared_frame();
-    video->output->imageQueue.pop(frame);
+    Frame frame = video->output->imageQueue.pop();
     Frame filtered_frame = video->output->filters->applyFilters(frame);
     Frame output_frame = video->output->converter->convert(filtered_frame);
     QImage image(output_frame->data[0], video->output->codec_context->width, video->output->codec_context->height, output_frame->linesize[0], QImage::Format_RGB32);
@@ -284,6 +289,7 @@ qint64 Media::get_real_time_ms()
             IMediaContext* media = demuxer->medias[temp_packet->stream_index];
             media->packetQueue.push(std::move(temp_packet));
             emit media->newPacketArrived();
+
         }
     }
     return seeked_time_ms;
@@ -294,10 +300,8 @@ void Media::lock_all_mutexes()
     formatMutex.lock();
     if (audio)
         audio->audioMutex.lock();
-    if (video){
+    if (video)
         video->videoMutex.lock();
-        video->output->queueMutex.lock();
-    }
 }
 
 void Media::unlock_all_mutexes()
@@ -305,10 +309,8 @@ void Media::unlock_all_mutexes()
     formatMutex.unlock();
     if (audio)
         audio->audioMutex.unlock();
-    if (video){
+    if (video)
         video->videoMutex.unlock();
-        video->output->queueMutex.unlock();
-    }
 }
 
 void Media::delete_members()

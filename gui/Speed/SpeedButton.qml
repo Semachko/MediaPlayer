@@ -1,4 +1,4 @@
-import QtQuick
+﻿import QtQuick
 import QtQuick.Controls.Basic
 
 Button {
@@ -18,7 +18,7 @@ Button {
         Image {
             id: icon
             anchors.centerIn: parent
-            source: "qrc:/images/Speed.svg"
+            source: "qrc:/resources/icons/Speed.svg"
             fillMode: Image.PreserveAspectFit
         }
     }

@@ -1,4 +1,4 @@
-import QtQuick
+﻿import QtQuick
 import QtQuick.Controls.Basic
 
 Button {
@@ -29,7 +29,7 @@ Button {
             anchors.centerIn: parent
             anchors.horizontalCenterOffset: -5
             scale: 0.8
-            source: "qrc:/images/WhiteTriangle.svg"
+            source: "qrc:/resources/icons/WhiteTriangle.svg"
         }
         Rectangle {
             anchors.centerIn: parent

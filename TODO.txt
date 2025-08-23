@@ -1,4 +1,7 @@
-﻿add multithread decoding
+﻿//make condition_variable correct
+done, but big problem. Need to sync AV-types like codec_context (im clearing buffers while decoding).
+
+add multithread decoding
 lagging when seeking (move seeking into different threads)
 make correct destroying frameoutput loop (QML VideoSink destroys first)
 ui menubar hides when seeking

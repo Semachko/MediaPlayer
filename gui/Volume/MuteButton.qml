@@ -1,4 +1,4 @@
-import QtQuick
+﻿import QtQuick
 import QtQuick.Controls.Basic
 
 Button {
@@ -19,14 +19,14 @@ Button {
             id: muted
             visible: checked
             anchors.centerIn: parent
-            source: "qrc:/images/MutedWhite.svg"
+            source: "qrc:/resources/icons/MutedWhite.svg"
             fillMode: Image.PreserveAspectFit
         }
         Image {
             id: notmuted
             visible: !checked
             anchors.centerIn: parent
-            source: "qrc:/images/NotMutedWhite.svg"
+            source: "qrc:/resources/icons/NotMutedWhite.svg"
             fillMode: Image.PreserveAspectFit
         }
     }

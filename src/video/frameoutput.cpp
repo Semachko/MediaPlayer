@@ -26,23 +26,19 @@ void FrameOutput::start_output()
     while(!abort)
     {
         sync->check_pause();
-        QMutexLocker q(&conditionMutex);
         //qDebug()<<OUTPUT<<"Checking is image queue empty";
         // qDebug()<<OUTPUT<<"Image queue size ="<<imageQueue.size();
-        while(imageQueue.empty()){
-            //qDebug()<<OUTPUT<<"Queue is empty, waiting for images";
-            imageReady.wait(&conditionMutex);
-        }
+
+        // while(imageQueue.empty()){
+        //     //qDebug()<<OUTPUT<<"Queue is empty, waiting for images";
+        //     imageReady.wait(&conditionMutex);
+        // }
         //qDebug()<<OUTPUT<<"Queue contain image, outputing";
 
         // ImageFrame imageFrame;
         // if(!imageQueue.pop(imageFrame))
         //     continue;
-        Frame frame = make_shared_frame();
-        if(!imageQueue.pop(frame))
-            continue;
-
-
+        Frame frame = imageQueue.pop();
 
         av_frame_unref(currentFrame.get());
         currentFrame->format = frame->format;

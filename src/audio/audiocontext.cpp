@@ -69,14 +69,12 @@ AudioContext::~AudioContext()
 
 void AudioContext::decode_and_output()
 {
-    QMutexLocker _(&audioMutex);
     if (buffer_available() <= 0)
         return;
-    Packet packet;
-    if(!packetQueue.pop(packet)){
-        emit requestPacket();
-        return;
-    }
+    Packet packet = packetQueue.pop();
+    emit requestPacket();
+
+    QMutexLocker _(&audioMutex);
     decode(packet);
     equalizer_and_output();
 }

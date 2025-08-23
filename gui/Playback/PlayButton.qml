@@ -1,4 +1,4 @@
-import QtQuick
+﻿import QtQuick
 import QtQuick.Controls.Basic
 import QtQuick.Shapes
 
@@ -30,7 +30,7 @@ Button {
             visible: !checked
             anchors.centerIn: parent
             anchors.horizontalCenterOffset: 4
-            source: "qrc:/images/WhiteTriangle.svg"
+            source: "qrc:/resources/icons/WhiteTriangle.svg"
         }
         Item {
             id: pause

@@ -1,9 +1,10 @@
-#ifndef QUEUE_H
+﻿#ifndef QUEUE_H
 #define QUEUE_H
 
 #include <QObject>
 #include <QMutex>
 #include <QMutexLocker>
+#include <QWaitCondition>
 #include <queue>
 
 template<typename T>
@@ -13,20 +14,29 @@ public:
     Queue(qint64 size) : maxSize(size){}
 
     void push(const T& value){
-        QMutexLocker locker(&mutex);
-        queue.push(value);
+    {
+        {
+            QMutexLocker locker(&mutex);
+            queue.push(value);
+        }
+        image_ready.notify_one();
+    }
     }
     void push(T&& value){
-        QMutexLocker locker(&mutex);
-        queue.push(std::move(value));
+        {
+            QMutexLocker locker(&mutex);
+            queue.push(std::move(value));
+        }
+        image_ready.notify_one();
     }
-    bool pop(T& out) {
-        QMutexLocker locker(&mutex);
-        if (queue.empty())
-            return false;
-        out = queue.front();
+    T pop() {
+        mutex.lock();
+        while(queue.empty())
+            image_ready.wait(&mutex);
+        T data = queue.front();
         queue.pop();
-        return true;
+        mutex.unlock();
+        return data;
     }
     bool front(T& out) const {
         QMutexLocker locker(&mutex);
@@ -62,6 +72,7 @@ public:
 
 private:
     mutable QMutex mutex;
+    QWaitCondition image_ready;
     std::queue<T> queue;
     qint64 maxSize = 2;
 };

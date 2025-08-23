@@ -1,4 +1,4 @@
-
+﻿
 
 /*
 This is a UI file (.ui.qml) that is intended to be edited in Qt Design Studio only.
@@ -25,7 +25,7 @@ Button {
         Image {
             id: optionsBlack
             anchors.centerIn: parent
-            source: pressed ? "qrc:/images/OptionsBlack.svg" : "qrc:/images/OptionsWhite.svg"
+            source: pressed ? "qrc:/resources/icons/OptionsBlack.svg" : "qrc:/resources/icons/OptionsWhite.svg"
             fillMode: Image.PreserveAspectFit
         }
     }

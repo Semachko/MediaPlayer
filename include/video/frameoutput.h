@@ -4,7 +4,6 @@
 #include <QObject>
 #include <QVideoSink>
 #include <QVideoFrame>
-#include <QWaitCondition>
 #include <QMutex>
 #include <QPair>
 
@@ -47,14 +46,10 @@ public:
     AVCodecContext* codec_context;
     qreal timebase;
 
-    QWaitCondition imageReady;
-    QMutex queueMutex;
     bool abort = false;
     Frame currentFrame = make_shared_frame();
 private:
-    QMutex conditionMutex;
     Synchronizer* sync;
-
     QVideoSink* videosink;
 };
 

@@ -32,7 +32,7 @@ Window {
         id: backgroundlogo
         anchors.centerIn: parent
         scale: 2.5
-        source: "qrc:/images/BackGroundLogo.svg"
+        source: "qrc:/resources/icons/BackGroundLogo.svg"
     }
     Component.onCompleted: {
         player.videoSink = videoOutput.videoSink

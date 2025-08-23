@@ -55,7 +55,6 @@ VideoContext::~VideoContext()
     // delete filters;
     // delete converter;
 
-    output->imageReady.wakeAll();
     outputThread->quit();
     outputThread->wait();
     output->deleteLater();
@@ -67,15 +66,12 @@ VideoContext::~VideoContext()
 
 void VideoContext::decode_and_output()
 {
-    QMutexLocker _(&videoMutex);
-
     if (buffer_available() == 0)
         return;
-    Packet packet;
-    if(!packetQueue.pop(packet)){
-        emit requestPacket();
-        return;
-    }
+    Packet packet = packetQueue.pop();
+    emit requestPacket();
+
+    QMutexLocker _(&videoMutex);
     decode(packet);
     filter_and_output();
 }
@@ -111,8 +107,6 @@ void VideoContext::filter_and_output()
         Frame output_frame = make_shared_frame();
         av_frame_move_ref(output_frame.get(), frame.get());
         output->imageQueue.push(output_frame);
-        output->imageReady.notify_all();
-
         //av_frame_unref(frame.get());
     }
 }
