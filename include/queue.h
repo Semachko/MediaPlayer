@@ -2,78 +2,69 @@
 #define QUEUE_H
 
 #include <QObject>
-#include <QMutex>
-#include <QMutexLocker>
-#include <QWaitCondition>
+#include <mutex>
 #include <queue>
 
 template<typename T>
-class Queue : QObject
+class Queue
 {
 public:
-    Queue(qint64 size) : maxSize(size){}
+    Queue(qint64 size) : max_size(size){}
+    Queue(const Queue&) = delete;
+    Queue& operator=(const Queue&) = delete;
 
     void push(const T& value){
-    {
         {
-            QMutexLocker locker(&mutex);
+            std::lock_guard _(mutex);
             queue.push(value);
         }
-        image_ready.notify_one();
-    }
+        cv.notify_one();
     }
     void push(T&& value){
         {
-            QMutexLocker locker(&mutex);
+            std::lock_guard _(mutex);
             queue.push(std::move(value));
         }
-        image_ready.notify_one();
+        cv.notify_one();
     }
-    T pop() {
-        mutex.lock();
-        while(queue.empty())
-            image_ready.wait(&mutex);
+    T try_pop() {
+        std::lock_guard _(mutex);
+        if(queue.empty())
+            return T{};
         T data = queue.front();
         queue.pop();
-        mutex.unlock();
         return data;
     }
-    bool front(T& out) const {
-        QMutexLocker locker(&mutex);
-        if (queue.empty())
-            return false;
-        out = queue.front();
-        return true;
+    T wait_pop() {
+        std::unique_lock lock(mutex);
+        cv.wait(lock, [this] {return !queue.empty();});
+        T data = queue.front();
+        queue.pop();
+        return data;
     }
-    bool back(T& out) const {
-        QMutexLocker locker(&mutex);
-        if (queue.empty())
-            return false;
-        out = queue.back();
-        return true;
-    }
+
     bool empty() const{
-        QMutexLocker locker(&mutex);
+        std::lock_guard _(mutex);
         return queue.empty();
     }
     bool is_full() const{
-        QMutexLocker locker(&mutex);
-        return queue.size() >= maxSize;
+        std::lock_guard _(mutex);
+        return queue.size() >= max_size;
     }
     size_t size() const{
-        QMutexLocker locker(&mutex);
+        std::lock_guard _(mutex);
         return queue.size();
     }
     void clear(){
-        QMutexLocker locker(&mutex);
+        std::lock_guard _(mutex);
         std::queue<T> empty;
         std::swap(queue, empty);
     }
 
 private:
-    mutable QMutex mutex;
-    QWaitCondition image_ready;
+    mutable std::mutex mutex;
+    std::condition_variable cv;
     std::queue<T> queue;
-    qint64 maxSize = 2;
+    qint64 max_size;
 };
 #endif // QUEUE_H

@@ -17,10 +17,10 @@ class Demuxer : public QObject
 {
     Q_OBJECT
 public:
-    explicit Demuxer(AVFormatContext* format_context,Synchronizer* sync,QMutex& formatMutex);
+    explicit Demuxer(AVFormatContext* format_context,Synchronizer* sync);
     ~Demuxer();
 
-    void add_context(int stream_id, IMediaContext* context);
+    void add_context(IMediaContext* context);
     void demuxe_packets();
     bool push_packet_to_queues();
 signals:
@@ -29,8 +29,8 @@ signals:
     ///////////////////////////////////////////////
 public:
     std::unordered_map<int,IMediaContext*> medias;
+    std::mutex mutex;
 private:
-    QMutex& formatMutex;
     AVFormatContext* format_context;
     Synchronizer* sync;
 };

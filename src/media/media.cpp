@@ -2,8 +2,10 @@
 #include <QElapsedTimer>
 #include <QVideoFrame>
 #include <utility>
+#include <mutex>
 
 #include "media/media.h"
+#include "media/codec.h"
 
 Media::Media(){}
 Media::~Media()
@@ -34,32 +36,15 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
     // How many seconds forward we want to bufferize
     const qreal bufferization_time = 0.2;
 
-    demuxer = new Demuxer(format_context, sync, formatMutex);
+    demuxer = new Demuxer(format_context, sync);
     demuxerThread = new QThread(this);
     demuxer->moveToThread(demuxerThread);
     demuxerThread->start();
 
     int stream_id = -1;
-    stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
-    if (stream_id >= 0){
-        video = new VideoContext(videosink, format_context, sync, stream_id, bufferization_time);
-        videoThread = new QThread(this);
-        video->moveToThread(videoThread);
-        videoThread->start();
-        video->set_contrast(parameters.filters.contrast);
-        video->set_brightness(parameters.filters.brightness);
-        video->set_saturation(parameters.filters.saturation);
-
-        demuxer->add_context(video->stream_id, video);
-        connect(video,&VideoContext::requestPacket,demuxer,&Demuxer::demuxe_packets);
-        connect(this,&Media::brightnessChanged,video,&VideoContext::set_brightness);
-        connect(this,&Media::contrastChanged,video,&VideoContext::set_contrast);
-        connect(this,&Media::saturationChanged,video,&VideoContext::set_saturation);
-    }
-
     stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
     if (stream_id >= 0){
-        audio = new AudioContext(format_context, sync, stream_id, bufferization_time);
+        audio = new AudioContext(format_context->streams[stream_id], sync, bufferization_time);
         audioThread = new QThread(this);
         audio->moveToThread(audioThread);
         audioThread->start();
@@ -71,17 +56,34 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
         if(audio->isMuted != parameters.isMuted)
             mute_unmute();
 
-        demuxer->add_context(audio->stream_id, audio);
+        demuxer->add_context(audio);
         connect(audio,&AudioContext::requestPacket,demuxer,&Demuxer::demuxe_packets);
         connect(this,&Media::lowChanged,audio,&AudioContext::set_low);
         connect(this,&Media::midChanged,audio,&AudioContext::set_mid);
         connect(this,&Media::highChanged,audio,&AudioContext::set_high);
     }
+    stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
+    if (stream_id >= 0){
+        video = new VideoContext(videosink, format_context->streams[stream_id], sync, bufferization_time);
+        videoThread = new QThread(this);
+        video->moveToThread(videoThread);
+        videoThread->start();
+        video->set_contrast(parameters.filters.contrast);
+        video->set_brightness(parameters.filters.brightness);
+        video->set_saturation(parameters.filters.saturation);
+
+        demuxer->add_context(video);
+        connect(video,&VideoContext::requestPacket,demuxer,&Demuxer::demuxe_packets);
+        connect(this,&Media::brightnessChanged,video,&VideoContext::set_brightness);
+        connect(this,&Media::contrastChanged,video,&VideoContext::set_contrast);
+        connect(this,&Media::saturationChanged,video,&VideoContext::set_saturation);
+        output_one_image();
+    }
 
     if (video)
     {
         qreal total_seconds = format_context->duration / 1'000'000.0;
-        qreal fps = av_q2d(format_context->streams[video->stream_id]->avg_frame_rate);
+        qreal fps = av_q2d(video->codec.stream->avg_frame_rate);
         qint64 total_frames = total_seconds * fps;
         qreal timeStep = 1.0 / total_frames;
         emit outputTimeStep(timeStep);
@@ -101,13 +103,6 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
         if (!isRepeating)
             emit endReached();
     });
-
-    if (video){
-        lock_all_mutexes();
-        output_one_image();
-        unlock_all_mutexes();
-    }
-
 
     connect(this,&Media::playORpause,this,&Media::resume_pause);
     connect(this,&Media::sliderPause,this,&Media::slider_pause);
@@ -146,7 +141,6 @@ void Media::resume_pause()
         }
     }
 }
-
 
 void Media::change_repeating()
 {
@@ -221,63 +215,54 @@ void Media::change_time(qreal position)
 
 void Media::seek_time(int64_t seek_target)
 {
-    lock_all_mutexes();
-    clear_all_buffers();
+    demuxer->mutex.lock();
+    if (audio)
+        audio->mutex.lock();
+    if (video)
+        video->mutex.lock();
 
     av_seek_frame(format_context, -1, seek_target, AVSEEK_FLAG_BACKWARD);
     qint64 current_time = get_real_time_ms();
     sync->clock->set_time(current_time);
-
-    if (video){
-        video->packetQueue.clear();
-        audio->audioDevice->clear();
-        avcodec_flush_buffers(audio->codec_context);
+    if(video){
+        video->packet_queue.clear();
+        video->output->image_queue.clear();
+        video->decoder.clear_decoder();
         emit video->requestPacket();
-        output_one_image();
+        video->mutex.unlock();
     }
-    if (audio){
-        audio->packetQueue.clear();
-        video->output->imageQueue.clear();
-        avcodec_flush_buffers(video->codec_context);
+    if(audio){
+        audio->packet_queue.clear();
+        audio->audioDevice->clear();
+        audio->decoder.clear_decoder();
         emit audio->requestPacket();
+        audio->mutex.unlock();
     }
-
-    //unlock_all_mutexes();
+    demuxer->mutex.unlock();
+    if (video)
+        output_one_image();
 }
 
 
 void Media::output_one_image()
 {
-    while(video->output->imageQueue.empty()){
-        while(video->packetQueue.empty()){
+    std::scoped_lock _(video->mutex, demuxer->mutex);
+    while(video->output->image_queue.empty()){
+        while(video->packet_queue.empty()){
             demuxer->push_packet_to_queues();
         }
-        Packet packet = video->packetQueue.pop();
+        Packet packet = video->packet_queue.try_pop();
         video->decode(packet);
         video->filter_and_output();
     }
-    Frame frame = video->output->imageQueue.pop();
+    Frame frame = video->output->image_queue.try_pop();
     Frame filtered_frame = video->output->filters->applyFilters(frame);
     Frame output_frame = video->output->converter->convert(filtered_frame);
-    QImage image(output_frame->data[0], video->output->codec_context->width, video->output->codec_context->height, output_frame->linesize[0], QImage::Format_RGB32);
+    QImage image(output_frame->data[0], video->output->codec.context->width, video->output->codec.context->height, output_frame->linesize[0], QImage::Format_RGB32);
     QVideoFrame videoframe = QVideoFrame(image);
     video->videosink->setVideoFrame(videoframe);
 }
 
-
-void Media::clear_all_buffers()
-{
-    if(audio){
-        audio->packetQueue.clear();
-        audio->audioDevice->clear();
-        avcodec_flush_buffers(audio->codec_context);
-    }
-    if(video){
-        video->packetQueue.clear();
-        video->output->imageQueue.clear();
-        avcodec_flush_buffers(video->codec_context);
-    }
-}
 qint64 Media::get_real_time_ms()
 {
     qint64 seeked_time_ms = -1;
@@ -287,32 +272,13 @@ qint64 Media::get_real_time_ms()
         if (demuxer->medias.contains(temp_packet->stream_index)){
             seeked_time_ms = temp_packet->pts * av_q2d(format_context->streams[temp_packet->stream_index]->time_base) * 1000;
             IMediaContext* media = demuxer->medias[temp_packet->stream_index];
-            media->packetQueue.push(std::move(temp_packet));
+            media->packet_queue.push(std::move(temp_packet));
             emit media->newPacketArrived();
 
         }
     }
     return seeked_time_ms;
 }
-
-void Media::lock_all_mutexes()
-{
-    formatMutex.lock();
-    if (audio)
-        audio->audioMutex.lock();
-    if (video)
-        video->videoMutex.lock();
-}
-
-void Media::unlock_all_mutexes()
-{
-    formatMutex.unlock();
-    if (audio)
-        audio->audioMutex.unlock();
-    if (video)
-        video->videoMutex.unlock();
-}
-
 void Media::delete_members()
 {
     if(!sync->isPaused)

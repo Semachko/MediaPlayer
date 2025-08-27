@@ -10,51 +10,32 @@
 constexpr auto DECODING = "\033[31m[Decoding]\033[0m";
 constexpr auto IMAGE = "\033[35m[Image]\033[0m";
 
-VideoContext::VideoContext(QVideoSink* videosink, AVFormatContext* format_context, Synchronizer* sync, int stream_id, qreal bufferization_time)
+VideoContext::VideoContext(QVideoSink* videosink, AVStream* stream, Synchronizer* sync, qreal bufferization_time)
     :
-    IMediaContext(10),
+    IMediaContext(stream, 10),
     videosink(videosink),
-    stream_id(stream_id),
+    decoder(codec),
     sync(sync)
 {
-    timeBase = format_context->streams[stream_id]->time_base;
-
-    // Initiating CODEC
-    AVCodecParameters* codec_parameters = format_context->streams[stream_id]->codecpar;
-    const AVCodec* codec = avcodec_find_decoder(codec_parameters->codec_id);
-    codec_context = avcodec_alloc_context3(codec);
-    avcodec_parameters_to_context(codec_context, codec_parameters);
-    avcodec_open2(codec_context, codec, nullptr);
-
-
-
-    qreal fps = av_q2d(format_context->streams[stream_id]->avg_frame_rate);
+    qreal fps = av_q2d(codec.stream->avg_frame_rate);
     maxBufferSize = fps * bufferization_time;
 
-
-    output = new FrameOutput(videosink, sync, maxBufferSize);
-    output->filters = new Filters(codec_parameters,timeBase);
-    output->converter = new ImageConverter(codec_context);
-    output->codec_context = codec_context;
+    output = new FrameOutput(videosink, sync, codec, maxBufferSize);
+    output->filters = new Filters(codec.parameters,timeBase);
+    output->converter = new ImageConverter(codec.context);
     output->timebase = av_q2d(timeBase);
     outputThread = new QThread(this);
     output->moveToThread(outputThread);
     outputThread->start();
 
-    connect(output,&FrameOutput::imageOutputted, this, &VideoContext::decode_and_output);
+    connect(output,&FrameOutput::imageOutputted, this, &VideoContext::process_packet);
     QMetaObject::invokeMethod(output,&FrameOutput::start_output, Qt::QueuedConnection);
 
-    connect(this,&VideoContext::newPacketArrived, this, &VideoContext::decode_and_output);
+    connect(this,&VideoContext::newPacketArrived, this, &VideoContext::process_packet);
 }
 
 VideoContext::~VideoContext()
 {
-    if (stream_id<0)
-        return;
-    avcodec_free_context(&codec_context);
-    // delete filters;
-    // delete converter;
-
     outputThread->quit();
     outputThread->wait();
     output->deleteLater();
@@ -64,14 +45,15 @@ VideoContext::~VideoContext()
 }
 
 
-void VideoContext::decode_and_output()
+void VideoContext::process_packet()
 {
-    if (buffer_available() == 0)
+    std::lock_guard _(mutex);
+    if (buffer_available() <= 0)
         return;
-    Packet packet = packetQueue.pop();
+    Packet packet = packet_queue.try_pop();
     emit requestPacket();
-
-    QMutexLocker _(&videoMutex);
+    if (!packet)
+        return;
     decode(packet);
     filter_and_output();
 }
@@ -82,21 +64,15 @@ void VideoContext::decode(Packet& packet)
     qreal diff = currTime - packetTime;
     if (diff > 0.15){
         qDebug()<<"diff ="<<diff<<"Lating, skip.";
-        emit requestPacket();
         return;
     }
-    int ret = avcodec_send_packet(codec_context, packet.get());
-    if (ret < 0) {
-        qDebug()<<"Error decoding video packet: "<<ret;
-        return;
-    }
+    decoder.decode_packet(packet);
 }
 
 void VideoContext::filter_and_output()
 {
     Frame frame = make_shared_frame();
-    int res;
-    while ((res = avcodec_receive_frame(codec_context, frame.get())) == 0)
+    while (frame = decoder.receive_frame())
     {
         // Frame filtered_frame = filters->applyFilters(frame);
         // Frame output_frame = converter->convert(filtered_frame);
@@ -106,14 +82,14 @@ void VideoContext::filter_and_output()
         //ImageFrame imageFrame(std::move(QVideoFrame(image.copy())),imagetime);
         Frame output_frame = make_shared_frame();
         av_frame_move_ref(output_frame.get(), frame.get());
-        output->imageQueue.push(output_frame);
+        output->image_queue.push(output_frame);
         //av_frame_unref(frame.get());
     }
 }
 
 qint64 VideoContext::buffer_available()
 {
-    qint64 available_size = maxBufferSize - output->imageQueue.size();
+    qint64 available_size = maxBufferSize - output->image_queue.size();
     if (available_size <= 0)
         return 0;
     return available_size;

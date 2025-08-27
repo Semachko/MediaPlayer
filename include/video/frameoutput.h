@@ -7,6 +7,7 @@
 #include <QMutex>
 #include <QPair>
 
+#include "media/codec.h"
 #include "video/filters.h"
 #include "video/imageconverter.h"
 #include "sync/synchronizer.h"
@@ -29,25 +30,27 @@ class FrameOutput: public QObject
 {
     Q_OBJECT
 public:
-    FrameOutput(QVideoSink*, Synchronizer*, qint64 queueSize);
+    FrameOutput(QVideoSink*, Synchronizer*, Codec&, qint64);
     ~FrameOutput();
 
     void start_output();
     void set_filters_on_currentFrame();
 signals:
     void imageOutputted();
+private:
+    void copy_frame(Frame source, Frame destination);
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
 public:
-    //Queue<ImageFrame> imageQueue;
-    Queue<Frame> imageQueue;
+    //Queue<ImageFrame> image_queue;
+    Queue<Frame> image_queue;
     Filters* filters;
     ImageConverter* converter;
-    AVCodecContext* codec_context;
+    Codec& codec;
     qreal timebase;
 
     bool abort = false;
-    Frame currentFrame = make_shared_frame();
+    Frame current_frame = make_shared_frame();
 private:
     Synchronizer* sync;
     QVideoSink* videosink;

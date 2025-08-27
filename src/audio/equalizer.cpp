@@ -1,8 +1,10 @@
 ﻿#include "audio/equalizer.h"
 #include <QDebug>
 
-Equalizer::Equalizer(AVCodecContext* cod_ctx) : codec_context(cod_ctx){
+Equalizer::Equalizer(Codec& codec)
+{
     //av_log_set_level(AV_LOG_DEBUG);
+    AVCodecContext* codec_context = codec.context;
     char buf[128];
     av_channel_layout_describe(&codec_context->ch_layout, buf, sizeof(buf));
     args =

@@ -75,9 +75,6 @@ signals:
 
 private:
     void output_one_image();
-    void lock_all_mutexes();
-    void unlock_all_mutexes();
-    void clear_all_buffers();
     qint64 get_real_time_ms();
     void delete_members();
     void seek_time(int64_t);
@@ -93,7 +90,6 @@ private:
     QThread* demuxerThread;
 
     Synchronizer* sync;
-    QMutex formatMutex;
 
     bool isRepeating = false;
     bool isSliderPause = false;

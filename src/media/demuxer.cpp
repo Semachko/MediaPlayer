@@ -5,25 +5,24 @@
 
 constexpr auto PACKET = "\033[33m[Packet]\033[0m";
 
-Demuxer::Demuxer(AVFormatContext* format_context, Synchronizer *sync, QMutex &formatMutex)
+Demuxer::Demuxer(AVFormatContext* format_context, Synchronizer *sync)
     :
     format_context(format_context),
-    sync(sync),
-    formatMutex(formatMutex)
+    sync(sync)
 {
 }
 
-void Demuxer::add_context(int stream_id, IMediaContext* context)
+void Demuxer::add_context(IMediaContext* context)
 {
-    medias[stream_id] = context;
+    medias[context->codec.stream->index] = context;
 }
 
 void Demuxer::demuxe_packets()
 {
     //sync->check_pause();
     for (auto& [_stream, context] : medias)
-        while (!context->packetQueue.is_full()){
-            QMutexLocker _(&formatMutex);
+        while (!context->packet_queue.is_full()){
+            std::lock_guard _(mutex);
             if (!push_packet_to_queues())
                 return;
     }
@@ -41,7 +40,7 @@ bool Demuxer::push_packet_to_queues()
 
     if (medias.contains(packet->stream_index)){
         IMediaContext* media = medias[packet->stream_index];
-        media->packetQueue.push(std::move(packet));
+        media->packet_queue.push(std::move(packet));
         emit media->newPacketArrived();
     }
     return true;

@@ -5,6 +5,7 @@
 #include <QIODevice>
 #include <QByteArray>
 #include <QThread>
+#include <mutex>
 
 extern "C" {
 #include "libavformat/avformat.h"
@@ -19,6 +20,8 @@ extern "C" {
 #include <libavfilter/buffersrc.h>
 }
 
+#include "media/codec.h"
+#include "media/decoder.h"
 #include "media/imediacontext.h"
 #include "audio/audioiodevice.h"
 #include "sync/synchronizer.h"
@@ -31,10 +34,10 @@ class AudioContext : public IMediaContext
 {
     Q_OBJECT
 public:
-    AudioContext(AVFormatContext* format_context, Synchronizer* sync, int stream_id, qreal bufferization_time);
+    AudioContext(AVStream* stream,  Synchronizer* sync, qreal bufferization_time);
     ~AudioContext();
 
-    void decode_and_output() override;
+    void process_packet() override;
     qint64 buffer_available() override;
     void set_low(qreal value);
     void set_mid(qreal value);
@@ -49,19 +52,18 @@ private:
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
 public:
-    int stream_id;
     bool isMuted = false;
     qreal last_volume = 0.2;
     QAudioSink* audioSink;
     AudioIODevice* audioDevice;
     QAudioFormat format;
 
-    AVCodecContext* codec_context;
-    QMutex audioMutex;
-private:
+    Decoder decoder;
     SampleConverter* converter;
-    Equalizer* equalizer;
+    Equalizer equalizer;
 
+    std::mutex mutex;
+private:
     Synchronizer* sync;
     qint64 maxBufferSize;
     const qint64 MIN_BUFFER_SIZE = 4092;

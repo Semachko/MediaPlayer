@@ -1,4 +1,4 @@
-#ifndef EQUALIZER_H
+﻿#ifndef EQUALIZER_H
 #define EQUALIZER_H
 
 #define __STDC_CONSTANT_MACROS
@@ -14,11 +14,12 @@ extern "C" {
 #include <QMutex>
 #include <QAudioFormat>
 #include "frame.h"
+#include "media/codec.h"
 
 class Equalizer
 {
 public:
-    explicit Equalizer(AVCodecContext* codec_context);
+    explicit Equalizer(Codec& codec);
     ~Equalizer();
 
     Frame applyEqualizer(Frame frame);
@@ -29,7 +30,6 @@ public:
 private:
     void update_equalizer();
 private:
-    AVCodecContext* codec_context;
     AVFilterGraph* filter_graph = nullptr;
     AVFilterContext *buffersrc_ctx;
     AVFilterContext *buffersink_ctx;

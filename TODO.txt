@@ -2,6 +2,7 @@
 done, but big problem. Need to sync AV-types like codec_context (im clearing buffers while decoding).
 
 add multithread decoding
+change main time to depend on audio time
 lagging when seeking (move seeking into different threads)
 make correct destroying frameoutput loop (QML VideoSink destroys first)
 ui menubar hides when seeking
@@ -11,4 +12,3 @@ fix ui resizing
 
 find out how works volume in samples
 add stretching
-check if i need flushing decoders (avcodec_send_frame(ctx, nullptr))

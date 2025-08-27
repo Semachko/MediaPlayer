@@ -7,21 +7,13 @@
 constexpr auto DECODING = "\033[31m[Decoding]\033[0m";
 constexpr auto SAMPLE = "\033[35m[Sample]\033[0m";
 
-AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync, int stream_id, qreal bufferization_time)
+AudioContext::AudioContext(AVStream* stream,  Synchronizer* sync, qreal bufferization_time)
     :
-    IMediaContext(10),
-    stream_id(stream_id),
+    IMediaContext(stream,10),
+    decoder(codec),
+    equalizer(codec),
     sync(sync)
 {
-    timeBase = format_context->streams[stream_id]->time_base;
-
-    // Initiating CODEC
-    AVCodecParameters* codec_parameters = format_context->streams[stream_id]->codecpar;
-    const AVCodec* codec = avcodec_find_decoder(codec_parameters->codec_id);
-    codec_context = avcodec_alloc_context3(codec);
-    avcodec_parameters_to_context(codec_context, codec_parameters);
-    avcodec_open2(codec_context, codec, nullptr);
-
     // Initiating output audio device FORMAT
     format = QMediaDevices::defaultAudioOutput().preferredFormat();
     qDebug() << "Preferred format:";
@@ -33,13 +25,11 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync, 
         throw;
     }
 
-    equalizer = new Equalizer(codec_context);
-
     // Initiating output audio CONVERTER
     AVChannelLayout outlayout;
     av_channel_layout_default(&outlayout, format.channelCount());
     SampleFormat outputFormat{convert_to_AVFormat(format.sampleFormat()),format.sampleRate(),outlayout};
-    converter = new SampleConverter(codec_context,outputFormat);
+    converter = new SampleConverter(codec.context, outputFormat);
 
     // Getting MAX SIZE of audio output buffer
     qint64 bytesPerSample = av_get_bytes_per_sample((AVSampleFormat)outputFormat.format);
@@ -54,27 +44,26 @@ AudioContext::AudioContext(AVFormatContext *format_context, Synchronizer* sync, 
     audioSink->start(audioDevice);
     audioSink->suspend();
 
-    connect(this, &AudioContext::newPacketArrived, this,&AudioContext::decode_and_output, Qt::QueuedConnection);
-    connect(audioDevice, &AudioIODevice::dataReaded, this,&AudioContext::decode_and_output, Qt::QueuedConnection);
+    connect(this, &AudioContext::newPacketArrived, this,&AudioContext::process_packet, Qt::QueuedConnection);
+    connect(audioDevice, &AudioIODevice::dataReaded, this,&AudioContext::process_packet, Qt::QueuedConnection);
 }
 
 AudioContext::~AudioContext()
 {
-    delete converter;
-    delete equalizer;
     delete audioSink;
     delete audioDevice;
-    delete codec_context;
+    //avcodec_free_context(&codec_context);
 }
 
-void AudioContext::decode_and_output()
+void AudioContext::process_packet()
 {
+    std::lock_guard _(mutex);
     if (buffer_available() <= 0)
         return;
-    Packet packet = packetQueue.pop();
+    Packet packet = packet_queue.try_pop();
     emit requestPacket();
-
-    QMutexLocker _(&audioMutex);
+    if (!packet)
+        return;
     decode(packet);
     equalizer_and_output();
 }
@@ -86,24 +75,17 @@ void AudioContext::decode(Packet& packet)
     qreal diff = currTime - packetTime;
     if (diff > 0.15){
         qDebug()<<"Packet is lating skipping:"<<diff<<"sec";
-        emit requestPacket();
         return;
     }
-
-    int result = avcodec_send_packet(codec_context, packet.get());
-    if (result < 0) {
-        qDebug()<<"Error decoding audio packet: "<<result;
-        return;
-    }
+    decoder.decode_packet(packet);
 }
 
 void AudioContext::equalizer_and_output()
 {
     Frame frame = make_shared_frame();
-    int res;
-    while ((res = avcodec_receive_frame(codec_context, frame.get())) == 0)
+    while (frame = decoder.receive_frame())
     {
-        Frame equalized_frame = equalizer->applyEqualizer(frame);
+        Frame equalized_frame = equalizer.applyEqualizer(frame);
         if (!equalized_frame)
             continue;
         Frame converted_frame = converter->convert(equalized_frame);
@@ -127,16 +109,16 @@ qint64 AudioContext::buffer_available()
 }
 
 void AudioContext::set_low(qreal value){
-    equalizer->set_low(value);
+    equalizer.set_low(value);
 }
 void AudioContext::set_mid(qreal value){
-    equalizer->set_mid(value);
+    equalizer.set_mid(value);
 }
 void AudioContext::set_high(qreal value){
-    equalizer->set_high(value);
+    equalizer.set_high(value);
 }
 void AudioContext::set_speed(qreal speed){
-    equalizer->set_speed(speed);
+    equalizer.set_speed(speed);
 }
 void AudioContext::set_volume(qreal value){
     last_volume=value;
