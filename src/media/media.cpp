@@ -64,6 +64,7 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
     }
     stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     if (stream_id >= 0){
+        qDebug()<<"Video stream id:"<<stream_id;
         video = new VideoContext(videosink, format_context->streams[stream_id], sync, bufferization_time);
         videoThread = new QThread(this);
         video->moveToThread(videoThread);

@@ -72,18 +72,11 @@ void VideoContext::decode(Packet& packet)
 void VideoContext::filter_and_output()
 {
     Frame frame = make_shared_frame();
-    while (frame = decoder.receive_frame())
+    while ((frame = decoder.receive_frame())!=nullptr)
     {
-        // Frame filtered_frame = filters->applyFilters(frame);
-        // Frame output_frame = converter->convert(filtered_frame);
-
-        //QImage image(output_frame->data[0], codec_context->width, codec_context->height, output_frame->linesize[0], QImage::Format_RGB32);
-        //qint64 imagetime = filtered_frame->best_effort_timestamp * 1000 * timeBase.num / timeBase.den;
-        //ImageFrame imageFrame(std::move(QVideoFrame(image.copy())),imagetime);
         Frame output_frame = make_shared_frame();
         av_frame_move_ref(output_frame.get(), frame.get());
         output->image_queue.push(output_frame);
-        //av_frame_unref(frame.get());
     }
 }
 
