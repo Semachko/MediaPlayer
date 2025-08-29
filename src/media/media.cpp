@@ -25,13 +25,12 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
 
     sync = new Synchronizer();
 
-    updateTimer = new QTimer(this);
-    connect(updateTimer, &QTimer::timeout, this, [this]() {
+    connect(&updateTimer, &QTimer::timeout, this, [this]() {
         qint64 curr_time = sync->get_time();
         qreal pos = curr_time/(format_context->duration/1000.0);
         emit outputTime(curr_time, pos);
     });
-    updateTimer->start(100);
+    updateTimer.start(100);
 
     // How many seconds forward we want to bufferize
     const qreal bufferization_time = 0.2;
@@ -40,6 +39,11 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
     demuxerThread = new QThread(this);
     demuxer->moveToThread(demuxerThread);
     demuxerThread->start();
+    connect(demuxer,&Demuxer::endReached,this,[this]() {
+        change_time(0);
+        if (!isRepeating)
+            emit endReached();
+    });
 
     int stream_id = -1;
     stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
@@ -64,7 +68,6 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
     }
     stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     if (stream_id >= 0){
-        qDebug()<<"Video stream id:"<<stream_id;
         video = new VideoContext(videosink, format_context->streams[stream_id], sync, bufferization_time);
         videoThread = new QThread(this);
         video->moveToThread(videoThread);
@@ -78,7 +81,13 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
         connect(this,&Media::brightnessChanged,video,&VideoContext::set_brightness);
         connect(this,&Media::contrastChanged,video,&VideoContext::set_contrast);
         connect(this,&Media::saturationChanged,video,&VideoContext::set_saturation);
-        output_one_image();
+        if(sync->isPaused)
+            video->output->process_one_image();
+        else{
+            sync->play_or_pause();
+            video->output->process_one_image();
+            sync->play_or_pause();
+        }
     }
 
     if (video)
@@ -93,20 +102,13 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
         emit outputTimeStep(timeStep);
     }
 
-
     if(sync->isPaused != parameters.isPaused)
         resume_pause();
     isRepeating = parameters.isRepeating;
     change_speed(parameters.speed);
 
-    connect(demuxer,&Demuxer::endReached,this,[this]() {
-        change_time(0);
-        if (!isRepeating)
-            emit endReached();
-    });
-
     connect(this,&Media::playORpause,this,&Media::resume_pause);
-    connect(this,&Media::sliderPause,this,&Media::slider_pause);
+    connect(this,&Media::sliderPressed,this,&Media::slider_press);
     connect(this,&Media::timeChanged,this,&Media::change_time);
     connect(this,&Media::subtruct5sec,this,&Media::subtruct_5sec);
     connect(this,&Media::add5sec,this,&Media::add_5sec);
@@ -121,12 +123,12 @@ void Media::resume_pause()
 {
     sync->play_or_pause();
     if(sync->isPaused)
-        QMetaObject::invokeMethod(updateTimer, [this]() {
-            updateTimer->stop();
+        QMetaObject::invokeMethod(&updateTimer, [this]() {
+            updateTimer.stop();
         });
     else
-        QMetaObject::invokeMethod(updateTimer, [this]() {
-            updateTimer->start(100);
+        QMetaObject::invokeMethod(&updateTimer, [this]() {
+            updateTimer.start(100);
         });
 
     if (audio){
@@ -190,7 +192,7 @@ void Media::change_speed(qreal speed)
     sync->clock->setSpeed(speed);
 }
 
-void Media::slider_pause(qreal position)
+void Media::slider_press(qreal position)
 {
     if(!isSliderPause)
     {
@@ -217,33 +219,26 @@ void Media::change_time(qreal position)
 void Media::seek_time(int64_t seek_target)
 {
     demuxer->mutex.lock();
-    if (audio)
-        audio->mutex.lock();
-    if (video)
-        video->mutex.lock();
-
-    av_seek_frame(format_context, -1, seek_target, AVSEEK_FLAG_BACKWARD);
-    qint64 current_time = get_real_time_ms();
-    sync->clock->set_time(current_time);
-    if(video){
-        video->packet_queue.clear();
-        video->output->image_queue.clear();
-        video->decoder.clear_decoder();
-        emit video->requestPacket();
-        video->mutex.unlock();
-    }
     if(audio){
+        std::lock_guard _(audio->mutex);
         audio->packet_queue.clear();
         audio->audioDevice->clear();
         audio->decoder.clear_decoder();
-        emit audio->requestPacket();
-        audio->mutex.unlock();
     }
+    if(video){
+        std::lock_guard _(video->mutex);
+        video->packet_queue.clear();
+        video->output->image_queue.clear();
+        video->decoder.clear_decoder();
+    }
+    av_seek_frame(format_context, -1, seek_target, AVSEEK_FLAG_BACKWARD);
+    qint64 current_time = get_real_time_ms();
+    sync->clock->set_time(current_time);
     demuxer->mutex.unlock();
-    if (video)
-        output_one_image();
-}
 
+    if (video)
+        video->output->process_one_image();
+}
 
 void Media::output_one_image()
 {
@@ -285,7 +280,7 @@ void Media::delete_members()
     if(!sync->isPaused)
         sync->play_or_pause();
     disconnect(this,&Media::playORpause,this,&Media::resume_pause);
-    disconnect(this,&Media::sliderPause,this,&Media::slider_pause);
+    disconnect(this,&Media::sliderPressed,this,&Media::slider_press);
     disconnect(this,&Media::timeChanged,this,&Media::change_time);
     disconnect(this,&Media::subtruct5sec,this,&Media::subtruct_5sec);
     disconnect(this,&Media::add5sec,this,&Media::add_5sec);
@@ -316,5 +311,4 @@ void Media::delete_members()
 
     avformat_close_input(&format_context);
     sync->deleteLater();
-    updateTimer->deleteLater();
 }

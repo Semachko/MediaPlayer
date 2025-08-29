@@ -51,6 +51,8 @@ void Filters::update_filters()
     }
 
     filter_graph = avfilter_graph_alloc();
+    filter_graph->thread_type = AVFILTER_THREAD_SLICE;
+    filter_graph->nb_threads = 0;
 
     buffersrc  = avfilter_get_by_name("buffer");
     buffersink = avfilter_get_by_name("buffersink");

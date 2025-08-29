@@ -13,6 +13,7 @@ extern "C" {
 #include <QVideoSink>
 #include <QUrl>
 #include <QMutex>
+#include <QTimer>
 
 #include <atomic>
 #include <condition_variable>
@@ -43,7 +44,7 @@ public:
     void change_volume(qreal);
 
     void change_time(qreal);
-    void slider_pause(qreal);
+    void slider_press(qreal);
     void change_repeating();
 signals:
     void fileChanged(QString,QVideoSink*,bool);
@@ -67,7 +68,7 @@ signals:
 
     void timeChanged(qreal);
 
-    void sliderPause(qreal);
+    void sliderPressed(qreal);
     void outputTime(qint64,qreal);
     void outputGlobalTime(qint64);
     void repeatingChanged();
@@ -93,7 +94,7 @@ private:
 
     bool isRepeating = false;
     bool isSliderPause = false;
-    QTimer* updateTimer;
+    QTimer updateTimer;
 };
 
 #endif // MEDIA_H

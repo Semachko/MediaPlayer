@@ -11,18 +11,9 @@ Decoder::~Decoder()
 
 void Decoder::decode_packet(Packet packet)
 {
-    auto start = std::chrono::high_resolution_clock::now();
-
     int result = avcodec_send_packet(codec.context, packet.get());
     if (result < 0)
         qDebug()<<"Error decoding packet: "<<result;
-
-    if (packet->stream_index == 0)
-    {
-        auto end = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
-        qDebug() << "Decoding mcs: " << duration;
-    }
 }
 
 Frame Decoder::receive_frame()
@@ -32,6 +23,7 @@ Frame Decoder::receive_frame()
     if (result == 0){
         return frame;
     }
+    qDebug()<<"--------Error receiving frame: "<<result;
     return Frame{};
 }
 

@@ -34,6 +34,8 @@ public:
     ~FrameOutput();
 
     void start_output();
+    void process_image();
+    void process_one_image();
     void set_filters_on_currentFrame();
 signals:
     void imageOutputted();

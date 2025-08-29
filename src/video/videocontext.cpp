@@ -54,6 +54,18 @@ void VideoContext::process_packet()
     emit requestPacket();
     if (!packet)
         return;
+{
+    using namespace std::chrono;
+    auto now = high_resolution_clock::now();
+    auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
+    auto us = duration_cast<microseconds>(now.time_since_epoch()) % 1000;
+    auto s  = duration_cast<seconds>(now.time_since_epoch());
+
+    qDebug().noquote() << "got packet " <<QString("%1:%2:%3")
+    .arg((s.count()) % 60, 2, 10, QChar('0'))   // секунды
+    .arg(ms.count(), 3, 10, QChar('0'))         // миллисекунды
+    .arg(us.count(), 3, 10, QChar('0'));        // микросекунды
+}
     decode(packet);
     filter_and_output();
 }
@@ -77,6 +89,18 @@ void VideoContext::filter_and_output()
         Frame output_frame = make_shared_frame();
         av_frame_move_ref(output_frame.get(), frame.get());
         output->image_queue.push(output_frame);
+        {
+            using namespace std::chrono;
+            auto now = high_resolution_clock::now();
+            auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
+            auto us = duration_cast<microseconds>(now.time_since_epoch()) % 1000;
+            auto s  = duration_cast<seconds>(now.time_since_epoch());
+
+            qDebug().noquote() << "pushed frame " <<QString("%1:%2:%3")
+            .arg((s.count()) % 60, 2, 10, QChar('0'))   // секунды
+            .arg(ms.count(), 3, 10, QChar('0'))         // миллисекунды
+            .arg(us.count(), 3, 10, QChar('0'));        // микросекунды
+        }
     }
 }
 

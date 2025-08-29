@@ -99,7 +99,7 @@ Window {
                 stepSize: player.timeStep
                 onMoved:{
                     if (pressed)
-                        player.sliderPause(position)
+                        player.sliderPressed(position)
 
                 }
                 onPressedChanged:{

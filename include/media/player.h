@@ -39,7 +39,7 @@ public:
     Q_INVOKABLE void subtruct5sec();
     Q_INVOKABLE void add5sec();
     Q_INVOKABLE void nextMedia(bool isPlaying);
-    Q_INVOKABLE void sliderPause(qreal time);
+    Q_INVOKABLE void sliderPressed(qreal time);
     Q_INVOKABLE void timeChanged(qreal time);
 
     qreal currentPosition() const;
@@ -109,6 +109,7 @@ private:
     Media* media;
     QThread* mediaThread;
     QVideoSink* m_videoSink;
+    QTimer anti_floodseek_timer;
 
     QString m_filename = "CHOOSE FILE";
     Playlist playlist;

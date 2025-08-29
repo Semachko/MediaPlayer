@@ -1,6 +1,8 @@
 ﻿#include "video/frameoutput.h"
 #include <QDebug>
 #include <QThread>
+#include <chrono>
+
 constexpr auto OUTPUT = "\033[34m[Output]\033[0m";
 
 // ImageFrame::ImageFrame(QVideoFrame&& videoframe, qint64 time)
@@ -27,13 +29,14 @@ void FrameOutput::start_output()
     while(!abort)
     {
         sync->check_pause();
-        //qDebug()<<OUTPUT<<"Checking is image queue empty";
-        // qDebug()<<OUTPUT<<"Image queue size ="<<image_queue.size();
-        //qDebug()<<OUTPUT<<"Queue contain image, outputing";
+        process_image();
+    }
+}
+
+void FrameOutput::process_image()
+{
         Frame frame = image_queue.wait_pop();
         copy_frame(frame, current_frame);
-
-
         Frame filtered_frame = filters->applyFilters(frame);
         Frame output_frame = converter->convert(filtered_frame);
         QImage image(output_frame->data[0], codec.context->width, codec.context->height, output_frame->linesize[0], QImage::Format_RGB32);
@@ -45,10 +48,48 @@ void FrameOutput::start_output()
             QThread::msleep(delay);
         if (abort)
             return;
-        //qDebug()<<"Current time in seconds:"<<sync->get_time()/1000.0;
         videosink->setVideoFrame(videoframe);
         emit imageOutputted();
-    }
+}
+
+void FrameOutput::process_one_image()
+{
+{
+        using namespace std::chrono;
+        auto now = high_resolution_clock::now();
+        auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
+        auto us = duration_cast<microseconds>(now.time_since_epoch()) % 1000;
+        auto s  = duration_cast<seconds>(now.time_since_epoch());
+
+        qDebug().noquote() << "start waiting " <<QString("%1:%2:%3")
+        .arg((s.count()) % 60, 2, 10, QChar('0'))   // секунды
+        .arg(ms.count(), 3, 10, QChar('0'))         // миллисекунды
+        .arg(us.count(), 3, 10, QChar('0'));        // микросекунды
+}
+
+        Frame frame = image_queue.wait_pop();
+
+{
+        using namespace std::chrono;
+        auto now = high_resolution_clock::now();
+        auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
+        auto us = duration_cast<microseconds>(now.time_since_epoch()) % 1000;
+        auto s  = duration_cast<seconds>(now.time_since_epoch());
+
+        qDebug().noquote() << "got final image" <<QString("%1:%2:%3")
+        .arg((s.count()) % 60, 2, 10, QChar('0'))   // секунды
+        .arg(ms.count(), 3, 10, QChar('0'))         // миллисекунды
+        .arg(us.count(), 3, 10, QChar('0'));        // микросекунды
+}
+
+
+        copy_frame(frame, current_frame);
+        Frame filtered_frame = filters->applyFilters(frame);
+        Frame output_frame = converter->convert(filtered_frame);
+        QImage image(output_frame->data[0], codec.context->width, codec.context->height, output_frame->linesize[0], QImage::Format_RGB32);
+        QVideoFrame videoframe = QVideoFrame(image);
+        videosink->setVideoFrame(videoframe);
+        emit imageOutputted();
 }
 
 void FrameOutput::set_filters_on_currentFrame()

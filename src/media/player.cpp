@@ -3,6 +3,7 @@
 #include <QDebug>
 
 Player::Player() {
+    anti_floodseek_timer.setSingleShot(true);
     media = new Media();
     connect(media,&Media::endReached,this,&Player::paused);
     connect(media,&Media::outputGlobalTime,this,&Player::globalTime);
@@ -14,6 +15,9 @@ Player::Player() {
         emit newTime(time);
         emit currentPositionChanged();
     });
+    mediaThread = new QThread(this);
+    media->moveToThread(mediaThread);
+    mediaThread->start();
 }
 
 Player::~Player()
@@ -91,8 +95,11 @@ void Player::subtruct5sec(){
 
 
 
-void Player::sliderPause(qreal time){
-    emit media->sliderPause(time);
+void Player::sliderPressed(qreal time){
+    if(anti_floodseek_timer.isActive())
+        return;
+    anti_floodseek_timer.start(50);
+    emit media->sliderPressed(time);
 }
 void Player::timeChanged(qreal time){
     emit media->timeChanged(time);
