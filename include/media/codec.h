@@ -16,6 +16,7 @@ public:
     const AVCodec* codec;
     AVCodecContext* context;
     AVCodecParameters* parameters;
+    AVRational timeBase;
 };
 
 #endif // CODEC_H

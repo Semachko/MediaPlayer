@@ -16,18 +16,24 @@ void Decoder::decode_packet(Packet packet)
         qDebug()<<"Error decoding packet: "<<result;
 }
 
-Frame Decoder::receive_frame()
+QQueue<Frame> Decoder::receive_frames()
 {
+    QQueue<Frame> queue;
     Frame frame = make_shared_frame();
-    int result = avcodec_receive_frame(codec.context, frame.get());
-    if (result == 0){
-        return frame;
+    while (avcodec_receive_frame(codec.context, frame.get()) == 0){
+        queue.enqueue(frame);
+        frame = make_shared_frame();
     }
-    qDebug()<<"--------Error receiving frame: "<<result;
-    return Frame{};
+    return queue;
+}
+
+void Decoder::drain_decoder()
+{
+    avcodec_send_packet(codec.context, nullptr);
 }
 
 void Decoder::clear_decoder()
 {
     avcodec_flush_buffers(codec.context);
 }
+

@@ -10,20 +10,16 @@
 constexpr auto DECODING = "\033[31m[Decoding]\033[0m";
 constexpr auto IMAGE = "\033[35m[Image]\033[0m";
 
-VideoContext::VideoContext(QVideoSink* videosink, AVStream* stream, Synchronizer* sync, qreal bufferization_time)
+VideoContext::VideoContext(AVStream* stream, Synchronizer* sync, MediaParameters* params, qreal bufferization_time)
     :
     IMediaContext(stream, 10),
-    videosink(videosink),
     decoder(codec),
     sync(sync)
 {
     qreal fps = av_q2d(codec.stream->avg_frame_rate);
     maxBufferSize = fps * bufferization_time;
 
-    output = new FrameOutput(videosink, sync, codec, maxBufferSize);
-    output->filters = new Filters(codec.parameters,timeBase);
-    output->converter = new ImageConverter(codec.context);
-    output->timebase = av_q2d(timeBase);
+    output = new FrameOutput(sync, codec, params, maxBufferSize);
     outputThread = new QThread(this);
     output->moveToThread(outputThread);
     outputThread->start();
@@ -54,54 +50,20 @@ void VideoContext::process_packet()
     emit requestPacket();
     if (!packet)
         return;
-{
-    using namespace std::chrono;
-    auto now = high_resolution_clock::now();
-    auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
-    auto us = duration_cast<microseconds>(now.time_since_epoch()) % 1000;
-    auto s  = duration_cast<seconds>(now.time_since_epoch());
-
-    qDebug().noquote() << "got packet " <<QString("%1:%2:%3")
-    .arg((s.count()) % 60, 2, 10, QChar('0'))   // секунды
-    .arg(ms.count(), 3, 10, QChar('0'))         // миллисекунды
-    .arg(us.count(), 3, 10, QChar('0'));        // микросекунды
+    decode_packet(packet);
+    auto queue = decoder.receive_frames();
+    output->image_queue.push(std::move(queue));
 }
-    decode(packet);
-    filter_and_output();
-}
-void VideoContext::decode(Packet& packet)
+void VideoContext::decode_packet(Packet& packet)
 {
-    qreal packetTime = packet->pts * av_q2d(timeBase);
+    qreal packetTime = packet->pts * av_q2d(codec.timeBase);
     qreal currTime = sync->get_time() / 1000.0;
     qreal diff = currTime - packetTime;
     if (diff > 0.15){
-        qDebug()<<"diff ="<<diff<<"Lating, skip.";
+        qDebug()<<"Packet is lating skipping:"<<diff<<"sec";
         return;
     }
     decoder.decode_packet(packet);
-}
-
-void VideoContext::filter_and_output()
-{
-    Frame frame = make_shared_frame();
-    while ((frame = decoder.receive_frame())!=nullptr)
-    {
-        Frame output_frame = make_shared_frame();
-        av_frame_move_ref(output_frame.get(), frame.get());
-        output->image_queue.push(output_frame);
-        {
-            using namespace std::chrono;
-            auto now = high_resolution_clock::now();
-            auto ms = duration_cast<milliseconds>(now.time_since_epoch()) % 1000;
-            auto us = duration_cast<microseconds>(now.time_since_epoch()) % 1000;
-            auto s  = duration_cast<seconds>(now.time_since_epoch());
-
-            qDebug().noquote() << "pushed frame " <<QString("%1:%2:%3")
-            .arg((s.count()) % 60, 2, 10, QChar('0'))   // секунды
-            .arg(ms.count(), 3, 10, QChar('0'))         // миллисекунды
-            .arg(us.count(), 3, 10, QChar('0'));        // микросекунды
-        }
-    }
 }
 
 qint64 VideoContext::buffer_available()
@@ -112,23 +74,3 @@ qint64 VideoContext::buffer_available()
     return available_size;
 }
 
-void VideoContext::set_brightness(qreal value)
-{
-    output->filters->set_brightness(value);
-    if (sync->isPaused)
-        output->set_filters_on_currentFrame();
-}
-
-void VideoContext::set_contrast(qreal value)
-{
-    output->filters->set_contrast(value);
-    if (sync->isPaused)
-        output->set_filters_on_currentFrame();
-}
-
-void VideoContext::set_saturation(qreal value)
-{
-    output->filters->set_saturation(value);
-    if (sync->isPaused)
-        output->set_filters_on_currentFrame();
-}

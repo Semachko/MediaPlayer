@@ -1,4 +1,4 @@
-#ifndef FILTERS_H
+﻿#ifndef FILTERS_H
 #define FILTERS_H
 
 #define __STDC_CONSTANT_MACROS
@@ -14,11 +14,13 @@ extern "C" {
 #include <QMutex>
 
 #include "frame.h"
+#include "media/codec.h"
+#include "media/mediaparameters.h"
 
-class Filters
-{
+class Filters : public QObject
+{Q_OBJECT
 public:
-    explicit Filters(AVCodecParameters*, AVRational time_base);
+    explicit Filters(Codec&, VideoParameters*);
     ~Filters();
 
     Frame applyFilters(Frame frame);
@@ -37,10 +39,7 @@ private:
     AVFilterInOut *outputs;
     AVFilterInOut *inputs;
 
-    qreal brightness = 0.0;
-    qreal contrast   = 1.0;
-    qreal saturation = 1.0;
-
+    VideoParameters* params;
     QMutex mutex;
 };
 

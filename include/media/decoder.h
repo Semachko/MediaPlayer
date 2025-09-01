@@ -6,6 +6,7 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
+#include <QQueue>
 #include <mutex>
 #include "codec.h"
 #include "packet.h"
@@ -18,9 +19,9 @@ public:
     ~Decoder();
 
     void decode_packet(Packet packet);
-    Frame receive_frame();
+    QQueue<Frame> receive_frames();
     void clear_decoder();
-
+    void drain_decoder();
 public:
     Codec& codec;
 };

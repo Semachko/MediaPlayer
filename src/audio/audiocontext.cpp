@@ -7,11 +7,11 @@
 constexpr auto DECODING = "\033[31m[Decoding]\033[0m";
 constexpr auto SAMPLE = "\033[35m[Sample]\033[0m";
 
-AudioContext::AudioContext(AVStream* stream,  Synchronizer* sync, qreal bufferization_time)
+AudioContext::AudioContext(AVStream* stream,  Synchronizer* sync, MediaParameters* params_, qreal bufferization_time)
     :
     IMediaContext(stream,10),
+    params(params_),
     decoder(codec),
-    equalizer(codec),
     sync(sync)
 {
     // Initiating output audio device FORMAT
@@ -25,34 +25,57 @@ AudioContext::AudioContext(AVStream* stream,  Synchronizer* sync, qreal bufferiz
         throw;
     }
 
-    // Initiating output audio CONVERTER
+    // Initiating output CONVERTER and OUTPUTER
     AVChannelLayout outlayout;
     av_channel_layout_default(&outlayout, format.channelCount());
-    SampleFormat outputFormat{convert_to_AVFormat(format.sampleFormat()),format.sampleRate(),outlayout};
-    converter = new SampleConverter(codec.context, outputFormat);
+    SampleFormat outputFormat{convert_to_AVFormat(format.sampleFormat()),format.sampleRate(),format.bytesPerSample(),outlayout};
+    audio_outputer = new AudioOutputer(sync, codec, outputFormat, params);
+    audioSink = new QAudioSink(format, this);
+    audioSink->setBufferSize(audio_outputer->MIN_BUFFER_SIZE);
+    audioSink->setVolume(last_volume);
+    audioSink->start(audio_outputer);
+    audioSink->suspend();
 
     // Getting MAX SIZE of audio output buffer
     qint64 bytesPerSample = av_get_bytes_per_sample((AVSampleFormat)outputFormat.format);
     qint64 bytesPerSecond = bytesPerSample * outputFormat.layout.nb_channels * outputFormat.sample_rate;
     maxBufferSize = bytesPerSecond * bufferization_time;
 
-    // Initiating audio output DEVICE
-    audioDevice = new AudioIODevice(this);
-    audioSink = new QAudioSink(format, this);
-    audioSink->setBufferSize(MIN_BUFFER_SIZE);
-    audioSink->setVolume(last_volume);
-    audioSink->start(audioDevice);
-    audioSink->suspend();
+    connect(params, &MediaParameters::isPausedChanged, this,&AudioContext::pause_changed);
+    connect(params->audio, &AudioParameters::isMutedChanged,this,&AudioContext::mute_unmute);
+    connect(params->audio, &AudioParameters::volumeChanged,this,&AudioContext::set_volume);
 
     connect(this, &AudioContext::newPacketArrived, this,&AudioContext::process_packet, Qt::QueuedConnection);
-    connect(audioDevice, &AudioIODevice::dataReaded, this,&AudioContext::process_packet, Qt::QueuedConnection);
+    connect(audio_outputer, &AudioOutputer::framesReaded, this,&AudioContext::process_packet, Qt::QueuedConnection);
 }
 
 AudioContext::~AudioContext()
 {
     delete audioSink;
-    delete audioDevice;
-    //avcodec_free_context(&codec_context);
+    delete audio_outputer;
+}
+
+void AudioContext::mute_unmute()
+{
+    if(params->audio->isMuted)
+        audioSink->setVolume(0);
+    else
+        audioSink->setVolume(last_volume);
+}
+void AudioContext::set_volume(){
+    last_volume=params->audio->volume;
+    if (!params->audio->isMuted)
+        audioSink->setVolume(last_volume);
+}
+
+void AudioContext::pause_changed()
+{
+    if(params->isPaused)
+        audioSink->suspend();
+    else{
+        audioSink->resume();
+        emit audio_outputer->readyRead();
+    }
 }
 
 void AudioContext::process_packet()
@@ -64,13 +87,15 @@ void AudioContext::process_packet()
     emit requestPacket();
     if (!packet)
         return;
-    decode(packet);
-    equalizer_and_output();
+    decode_packet(packet);
+    auto queue = decoder.receive_frames();
+    audio_outputer->frame_queue.push(std::move(queue));
+    emit audio_outputer->framesPushed();
 }
 
-void AudioContext::decode(Packet& packet)
+void AudioContext::decode_packet(Packet& packet)
 {
-    qreal packetTime = packet->pts * av_q2d(timeBase);
+    qreal packetTime = packet->pts * av_q2d(codec.timeBase);
     qreal currTime = sync->get_time() / 1000.0;
     qreal diff = currTime - packetTime;
     if (diff > 0.15){
@@ -78,54 +103,16 @@ void AudioContext::decode(Packet& packet)
         return;
     }
     decoder.decode_packet(packet);
-}
-
-void AudioContext::equalizer_and_output()
-{
-    Frame frame = make_shared_frame();
-    while (frame = decoder.receive_frame())
-    {
-        Frame equalized_frame = equalizer.applyEqualizer(frame);
-        if (!equalized_frame)
-            continue;
-        Frame converted_frame = converter->convert(equalized_frame);
-        if (!converted_frame)
-            continue;
-        int size = converted_frame->nb_samples * converted_frame->ch_layout.nb_channels * format.bytesPerSample();
-        audioDevice->append(QByteArray((const char*)converted_frame->data[0], size));
-        if (audioDevice->bytesAvailable() >= MIN_BUFFER_SIZE && !sync->isPaused)
-            emit audioDevice->readyRead();
-
-        av_frame_unref(frame.get());
-    }
+    emit audio_outputer->framesPushed();
 }
 
 qint64 AudioContext::buffer_available()
 {
-    qint64 available_bytes = maxBufferSize - audioDevice->bytesAvailable();
+    qint64 available_bytes = maxBufferSize - audio_outputer->bytesAvailable();
     if (available_bytes <= 0 && !sync->isPaused)
-        emit audioDevice->readyRead();
+        emit audio_outputer->readyRead();
     return available_bytes;
 }
-
-void AudioContext::set_low(qreal value){
-    equalizer.set_low(value);
-}
-void AudioContext::set_mid(qreal value){
-    equalizer.set_mid(value);
-}
-void AudioContext::set_high(qreal value){
-    equalizer.set_high(value);
-}
-void AudioContext::set_speed(qreal speed){
-    equalizer.set_speed(speed);
-}
-void AudioContext::set_volume(qreal value){
-    last_volume=value;
-    if (!isMuted)
-        audioSink->setVolume(value);
-}
-
 
 AVSampleFormat AudioContext::convert_to_AVFormat(QAudioFormat::SampleFormat format)
 {

@@ -12,21 +12,19 @@ extern "C" {
 }
 
 #include <QMutex>
+#include <QObject>
 #include <QAudioFormat>
+
 #include "frame.h"
 #include "media/codec.h"
+#include "media/mediaparameters.h"
 
-class Equalizer
-{
+class Equalizer : public QObject
+{Q_OBJECT
 public:
-    explicit Equalizer(Codec& codec);
+    explicit Equalizer(Codec& codec, MediaParameters* params_);
     ~Equalizer();
-
     Frame applyEqualizer(Frame frame);
-    void set_low(qreal value);
-    void set_mid(qreal value);
-    void set_high(qreal value);
-    void set_speed(qreal value);
 private:
     void update_equalizer();
 private:
@@ -39,11 +37,7 @@ private:
     AVFilterInOut *outputs;
     AVFilterInOut *inputs;
 
-    qreal low  = 0.0;
-    qreal mid  = 0.0;
-    qreal high = 0.0;
-    qreal speed = 1.0;
-
+    MediaParameters* params;
     QMutex mutex;
 };
 

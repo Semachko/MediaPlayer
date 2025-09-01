@@ -30,52 +30,28 @@ class Media : public QObject
     Q_OBJECT
 
 public:
-    Media();
+    Media(MediaParameters* parameters_);
     ~Media();
 
-    void set_file(MediaParameters& parameters, QVideoSink* videosink);
+    void set_file();
+    void resume_pause();
+
+    void seeking_pressed(qreal);
+    void seeking_released();
 
     void add_5sec();
-    void resume_pause();
     void subtruct_5sec();
 
-    void change_speed(qreal);
-    void mute_unmute();
-    void change_volume(qreal);
-
-    void change_time(qreal);
-    void slider_press(qreal);
-    void change_repeating();
 signals:
-    void fileChanged(QString,QVideoSink*,bool);
-    void outputTimeStep(qreal);
-
-    void brightnessChanged(qreal);
-    void contrastChanged(qreal);
-    void saturationChanged(qreal);
-    void lowChanged(qreal);
-    void midChanged(qreal);
-    void highChanged(qreal);
-
     void subtruct5sec();
     void playORpause();
     void add5sec();
 
-    void speedChanged(qreal);
-
-    void muteORunmute();
-    void volumeChanged(qreal);
-
-    void timeChanged(qreal);
-
-    void sliderPressed(qreal);
-    void outputTime(qint64,qreal);
-    void outputGlobalTime(qint64);
-    void repeatingChanged();
+    void seekingPressed(qreal);
+    void seekingReleased();
     void endReached();
 
 private:
-    void output_one_image();
     qint64 get_real_time_ms();
     void delete_members();
     void seek_time(int64_t);
@@ -91,10 +67,9 @@ private:
     QThread* demuxerThread;
 
     Synchronizer* sync;
-
-    bool isRepeating = false;
-    bool isSliderPause = false;
+    MediaParameters* params;
     QTimer updateTimer;
+    bool isSeeking = false;
 };
 
 #endif // MEDIA_H

@@ -7,28 +7,32 @@
 #include "media/media.h"
 #include "media/codec.h"
 
-Media::Media(){}
+Media::Media(MediaParameters* parameters)
+    : params(parameters)
+{
+    connect(params->file,&FileParameters::pathChanged,this,&Media::set_file);
+}
 Media::~Media()
 { delete_members(); }
 
-void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
+void Media::set_file()
 {
     if (format_context != nullptr){
         delete_members();
-        videosink->setVideoFrame(QVideoFrame());
+        params->videoSink->setVideoFrame(QVideoFrame());
     }
 
-    avformat_open_input(&format_context, parameters.filepath.toStdString().c_str(), nullptr, nullptr);
+    avformat_open_input(&format_context, params->file->path.toStdString().c_str(), nullptr, nullptr);
     avformat_find_stream_info(format_context, nullptr);
 
-    emit outputGlobalTime(format_context->duration/1000);
-
-    sync = new Synchronizer();
+    params->file->setGlobalTime(format_context->duration/1000);
+    sync = new Synchronizer(params);
 
     connect(&updateTimer, &QTimer::timeout, this, [this]() {
         qint64 curr_time = sync->get_time();
-        qreal pos = curr_time/(format_context->duration/1000.0);
-        emit outputTime(curr_time, pos);
+        params->setCurrentTime(curr_time);
+        // qreal pos = curr_time/(format_context->duration/1000.0);
+        // emit outputTime(curr_time, pos);
     });
     updateTimer.start(100);
 
@@ -40,132 +44,64 @@ void Media::set_file(MediaParameters& parameters, QVideoSink* videosink)
     demuxer->moveToThread(demuxerThread);
     demuxerThread->start();
     connect(demuxer,&Demuxer::endReached,this,[this]() {
-        change_time(0);
-        if (!isRepeating)
-            emit endReached();
+
     });
 
     int stream_id = -1;
     stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
     if (stream_id >= 0){
-        audio = new AudioContext(format_context->streams[stream_id], sync, bufferization_time);
+        audio = new AudioContext(format_context->streams[stream_id], sync, params, bufferization_time);
         audioThread = new QThread(this);
         audio->moveToThread(audioThread);
         audioThread->start();
-        audio->set_low(parameters.equalizer.low);
-        audio->set_mid(parameters.equalizer.mid);
-        audio->set_high(parameters.equalizer.high);
-        audio->set_speed(parameters.speed);
-        audio->set_volume(parameters.volume);
-        if(audio->isMuted != parameters.isMuted)
-            mute_unmute();
-
         demuxer->add_context(audio);
         connect(audio,&AudioContext::requestPacket,demuxer,&Demuxer::demuxe_packets);
-        connect(this,&Media::lowChanged,audio,&AudioContext::set_low);
-        connect(this,&Media::midChanged,audio,&AudioContext::set_mid);
-        connect(this,&Media::highChanged,audio,&AudioContext::set_high);
     }
+
     stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     if (stream_id >= 0){
-        video = new VideoContext(videosink, format_context->streams[stream_id], sync, bufferization_time);
+        video = new VideoContext(format_context->streams[stream_id], sync, params, bufferization_time);
         videoThread = new QThread(this);
         video->moveToThread(videoThread);
         videoThread->start();
-        video->set_contrast(parameters.filters.contrast);
-        video->set_brightness(parameters.filters.brightness);
-        video->set_saturation(parameters.filters.saturation);
-
         demuxer->add_context(video);
         connect(video,&VideoContext::requestPacket,demuxer,&Demuxer::demuxe_packets);
-        connect(this,&Media::brightnessChanged,video,&VideoContext::set_brightness);
-        connect(this,&Media::contrastChanged,video,&VideoContext::set_contrast);
-        connect(this,&Media::saturationChanged,video,&VideoContext::set_saturation);
-        if(sync->isPaused)
-            video->output->process_one_image();
-        else{
-            sync->play_or_pause();
-            video->output->process_one_image();
-            sync->play_or_pause();
-        }
-    }
 
-    if (video)
-    {
         qreal total_seconds = format_context->duration / 1'000'000.0;
         qreal fps = av_q2d(video->codec.stream->avg_frame_rate);
         qint64 total_frames = total_seconds * fps;
         qreal timeStep = 1.0 / total_frames;
-        emit outputTimeStep(timeStep);
+        params->file->setTimeStep(timeStep);
     }else{
         qreal timeStep = format_context->duration / 15'000;     // ~15ms step
-        emit outputTimeStep(timeStep);
+        params->file->setTimeStep(timeStep);
     }
-
-    if(sync->isPaused != parameters.isPaused)
-        resume_pause();
-    isRepeating = parameters.isRepeating;
-    change_speed(parameters.speed);
-
-    connect(this,&Media::playORpause,this,&Media::resume_pause);
-    connect(this,&Media::sliderPressed,this,&Media::slider_press);
-    connect(this,&Media::timeChanged,this,&Media::change_time);
+    connect(params,&MediaParameters::isPausedChanged,this,&Media::resume_pause);
+    connect(this,&Media::seekingPressed,this,&Media::seeking_pressed);
+    connect(this,&Media::seekingReleased,this,&Media::seeking_released);
     connect(this,&Media::subtruct5sec,this,&Media::subtruct_5sec);
     connect(this,&Media::add5sec,this,&Media::add_5sec);
-    connect(this,&Media::speedChanged,this,&Media::change_speed);
-    connect(this,&Media::repeatingChanged,this,&Media::change_repeating);
-    connect(this,&Media::volumeChanged,this,&Media::change_volume);
-    connect(this,&Media::muteORunmute,this,&Media::mute_unmute);
     QMetaObject::invokeMethod(demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
-}
-
-void Media::resume_pause()
-{
-    sync->play_or_pause();
-    if(sync->isPaused)
-        QMetaObject::invokeMethod(&updateTimer, [this]() {
-            updateTimer.stop();
-        });
-    else
-        QMetaObject::invokeMethod(&updateTimer, [this]() {
-            updateTimer.start(100);
-        });
-
-    if (audio){
+    if(video){
         if(sync->isPaused)
-            QMetaObject::invokeMethod(audio, [this]() {
-                audio->audioSink->suspend();
-            });
+            video->output->process_one_image();
         else{
-            QMetaObject::invokeMethod(audio, [this]() {
-                audio->audioSink->resume();
-            });
-        emit audio->audioDevice->readyRead();
+            sync->play_or_pause();
+            video->output->process_one_image();
+            sync->play_or_pause();
         }
     }
 }
 
-void Media::change_repeating()
+void Media::resume_pause()
 {
-    isRepeating=!isRepeating;
+    QMetaObject::invokeMethod(&updateTimer, [this]() {
+        if(params->isPaused)
+            updateTimer.stop();
+        else
+            updateTimer.start(100);
+    });
 }
-
-void Media::change_volume(qreal value)
-{
-    if (audio)
-        audio->set_volume(value);
-}
-
-void Media::mute_unmute()
-{
-    if(audio->isMuted)
-        audio->audioSink->setVolume(audio->last_volume);
-    else
-        audio->audioSink->setVolume(0);
-    audio->isMuted=!audio->isMuted;
-}
-
-
 
 void Media::add_5sec()
 {
@@ -185,34 +121,21 @@ void Media::subtruct_5sec()
     seek_time(seek_target);
 }
 
-void Media::change_speed(qreal speed)
+void Media::seeking_pressed(qreal position)
 {
-    if(audio)
-        audio->set_speed(speed);
-    sync->clock->setSpeed(speed);
-}
-
-void Media::slider_press(qreal position)
-{
-    if(!isSliderPause)
-    {
-        if(!sync->isPaused){
+    if (!isSeeking && !sync->isPaused){
             resume_pause();
-            isSliderPause=true;
-        }
+            isSeeking = true;
     }
     int64_t seek_target = format_context->duration * position;
-    // QMetaObject::invokeMethod(demuxer, [this, seek_target]() {
-    //     seek_time(seek_target);
-    // });
     seek_time(seek_target);
 }
 
-void Media::change_time(qreal position)
+void Media::seeking_released()
 {
-    if (isSliderPause) {
+    if (isSeeking){
         resume_pause();
-        isSliderPause=false;
+        isSeeking = false;
     }
 }
 
@@ -222,7 +145,7 @@ void Media::seek_time(int64_t seek_target)
     if(audio){
         std::lock_guard _(audio->mutex);
         audio->packet_queue.clear();
-        audio->audioDevice->clear();
+        audio->audio_outputer->clear();
         audio->decoder.clear_decoder();
     }
     if(video){
@@ -238,25 +161,6 @@ void Media::seek_time(int64_t seek_target)
 
     if (video)
         video->output->process_one_image();
-}
-
-void Media::output_one_image()
-{
-    std::scoped_lock _(video->mutex, demuxer->mutex);
-    while(video->output->image_queue.empty()){
-        while(video->packet_queue.empty()){
-            demuxer->push_packet_to_queues();
-        }
-        Packet packet = video->packet_queue.try_pop();
-        video->decode(packet);
-        video->filter_and_output();
-    }
-    Frame frame = video->output->image_queue.try_pop();
-    Frame filtered_frame = video->output->filters->applyFilters(frame);
-    Frame output_frame = video->output->converter->convert(filtered_frame);
-    QImage image(output_frame->data[0], video->output->codec.context->width, video->output->codec.context->height, output_frame->linesize[0], QImage::Format_RGB32);
-    QVideoFrame videoframe = QVideoFrame(image);
-    video->videosink->setVideoFrame(videoframe);
 }
 
 qint64 Media::get_real_time_ms()
@@ -275,19 +179,15 @@ qint64 Media::get_real_time_ms()
     }
     return seeked_time_ms;
 }
+
 void Media::delete_members()
 {
     if(!sync->isPaused)
         sync->play_or_pause();
     disconnect(this,&Media::playORpause,this,&Media::resume_pause);
-    disconnect(this,&Media::sliderPressed,this,&Media::slider_press);
-    disconnect(this,&Media::timeChanged,this,&Media::change_time);
+    disconnect(this,&Media::seekingPressed,this,&Media::seeking_pressed);
     disconnect(this,&Media::subtruct5sec,this,&Media::subtruct_5sec);
     disconnect(this,&Media::add5sec,this,&Media::add_5sec);
-    disconnect(this,&Media::speedChanged,this,&Media::change_speed);
-    disconnect(this,&Media::repeatingChanged,this,&Media::change_repeating);
-    disconnect(this,&Media::volumeChanged,this,&Media::change_volume);
-    disconnect(this,&Media::muteORunmute,this,&Media::mute_unmute);
 
     if (audio) {
         audioThread->quit();

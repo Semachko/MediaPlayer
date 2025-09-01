@@ -7,12 +7,13 @@
 #include <queue>
 
 #include "sync/clock.h"
+#include "media/mediaparameters.h"
 
 class Synchronizer : public QObject
 {
     Q_OBJECT
 public:
-    Synchronizer();
+    Synchronizer(MediaParameters* params);
     ~Synchronizer();
 
     void play_or_pause();

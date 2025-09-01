@@ -1,5 +1,5 @@
-﻿lagging when seeking (move seeking into different threads)
-change main time to depend on audio time
+﻿add pushing out frames from decoder at the end of mediafile
+seeking in exact time
 make correct destroying frameoutput loop (QML VideoSink destroys first)
 ui menubar hides when seeking
 add timebar above handle when seeking

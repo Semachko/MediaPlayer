@@ -1,5 +1,5 @@
-﻿#ifndef AUDIOCONTEXT_H
-#define AUDIOCONTEXT_H
+﻿#ifndef AUDIOOUTPUTER_H
+#define AUDIOOUTPUTER_H
 
 #include <QAudioSink>
 #include <QIODevice>
@@ -23,7 +23,7 @@ extern "C" {
 #include "media/codec.h"
 #include "media/decoder.h"
 #include "media/imediacontext.h"
-#include "audio/audioiodevice.h"
+#include "audio/audiooutputer.h"
 #include "sync/synchronizer.h"
 #include "audio/equalizer.h"
 #include "audio/sampleconverter.h"
@@ -34,41 +34,38 @@ class AudioContext : public IMediaContext
 {
     Q_OBJECT
 public:
-    AudioContext(AVStream* stream,  Synchronizer* sync, qreal bufferization_time);
+    AudioContext(AVStream* stream,  Synchronizer* sync, MediaParameters* params, qreal bufferization_time);
     ~AudioContext();
 
     void process_packet() override;
     qint64 buffer_available() override;
+
+    void mute_unmute();
+
     void set_low(qreal value);
     void set_mid(qreal value);
     void set_high(qreal value);
     void set_speed(qreal speed);
-    void set_volume(qreal volume);
+    void set_volume();
+    void pause_changed();
 
-    void decode(Packet& packet);
+    void decode_packet(Packet& packet);
     void equalizer_and_output();
 private:
     AVSampleFormat convert_to_AVFormat(QAudioFormat::SampleFormat format);
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
 public:
-    bool isMuted = false;
-    qreal last_volume = 0.2;
     QAudioSink* audioSink;
-    AudioIODevice* audioDevice;
+    AudioOutputer* audio_outputer;
+    MediaParameters* params;
     QAudioFormat format;
-
     Decoder decoder;
-    SampleConverter* converter;
-    Equalizer equalizer;
-
     std::mutex mutex;
 private:
     Synchronizer* sync;
     qint64 maxBufferSize;
-    const qint64 MIN_BUFFER_SIZE = 4092;
-    //qreal bufferization_time;
-
+    qreal last_volume = 0.2;
 };
 
-#endif // AUDIOCONTEXT_H
+#endif // AUDIOOUTPUTER_H

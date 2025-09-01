@@ -1,4 +1,4 @@
-#ifndef SAMPLECONVERTER_H
+﻿#ifndef SAMPLECONVERTER_H
 #define SAMPLECONVERTER_H
 
 extern "C" {
@@ -15,6 +15,7 @@ extern "C" {
 struct SampleFormat{
     int format;
     int sample_rate;
+    int bytes_per_sample;
     AVChannelLayout layout;
 };
 

@@ -47,6 +47,9 @@ Window {
             transformOrigin: Item.Center
             width: parent.width
             height: parent.height
+            Component.onCompleted: {
+                player.params.videoSink = videoOutput.videoSink
+            }
         }
     }
 
@@ -80,46 +83,33 @@ Window {
             Text{
                 id: current_time
                 Layout.bottomMargin: 3
-                text: "00:00:00"
+                text: root.get_time_by_ms(player.params.currentTime)
                 color: "white"
                 font.pointSize: 15
                 font.bold: true
-                Connections {
-                    target: player
-                    function onNewTime(time) {
-                        current_time.text = root.get_time_by_ms(time)
-                    }
-                }
             }
             TimelineSlider{
                 id: timeslider
+                stepSize: player.params.file.timeStep
+                value: 1.0 * player.params.currentTime / player.params.file.globalTime
                 Layout.fillWidth: true
                 Layout.fillHeight: true
-                value: player.currentPosition
-                stepSize: player.timeStep
                 onMoved:{
                     if (pressed)
-                        player.sliderPressed(position)
-
+                        player.seekingPressed(position)
                 }
                 onPressedChanged:{
                     if (!pressed)
-                        player.timeChanged(position)
+                        player.seekingReleased()
                 }
             }
             Text{
                 id: media_time
                 Layout.bottomMargin: 3
-                text: "00:00:00"
+                text: root.get_time_by_ms(player.params.file.globalTime)
                 color: "white"
                 font.pointSize: 15
                 font.bold: true
-                Connections {
-                    target: player
-                    function onGlobalTime(time) {
-                        media_time.text = root.get_time_by_ms(time)
-                    }
-                }
             }
         }
         RowLayout{
@@ -135,7 +125,7 @@ Window {
             spacing: 2
             FilenameBar{
                 id: filenamebar
-                text: player.filename
+                text: player.params.file.name
                 Layout.preferredWidth: parent.width * 0.7
                 Layout.preferredHeight: parent.height * 0.55
                 onClicked: fileDialog.open()
@@ -147,7 +137,7 @@ Window {
                         "Audio (*.mp3 *.aac *.wav *.flac *.ogg *.opus *.wma *.alac *.ac3 *.dts)"
                     ]
                     onAccepted: {
-                        player.setFile(fileDialog.selectedFile,playbutton.checked)
+                        player.setFile(fileDialog.selectedFile)
                     }
                 }
                 Shortcut {
@@ -162,7 +152,7 @@ Window {
                 onEqualizerClicked: equalizerwindow.visible = true
                 onRotateClicked: videoOutput.rotation += 90
                 onShuffleClicked: player.shuffleMedia(playbutton.checked)
-                onRepeatClicked: player.isRepeating = toolsmenu.isRepeating
+                onRepeatClicked: player.params.isRepeating = toolsmenu.isRepeating
                 Shortcut {
                     sequence: "E"
                     onActivated: equalizerwindow.visible = !equalizerwindow.visible
@@ -218,13 +208,7 @@ Window {
                 id: playbutton
                 scale: 0.7
                 Layout.fillWidth: true
-                onCheckedChanged: {
-                    player.isPaused = !playbutton.checked
-                }
-                Connections {
-                    target: player
-                    onPaused: playbutton.click()
-                }
+                onCheckedChanged: player.params.isPaused = !playbutton.checked
                 Shortcut {
                     sequence: "space"
                     onActivated: playbutton.click()
@@ -235,7 +219,6 @@ Window {
                     visible: parent.hovered
                     text: parent.checked ? "Pause (SPACE)" : "Play    (SPACE)"
                 }
-
             }
             ChangeTimeButtonRight {
                 id: changetimebtnright
@@ -310,7 +293,7 @@ Window {
                         height: 230
                         Layout.fillWidth: true
                         onMoved:{
-                            player.speed = speedslider.value
+                            player.params.speed = speedslider.value
                         }
                     }
                 }
@@ -327,7 +310,7 @@ Window {
                 scale: 0.75
                 Layout.leftMargin: -10
                 onClicked: {
-                    player.isMuted = mutebutton.checked
+                    player.params.audio.set_isMuted(mutebutton.checked)
                 }
                 Shortcut {
                     sequence: "M"
@@ -348,7 +331,7 @@ Window {
                 Layout.leftMargin: -15
                 Layout.rightMargin: 14
                 onMoved:{
-                    player.volume = volumeslider.value
+                    player.params.audio.set_volume(volumeslider.value)
                 }
                 HelpTip{
                     x: parent.x - 160
@@ -404,17 +387,17 @@ Window {
             id: filterswindow
             visible: false
             anchors.centerIn: parent
-            onBrightnessChanged: player.brightness = filterswindow.brightness
-            onContrastChanged: player.contrast = filterswindow.contrast
-            onSaturationChanged: player.saturation = filterswindow.saturation
+            onBrightnessChanged: player.params.video.set_brightness(filterswindow.brightness)
+            onContrastChanged: player.params.video.set_contrast(filterswindow.contrast)
+            onSaturationChanged: player.params.video.set_saturation(filterswindow.saturation)
         }
         EqualizerWindow{
             id: equalizerwindow
             visible: false
             anchors.centerIn: parent
-            onLowChanged: player.low = equalizerwindow.low
-            onMidChanged: player.mid = equalizerwindow.mid
-            onHighChanged: player.high = equalizerwindow.high
+            onLowChanged: player.params.audio.set_low(equalizerwindow.low)
+            onMidChanged: player.params.audio.set_mid(equalizerwindow.mid)
+            onHighChanged: player.params.audio.set_high(equalizerwindow.high)
         }
     }
 

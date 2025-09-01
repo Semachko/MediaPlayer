@@ -1,4 +1,4 @@
-#ifndef IMAGECONVERTER_H
+﻿#ifndef IMAGECONVERTER_H
 #define IMAGECONVERTER_H
 
 extern "C" {
@@ -11,11 +11,12 @@ extern "C" {
 #include "libavutil/imgutils.h"
 }
 #include "frame.h"
+#include "media/codec.h"
 
 class ImageConverter
 {
 public:
-    ImageConverter(AVCodecContext* codec_context);
+    ImageConverter(Codec&);
     ~ImageConverter();
 
     Frame convert(Frame input);

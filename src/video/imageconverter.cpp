@@ -1,10 +1,10 @@
 ﻿#include "video/imageconverter.h"
 #include <QDebug>
 
-ImageConverter::ImageConverter(AVCodecContext* codec_context) {
+ImageConverter::ImageConverter(Codec& codec) {
     output = make_shared_frame();
-    output->width  = codec_context->width;
-    output->height = codec_context->height;
+    output->width  = codec.context->width;
+    output->height = codec.context->height;
     output->format = AV_PIX_FMT_RGB32;
 
     if (av_frame_get_buffer(output.get(), 1) < 0){
@@ -12,15 +12,14 @@ ImageConverter::ImageConverter(AVCodecContext* codec_context) {
         return;
     }
     converter = sws_getContext(
-        codec_context->width,
-        codec_context->height,
-        codec_context->pix_fmt,
+        codec.context->width,
+        codec.context->height,
+        codec.context->pix_fmt,
         output->width,
         output->height,
         static_cast<AVPixelFormat>(output->format),
         SWS_BILINEAR, nullptr, nullptr, nullptr
     );
-
 }
 
 ImageConverter::~ImageConverter()

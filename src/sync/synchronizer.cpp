@@ -1,10 +1,12 @@
 ﻿#include "sync/synchronizer.h"
 
-Synchronizer::Synchronizer()
+Synchronizer::Synchronizer(MediaParameters* params)
     :
     clock(new Clock())
 {
     clock->start(0);
+    connect(params,&MediaParameters::speedChanged,this, [this, params]{clock->setSpeed(params->speed);});
+    connect(params,&MediaParameters::isPausedChanged,this,&Synchronizer::play_or_pause);
 }
 
 Synchronizer::~Synchronizer()

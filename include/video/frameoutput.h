@@ -8,30 +8,19 @@
 #include <QPair>
 
 #include "media/codec.h"
+#include "media/mediaparameters.h"
 #include "video/filters.h"
 #include "video/imageconverter.h"
 #include "sync/synchronizer.h"
 #include "queue.h"
 #include "frame.h"
 
-// struct ImageFrame
-// {
-//     ImageFrame(QVideoFrame&&,qint64);
-//     ImageFrame() = default;
-//     ImageFrame(ImageFrame&) = default;
-//     ImageFrame(ImageFrame&&) = default;
-//     ImageFrame& operator=(ImageFrame&) = default;
-//     ImageFrame& operator=(ImageFrame&&) = default;
-//     QVideoFrame image;
-//     qint64 time;
-// };
 
 class FrameOutput: public QObject
 {
     Q_OBJECT
 public:
-    FrameOutput(QVideoSink*, Synchronizer*, Codec&, qint64);
-    ~FrameOutput();
+    FrameOutput(Synchronizer*, Codec&, MediaParameters*, qint64);
 
     void start_output();
     void process_image();
@@ -44,16 +33,15 @@ private:
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
 public:
-    //Queue<ImageFrame> image_queue;
-    Queue<Frame> image_queue;
-    Filters* filters;
-    ImageConverter* converter;
-    Codec& codec;
-    qreal timebase;
-
     bool abort = false;
-    Frame current_frame = make_shared_frame();
+    Queue<Frame> image_queue;
 private:
+    Codec& codec;
+    Filters filters;
+    ImageConverter converter;
+    Frame current_frame = make_shared_frame();
+
+    std::mutex mutex;
     Synchronizer* sync;
     QVideoSink* videosink;
 };

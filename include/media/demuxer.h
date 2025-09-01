@@ -10,7 +10,7 @@ extern "C" {
 #include <unordered_map>
 
 #include "video/videocontext.h"
-#include "audio/audiocontext.h"
+#include "audio/AudioOutputer.h"
 #include "sync/synchronizer.h"
 
 class Demuxer : public QObject

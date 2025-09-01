@@ -2,8 +2,8 @@
 #define QUEUE_H
 
 #include <QObject>
+#include <QQueue>
 #include <mutex>
-#include <queue>
 
 template<typename T>
 class Queue
@@ -16,31 +16,38 @@ public:
     void push(const T& value){
         {
             std::lock_guard _(mutex);
-            queue.push(value);
+            queue.enqueue(value);
         }
         cv.notify_one();
     }
     void push(T&& value){
         {
             std::lock_guard _(mutex);
-            queue.push(std::move(value));
+            queue.enqueue(std::move(value));
         }
         cv.notify_one();
     }
+    void push(QQueue<T>&& values) {
+        {
+            std::lock_guard<std::mutex> _(mutex);
+            for (auto& v : values)
+                queue.enqueue(std::move(v));
+        }
+        cv.notify_all();
+    }
+
     T try_pop() {
         std::lock_guard _(mutex);
         if(queue.empty())
             return T{};
-        T data = queue.front();
-        queue.pop();
-        return data;
+        return queue.dequeue();
     }
+
     T wait_pop() {
         std::unique_lock lock(mutex);
         cv.wait(lock, [this] {return !queue.empty();});
         T data = queue.front();
-        queue.pop();
-        return data;
+        return queue.dequeue();
     }
 
     bool empty() const{
@@ -57,14 +64,13 @@ public:
     }
     void clear(){
         std::lock_guard _(mutex);
-        std::queue<T> empty;
-        std::swap(queue, empty);
+        queue.clear();
     }
 
 private:
     mutable std::mutex mutex;
     std::condition_variable cv;
-    std::queue<T> queue;
+    QQueue<T> queue;
     qint64 max_size;
 };
 #endif // QUEUE_H

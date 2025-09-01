@@ -16,6 +16,7 @@ extern "C" {
 #include "media/codec.h"
 #include "media/decoder.h"
 #include "media/imediacontext.h"
+#include "media/mediaparameters.h"
 #include "sync/synchronizer.h"
 #include "video/frameoutput.h"
 #include "video/filters.h"
@@ -25,31 +26,22 @@ class VideoContext : public IMediaContext
 {
     Q_OBJECT
 public:
-    VideoContext(QVideoSink* videosink, AVStream* stream, Synchronizer* sync, qreal bufferization_time);
+    VideoContext(AVStream* stream, Synchronizer* sync, MediaParameters* params, qreal bufferization_time);
     ~VideoContext();
 
     void process_packet() override;
     qint64 buffer_available() override;
-    void set_brightness(qreal value);
-    void set_contrast(qreal value);
-    void set_saturation(qreal value);
-
-    void decode(Packet& packet);
-    void filter_and_output();
+    void decode_packet(Packet& packet);
 private:
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
 public:
-    FrameOutput* output;
-    Decoder decoder;
-
     std::mutex mutex;
-    QVideoSink* videosink;
+    Decoder decoder;
+    FrameOutput* output;
 private:
     QThread* outputThread;
 
-    // Filters* filters;
-    // ImageConverter* converter;
     Synchronizer* sync;
     QWaitCondition* imageReady;
     qint64 maxBufferSize;

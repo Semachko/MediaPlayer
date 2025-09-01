@@ -1,16 +1,16 @@
 ﻿#include "video/filters.h"
 #include <QDebug>
 
-Filters::Filters(AVCodecParameters* codec_parameters, AVRational time_base)
+Filters::Filters(Codec& codec, VideoParameters* params_)
+    : params(params_)
 {
-    av_log_set_level(AV_LOG_ERROR);
-
+    //av_log_set_level(AV_LOG_ERROR);
     args =
-        "video_size="+std::to_string(codec_parameters->width)+"x"+std::to_string(codec_parameters->height)
-        +":pix_fmt="+std::to_string(codec_parameters->format)
-        +":time_base="+std::to_string(time_base.num)+"/"+std::to_string(time_base.den);
-
+        "video_size="+std::to_string(codec.parameters->width)+"x"+std::to_string(codec.parameters->height)
+        +":pix_fmt="+std::to_string(codec.parameters->format)
+        +":time_base="+std::to_string(codec.timeBase.num)+"/"+std::to_string(codec.timeBase.den);
     update_filters();
+    connect(params, &VideoParameters::paramsChanged,this,&Filters::update_filters);
 }
 
 Frame Filters::applyFilters(Frame frame)
@@ -20,24 +20,6 @@ Frame Filters::applyFilters(Frame frame)
     av_buffersrc_add_frame(buffersrc_ctx, frame.get());
     av_buffersink_get_frame(buffersink_ctx, filtered_frame.get());
     return filtered_frame;
-}
-
-void Filters::set_brightness(qreal value)
-{
-    brightness = value;
-    update_filters();
-}
-
-void Filters::set_contrast(qreal value)
-{
-    contrast = value;
-    update_filters();
-}
-
-void Filters::set_saturation(qreal value)
-{
-    saturation = value;
-    update_filters();
 }
 
 void Filters::update_filters()
@@ -72,9 +54,9 @@ void Filters::update_filters()
     inputs->next       = nullptr;
 
     std::string temp
-        = "eq=brightness="+std::to_string(brightness)
-          + ":contrast="+std::to_string(contrast)
-          + ":saturation="+std::to_string(saturation);
+        = "eq=brightness="+std::to_string(params->brightness)
+          + ":contrast="+std::to_string(params->contrast)
+          + ":saturation="+std::to_string(params->saturation);
     const char *filter_descr = temp.c_str();
 
     avfilter_graph_parse_ptr(filter_graph, filter_descr, &inputs, &outputs, nullptr);

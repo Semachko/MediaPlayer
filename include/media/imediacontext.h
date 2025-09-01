@@ -2,6 +2,7 @@
 #define IMEDIACONTEXT_H
 
 #include <QObject>
+#include <qdebug.h>
 #include <queue.h>
 #include <packet.h>
 #include "media/codec.h"
@@ -13,10 +14,8 @@ public:
     IMediaContext(AVStream* stream, qint64 queue_size)
         :
         packet_queue(queue_size),
-        codec(stream),
-        timeBase(codec.stream->time_base)
+        codec(stream)
     {}
-
     virtual void process_packet() = 0;
     virtual qint64 buffer_available() = 0;
 signals:
@@ -27,7 +26,6 @@ protected:
     qint64 maxBufferSize;
 public:
     Codec codec;
-    AVRational timeBase;
     Queue<Packet> packet_queue;
 };
 

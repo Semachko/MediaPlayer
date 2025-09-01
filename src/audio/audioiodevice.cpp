@@ -1,44 +1,63 @@
-﻿#include "audio/audioiodevice.h"
+﻿#include "audio/audiooutputer.h"
 #include <qdebug.h>
 
 constexpr auto OUTPUT = "\033[34m[Output]\033[0m";
 
-AudioIODevice::AudioIODevice(QObject *parent)
-    :
-    QIODevice(parent)
+AudioOutputer::AudioOutputer(Synchronizer* sync, Codec& codec, SampleFormat format_, MediaParameters* params_)
+
+    : QIODevice(),
+    format(format_),
+    params(params_),
+    converter(codec.context, format_),
+    equalizer(codec, params),
+    sync(sync)
 {
     open(QIODevice::ReadOnly);
+    connect(this, &AudioOutputer::framesPushed,this,&AudioOutputer::push_data_to_buffer);
 }
 
-void AudioIODevice::append(const QByteArray &data)
+void AudioOutputer::push_data_to_buffer()
 {
-    QMutexLocker _(&mutex);
-    buffer.append(data);
+    while(!frame_queue.empty())
+    {
+        Frame frame = frame_queue.wait_pop();
+        Frame equalized_frame = equalizer.applyEqualizer(frame);
+        if (!equalized_frame)
+            continue;
+        Frame converted_frame = converter.convert(equalized_frame);
+        if (!converted_frame)
+            continue;
+        int size = converted_frame->nb_samples * converted_frame->ch_layout.nb_channels * format.bytes_per_sample;
+        {
+            QMutexLocker _(&buff_mutex);
+            buffer.append(QByteArray((const char*)converted_frame->data[0], size));
+        }
+        if (bytesAvailable() >= MIN_BUFFER_SIZE && !params->isPaused)
+            emit readyRead();
+    }
 }
-qint64 AudioIODevice::readData(char *data, qint64 maxlen)
+qint64 AudioOutputer::readData(char *data, qint64 maxlen)
 {
-    QMutexLocker _(&mutex);
+    QMutexLocker _(&buff_mutex);
     qint64 len = qMin(maxlen, (qint64)buffer.size());
     if (len > 0) {
         memcpy(data, buffer.constData(), len);
         buffer.remove(0, len);
-        emit dataReaded();
+        emit framesReaded();
     }
     return len;
 }
-qint64 AudioIODevice::bytesAvailable() const
+qint64 AudioOutputer::bytesAvailable() const
 {
-    QMutexLocker _(&mutex);
+    QMutexLocker _(&buff_mutex);
     return buffer.size() + QIODevice::bytesAvailable();
 }
-void AudioIODevice::clear()
+void AudioOutputer::clear()
 {
-    QMutexLocker _(&mutex);
+    QMutexLocker _(&buff_mutex);
     buffer.clear();
 }
-
-
-qint64 AudioIODevice::writeData(const char *data, qint64 maxSize)
+qint64 AudioOutputer::writeData(const char *data, qint64 maxSize)
 {
     return -1;
 }
