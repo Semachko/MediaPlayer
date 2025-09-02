@@ -1,10 +1,10 @@
 ﻿add pushing out frames from decoder at the end of mediafile
 seeking in exact time
-make correct destroying frameoutput loop (QML VideoSink destroys first)
 ui menubar hides when seeking
 add timebar above handle when seeking
 add preload image on seeking
+make correct destroying frameoutput loop (QML VideoSink destroys first)
 fix ui resizing
 
-find out how works volume in samples
+find out how works volume levels in samples
 add stretching

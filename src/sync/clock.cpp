@@ -45,7 +45,6 @@ qint64 Clock::get_time() const
         return baseTime + (pausedTime * speed);
     else
         return baseTime + (timer.elapsed() * speed);
-
 }
 
 void Clock::set_time(qint64 ms)

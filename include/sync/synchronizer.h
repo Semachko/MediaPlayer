@@ -2,9 +2,7 @@
 #define SYNCHRONIZER_H
 
 #include <QObject>
-#include <QMutex>
-#include <QWaitCondition>
-#include <queue>
+#include <mutex>
 
 #include "sync/clock.h"
 #include "media/mediaparameters.h"
@@ -20,11 +18,12 @@ public:
     void check_pause();
     qint64 get_time();
 public:
-    bool isPaused = true;
     Clock* clock;
 private:
-    QMutex pauseMutex;
-    QWaitCondition pauseWait;
+    MediaParameters* params;
+    std::mutex pause_mutex;
+    std::mutex time_mutex;
+    std::condition_variable pauseWait;
 };
 
 #endif // SYNCHRONIZER_H

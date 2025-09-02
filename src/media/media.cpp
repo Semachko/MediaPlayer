@@ -31,8 +31,6 @@ void Media::set_file()
     connect(&updateTimer, &QTimer::timeout, this, [this]() {
         qint64 curr_time = sync->get_time();
         params->setCurrentTime(curr_time);
-        // qreal pos = curr_time/(format_context->duration/1000.0);
-        // emit outputTime(curr_time, pos);
     });
     updateTimer.start(100);
 
@@ -83,7 +81,7 @@ void Media::set_file()
     connect(this,&Media::add5sec,this,&Media::add_5sec);
     QMetaObject::invokeMethod(demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
     if(video){
-        if(sync->isPaused)
+        if(params->isPaused)
             video->output->process_one_image();
         else{
             sync->play_or_pause();
@@ -146,6 +144,8 @@ void Media::seek_time(int64_t seek_target)
         std::lock_guard _(audio->mutex);
         audio->packet_queue.clear();
         audio->audio_outputer->clear();
+        audio->audio_outputer->reset();
+        audio->audio_outputer->readAll();
         audio->decoder.clear_decoder();
     }
     if(video){
@@ -182,8 +182,8 @@ qint64 Media::get_real_time_ms()
 
 void Media::delete_members()
 {
-    if(!sync->isPaused)
-        sync->play_or_pause();
+    if(params->isPaused)
+        params->setIsPaused(false);
     disconnect(this,&Media::playORpause,this,&Media::resume_pause);
     disconnect(this,&Media::seekingPressed,this,&Media::seeking_pressed);
     disconnect(this,&Media::subtruct5sec,this,&Media::subtruct_5sec);

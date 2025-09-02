@@ -28,6 +28,8 @@ public:
         cv.notify_one();
     }
     void push(QQueue<T>&& values) {
+        if (values.empty())
+            return;
         {
             std::lock_guard<std::mutex> _(mutex);
             for (auto& v : values)

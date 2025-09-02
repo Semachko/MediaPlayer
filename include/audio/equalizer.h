@@ -11,7 +11,7 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
-#include <QMutex>
+#include <mutex>
 #include <QObject>
 #include <QAudioFormat>
 
@@ -38,7 +38,7 @@ private:
     AVFilterInOut *inputs;
 
     MediaParameters* params;
-    QMutex mutex;
+    std::mutex mutex;
 };
 
 #endif // EQUALIZER_H

@@ -11,7 +11,7 @@ extern "C" {
 }
 
 #include <QObject>
-#include <QMutex>
+#include <mutex>
 
 #include "frame.h"
 #include "media/codec.h"
@@ -40,7 +40,7 @@ private:
     AVFilterInOut *inputs;
 
     VideoParameters* params;
-    QMutex mutex;
+    std::mutex mutex;
 };
 
 #endif // FILTERS_H

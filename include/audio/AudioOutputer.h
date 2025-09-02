@@ -3,7 +3,6 @@
 
 #include <QIODevice>
 #include <QByteArray>
-#include <QMutex>
 #include <QWaitCondition>
 
 #include "queue.h"
@@ -38,7 +37,7 @@ private:
     SampleConverter converter;
     SampleFormat format;
     Equalizer equalizer;
-    mutable QMutex buff_mutex;
+    mutable std::mutex buff_mutex;
     QByteArray buffer;
 };
 

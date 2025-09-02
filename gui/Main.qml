@@ -91,9 +91,14 @@ Window {
             TimelineSlider{
                 id: timeslider
                 stepSize: player.params.file.timeStep
-                value: 1.0 * player.params.currentTime / player.params.file.globalTime
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Connections {
+                    target: player.params
+                    function onCurrentTimeChanged() {
+                        timeslider.value = 1.0 * player.params.currentTime / player.params.file.globalTime
+                    }
+                }
                 onMoved:{
                     if (pressed)
                         player.seekingPressed(position)
@@ -138,6 +143,7 @@ Window {
                     ]
                     onAccepted: {
                         player.setFile(fileDialog.selectedFile)
+                        timeslider.value = 0
                     }
                 }
                 Shortcut {

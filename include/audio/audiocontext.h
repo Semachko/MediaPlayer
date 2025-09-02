@@ -5,6 +5,7 @@
 #include <QIODevice>
 #include <QByteArray>
 #include <QThread>
+#include <chrono>
 #include <mutex>
 
 extern "C" {
@@ -63,6 +64,8 @@ public:
     Decoder decoder;
     std::mutex mutex;
 private:
+    QThread* outputThread;
+
     Synchronizer* sync;
     qint64 maxBufferSize;
     qreal last_volume = 0.2;

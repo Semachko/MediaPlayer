@@ -52,6 +52,8 @@ void VideoContext::process_packet()
         return;
     decode_packet(packet);
     auto queue = decoder.receive_frames();
+    if(queue.empty())
+        return;
     output->image_queue.push(std::move(queue));
 }
 void VideoContext::decode_packet(Packet& packet)

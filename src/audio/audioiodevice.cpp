@@ -18,9 +18,12 @@ AudioOutputer::AudioOutputer(Synchronizer* sync, Codec& codec, SampleFormat form
 
 void AudioOutputer::push_data_to_buffer()
 {
+    auto start = std::chrono::high_resolution_clock::now();
     while(!frame_queue.empty())
     {
-        Frame frame = frame_queue.wait_pop();
+        Frame frame = frame_queue.try_pop();
+        if(!frame)
+            break;
         Frame equalized_frame = equalizer.applyEqualizer(frame);
         if (!equalized_frame)
             continue;
@@ -29,16 +32,17 @@ void AudioOutputer::push_data_to_buffer()
             continue;
         int size = converted_frame->nb_samples * converted_frame->ch_layout.nb_channels * format.bytes_per_sample;
         {
-            QMutexLocker _(&buff_mutex);
+            std::lock_guard _(buff_mutex);
             buffer.append(QByteArray((const char*)converted_frame->data[0], size));
         }
         if (bytesAvailable() >= MIN_BUFFER_SIZE && !params->isPaused)
             emit readyRead();
     }
+
 }
 qint64 AudioOutputer::readData(char *data, qint64 maxlen)
 {
-    QMutexLocker _(&buff_mutex);
+    std::lock_guard _(buff_mutex);
     qint64 len = qMin(maxlen, (qint64)buffer.size());
     if (len > 0) {
         memcpy(data, buffer.constData(), len);
@@ -49,12 +53,12 @@ qint64 AudioOutputer::readData(char *data, qint64 maxlen)
 }
 qint64 AudioOutputer::bytesAvailable() const
 {
-    QMutexLocker _(&buff_mutex);
+    std::lock_guard _(buff_mutex);
     return buffer.size() + QIODevice::bytesAvailable();
 }
 void AudioOutputer::clear()
 {
-    QMutexLocker _(&buff_mutex);
+    std::lock_guard _(buff_mutex);
     buffer.clear();
 }
 qint64 AudioOutputer::writeData(const char *data, qint64 maxSize)

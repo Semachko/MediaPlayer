@@ -30,7 +30,9 @@ void FrameOutput::start_output(){
 
 void FrameOutput::process_image()
 {
-    Frame frame = image_queue.wait_pop();
+    Frame frame = image_queue.try_pop();
+    if (!frame)
+        return;
     copy_frame(frame, current_frame);
     Frame filtered_frame = filters.applyFilters(frame);
     Frame output_frame = converter.convert(filtered_frame);
@@ -41,8 +43,6 @@ void FrameOutput::process_image()
     //qDebug()<<"Delay: "<<delay;
     if (delay>0)
         QThread::msleep(delay);
-    if (abort)
-        return;
     videosink->setVideoFrame(videoframe);
     emit imageOutputted();
 }

@@ -105,7 +105,7 @@ public:
     bool getIsRepeating() const { return isRepeating; }
 
     void setVideoSink(QVideoSink* v) { videoSink = v; }
-    void setCurrentTime(qint64 v) { currentTime = v; emit currentTimeChanged();}
+    void setCurrentTime(qint64 v) { currentTime = v; emit currentTimeChanged(); qDebug()<<"EMITED";}
     void setSpeed(qreal v) { speed = v; emit speedChanged();}
     void setIsPaused(bool v) { isPaused = v; emit isPausedChanged(); }
     void setIsRepeating(bool v) { isRepeating = v; emit isRepeatingChanged();}

@@ -1,11 +1,14 @@
 ﻿#include "sync/synchronizer.h"
 
-Synchronizer::Synchronizer(MediaParameters* params)
+Synchronizer::Synchronizer(MediaParameters* params_)
     :
+    params(params_),
     clock(new Clock())
 {
     clock->start(0);
-    connect(params,&MediaParameters::speedChanged,this, [this, params]{clock->setSpeed(params->speed);});
+    if(params->isPaused)
+        clock->pause();
+    connect(params,&MediaParameters::speedChanged,this, [this]{clock->setSpeed(params->speed);});
     connect(params,&MediaParameters::isPausedChanged,this,&Synchronizer::play_or_pause);
 }
 
@@ -16,24 +19,25 @@ Synchronizer::~Synchronizer()
 
 void Synchronizer::play_or_pause()
 {
-    QMutexLocker locker(&pauseMutex);
-    isPaused = !isPaused;
-    if (!isPaused){
-        pauseWait.wakeAll();
-        clock->resume();
-    }else
+    std::lock_guard lock(pause_mutex);
+    if (params->isPaused)
         clock->pause();
+    else{
+        pauseWait.notify_all();
+        clock->resume();
+    }
 }
 
 void Synchronizer::check_pause()
 {
-    QMutexLocker locker(&pauseMutex);
-    while(isPaused)
-        pauseWait.wait(&pauseMutex);
+    std::unique_lock lock(pause_mutex);
+    while(params->isPaused)
+        pauseWait.wait(lock);
 }
 
 qint64 Synchronizer::get_time()
 {
+    std::unique_lock lock(time_mutex);
     return clock->get_time();
 }
 

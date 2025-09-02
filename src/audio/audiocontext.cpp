@@ -28,7 +28,8 @@ AudioContext::AudioContext(AVStream* stream,  Synchronizer* sync, MediaParameter
     // Initiating output CONVERTER and OUTPUTER
     AVChannelLayout outlayout;
     av_channel_layout_default(&outlayout, format.channelCount());
-    SampleFormat outputFormat{convert_to_AVFormat(format.sampleFormat()),format.sampleRate(),format.bytesPerSample(),outlayout};
+    //SampleFormat outputFormat{convert_to_AVFormat(format.sampleFormat()),format.sampleRate(),format.bytesPerSample(),outlayout};
+    SampleFormat outputFormat {convert_to_AVFormat(format.sampleFormat()),format.sampleRate(),format.bytesPerSample(),outlayout};
     audio_outputer = new AudioOutputer(sync, codec, outputFormat, params);
     audioSink = new QAudioSink(format, this);
     audioSink->setBufferSize(audio_outputer->MIN_BUFFER_SIZE);
@@ -36,17 +37,22 @@ AudioContext::AudioContext(AVStream* stream,  Synchronizer* sync, MediaParameter
     audioSink->start(audio_outputer);
     audioSink->suspend();
 
+    outputThread = new QThread(this);
+    audio_outputer->moveToThread(outputThread);
+    outputThread->start();
+
     // Getting MAX SIZE of audio output buffer
     qint64 bytesPerSample = av_get_bytes_per_sample((AVSampleFormat)outputFormat.format);
     qint64 bytesPerSecond = bytesPerSample * outputFormat.layout.nb_channels * outputFormat.sample_rate;
     maxBufferSize = bytesPerSecond * bufferization_time;
+    qDebug()<<"AUDIO BUFF SIZE:"<<maxBufferSize;
 
     connect(params, &MediaParameters::isPausedChanged, this,&AudioContext::pause_changed);
     connect(params->audio, &AudioParameters::isMutedChanged,this,&AudioContext::mute_unmute);
     connect(params->audio, &AudioParameters::volumeChanged,this,&AudioContext::set_volume);
 
-    connect(this, &AudioContext::newPacketArrived, this,&AudioContext::process_packet, Qt::QueuedConnection);
-    connect(audio_outputer, &AudioOutputer::framesReaded, this,&AudioContext::process_packet, Qt::QueuedConnection);
+    connect(this, &AudioContext::newPacketArrived, this,&AudioContext::process_packet);
+    connect(audio_outputer, &AudioOutputer::framesReaded, this,&AudioContext::process_packet);
 }
 
 AudioContext::~AudioContext()
@@ -81,6 +87,7 @@ void AudioContext::pause_changed()
 void AudioContext::process_packet()
 {
     std::lock_guard _(mutex);
+    //while(buffer_available() > 0)
     if (buffer_available() <= 0)
         return;
     Packet packet = packet_queue.try_pop();
@@ -89,6 +96,10 @@ void AudioContext::process_packet()
         return;
     decode_packet(packet);
     auto queue = decoder.receive_frames();
+    if(queue.empty()){
+        QMetaObject::invokeMethod(this,&AudioContext::process_packet, Qt::QueuedConnection);
+        return;
+    }
     audio_outputer->frame_queue.push(std::move(queue));
     emit audio_outputer->framesPushed();
 }
@@ -97,9 +108,10 @@ void AudioContext::decode_packet(Packet& packet)
 {
     qreal packetTime = packet->pts * av_q2d(codec.timeBase);
     qreal currTime = sync->get_time() / 1000.0;
+    //qDebug()<<"Audio packet time:"<<packetTime<<"sec."<< "Current time:"<<currTime;
     qreal diff = currTime - packetTime;
     if (diff > 0.15){
-        qDebug()<<"Packet is lating skipping:"<<diff<<"sec";
+        qDebug()<<"Audio packet is lating skipping:"<<diff<<"sec";
         return;
     }
     decoder.decode_packet(packet);
@@ -109,8 +121,6 @@ void AudioContext::decode_packet(Packet& packet)
 qint64 AudioContext::buffer_available()
 {
     qint64 available_bytes = maxBufferSize - audio_outputer->bytesAvailable();
-    if (available_bytes <= 0 && !sync->isPaused)
-        emit audio_outputer->readyRead();
     return available_bytes;
 }
 

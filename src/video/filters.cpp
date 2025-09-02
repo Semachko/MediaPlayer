@@ -15,7 +15,7 @@ Filters::Filters(Codec& codec, VideoParameters* params_)
 
 Frame Filters::applyFilters(Frame frame)
 {
-    QMutexLocker _(&mutex);
+    std::lock_guard _(mutex);
     Frame filtered_frame = make_shared_frame();
     av_buffersrc_add_frame(buffersrc_ctx, frame.get());
     av_buffersink_get_frame(buffersink_ctx, filtered_frame.get());
@@ -24,7 +24,7 @@ Frame Filters::applyFilters(Frame frame)
 
 void Filters::update_filters()
 {
-    QMutexLocker _(&mutex);
+    std::lock_guard _(mutex);
 
     if (filter_graph) {
         avfilter_graph_free(&filter_graph);

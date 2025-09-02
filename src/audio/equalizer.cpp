@@ -19,7 +19,7 @@ Equalizer::Equalizer(Codec& codec, MediaParameters* params_)
 
 Frame Equalizer::applyEqualizer(Frame frame)
 {
-    QMutexLocker _(&mutex);
+    std::lock_guard _(mutex);
     int ret = av_buffersrc_add_frame(buffersrc_ctx, frame.get());
     if (ret < 0) {
         qDebug() << "av_buffersrc_add_frame error:" << ret;
@@ -36,7 +36,7 @@ Frame Equalizer::applyEqualizer(Frame frame)
 
 void Equalizer::update_equalizer()
 {
-    QMutexLocker _(&mutex);
+    std::lock_guard _(mutex);
 
     if (filter_graph) {
         avfilter_graph_free(&filter_graph);
