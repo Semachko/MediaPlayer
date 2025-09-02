@@ -44,7 +44,7 @@ void Media::set_file()
     demuxer->moveToThread(demuxerThread);
     demuxerThread->start();
     connect(demuxer,&Demuxer::endReached,this,[this]() {
-
+//////////////////////////////////////////////////////
     });
 
     int stream_id = -1;
@@ -123,9 +123,9 @@ void Media::subtruct_5sec()
 
 void Media::seeking_pressed(qreal position)
 {
-    if (!isSeeking && !sync->isPaused){
-            resume_pause();
-            isSeeking = true;
+    if (!isSeeking && !params->isPaused){
+        params->setIsPaused(!params->isPaused);
+        isSeeking = true;
     }
     int64_t seek_target = format_context->duration * position;
     seek_time(seek_target);
@@ -134,7 +134,7 @@ void Media::seeking_pressed(qreal position)
 void Media::seeking_released()
 {
     if (isSeeking){
-        resume_pause();
+        params->setIsPaused(!params->isPaused);
         isSeeking = false;
     }
 }
