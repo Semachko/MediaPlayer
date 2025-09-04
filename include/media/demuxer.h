@@ -23,9 +23,7 @@ public:
     void add_context(IMediaContext* context);
     void demuxe_packets();
     bool push_packet_to_queues();
-signals:
-    void endReached();
-    ///////////////////////////////////////////////
+    void seek(int64_t time);
     ///////////////////////////////////////////////
 public:
     std::unordered_map<int,IMediaContext*> medias;
@@ -33,6 +31,7 @@ public:
 private:
     AVFormatContext* format_context;
     Synchronizer* sync;
+    bool end_reached = false;
 };
 
 #endif // DEMUXER_H

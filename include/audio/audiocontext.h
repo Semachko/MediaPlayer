@@ -22,7 +22,6 @@ extern "C" {
 }
 
 #include "media/codec.h"
-#include "media/decoder.h"
 #include "media/imediacontext.h"
 #include "audio/audiooutputer.h"
 #include "sync/synchronizer.h"
@@ -33,25 +32,19 @@ extern "C" {
 
 class AudioContext : public IMediaContext
 {
-    Q_OBJECT
+//Q_OBJECT
 public:
     AudioContext(AVStream* stream,  Synchronizer* sync, MediaParameters* params, qreal bufferization_time);
     ~AudioContext();
 
     void process_packet() override;
+    void decode_packet(Packet& packet);
+    void get_and_output_frames();
     qint64 buffer_available() override;
 
     void mute_unmute();
-
-    void set_low(qreal value);
-    void set_mid(qreal value);
-    void set_high(qreal value);
-    void set_speed(qreal speed);
     void set_volume();
     void pause_changed();
-
-    void decode_packet(Packet& packet);
-    void equalizer_and_output();
 private:
     AVSampleFormat convert_to_AVFormat(QAudioFormat::SampleFormat format);
 ///////////////////////////////////////////////
@@ -61,7 +54,6 @@ public:
     AudioOutputer* audio_outputer;
     MediaParameters* params;
     QAudioFormat format;
-    Decoder decoder;
     std::mutex mutex;
 private:
     QThread* outputThread;

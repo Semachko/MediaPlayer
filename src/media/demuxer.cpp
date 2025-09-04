@@ -23,9 +23,9 @@ void Demuxer::demuxe_packets()
     for (auto& [_stream, context] : medias)
         while (!context->packet_queue.is_full()){
             std::lock_guard _(mutex);
-            if (!push_packet_to_queues())
+            if (end_reached || !push_packet_to_queues())
                 return;
-    }
+        }
 }
 
 bool Demuxer::push_packet_to_queues()
@@ -33,8 +33,11 @@ bool Demuxer::push_packet_to_queues()
     Packet packet = make_shared_packet();
     int res = av_read_frame(format_context, packet.get());
     if (res<0){
-        if (res == AVERROR_EOF)
-            emit endReached();
+        if (res == AVERROR_EOF){
+            end_reached = true;
+            for (auto& [_stream, context] : medias)
+                emit context->endReached();
+        }
         return false;
     }
 
@@ -44,6 +47,12 @@ bool Demuxer::push_packet_to_queues()
         emit media->newPacketArrived();
     }
     return true;
+}
+
+void Demuxer::seek(int64_t time)
+{
+    av_seek_frame(format_context, -1, time, AVSEEK_FLAG_BACKWARD);
+    end_reached = false;
 }
 
 Demuxer::~Demuxer()

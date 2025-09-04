@@ -1,4 +1,5 @@
 ﻿#include "sync/synchronizer.h"
+#include <algorithm>
 
 Synchronizer::Synchronizer(MediaParameters* params_)
     :
@@ -38,7 +39,7 @@ void Synchronizer::check_pause()
 qint64 Synchronizer::get_time()
 {
     std::unique_lock lock(time_mutex);
-    return clock->get_time();
+    return std::min(clock->get_time(), params->file->globalTime.load());
 }
 
 

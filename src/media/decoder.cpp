@@ -30,6 +30,7 @@ QQueue<Frame> Decoder::receive_frames()
 void Decoder::drain_decoder()
 {
     avcodec_send_packet(codec.context, nullptr);
+    qDebug()<<"Decoder drained";
 }
 
 void Decoder::clear_decoder()

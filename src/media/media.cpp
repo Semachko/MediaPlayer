@@ -41,9 +41,6 @@ void Media::set_file()
     demuxerThread = new QThread(this);
     demuxer->moveToThread(demuxerThread);
     demuxerThread->start();
-    connect(demuxer,&Demuxer::endReached,this,[this]() {
-//////////////////////////////////////////////////////
-    });
 
     int stream_id = -1;
     stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
@@ -74,7 +71,7 @@ void Media::set_file()
         qreal timeStep = format_context->duration / 15'000;     // ~15ms step
         params->file->setTimeStep(timeStep);
     }
-    connect(params,&MediaParameters::isPausedChanged,this,&Media::resume_pause);
+    connect(params,&MediaParameters::isPausedChanged,this,&Media::resume_pause_timer);
     connect(this,&Media::seekingPressed,this,&Media::seeking_pressed);
     connect(this,&Media::seekingReleased,this,&Media::seeking_released);
     connect(this,&Media::subtruct5sec,this,&Media::subtruct_5sec);
@@ -91,7 +88,7 @@ void Media::set_file()
     }
 }
 
-void Media::resume_pause()
+void Media::resume_pause_timer()
 {
     QMetaObject::invokeMethod(&updateTimer, [this]() {
         if(params->isPaused)
@@ -154,7 +151,7 @@ void Media::seek_time(int64_t seek_target)
         video->output->image_queue.clear();
         video->decoder.clear_decoder();
     }
-    av_seek_frame(format_context, -1, seek_target, AVSEEK_FLAG_BACKWARD);
+    demuxer->seek(seek_target);
     qint64 current_time = get_real_time_ms();
     sync->clock->set_time(current_time);
     demuxer->mutex.unlock();
@@ -184,7 +181,7 @@ void Media::delete_members()
 {
     if(params->isPaused)
         params->setIsPaused(false);
-    disconnect(this,&Media::playORpause,this,&Media::resume_pause);
+    disconnect(this,&Media::playORpause,this,&Media::resume_pause_timer);
     disconnect(this,&Media::seekingPressed,this,&Media::seeking_pressed);
     disconnect(this,&Media::subtruct5sec,this,&Media::subtruct_5sec);
     disconnect(this,&Media::add5sec,this,&Media::add_5sec);

@@ -34,7 +34,7 @@ public:
     ~Media();
 
     void set_file();
-    void resume_pause();
+    void resume_pause_timer();
 
     void seeking_pressed(qreal);
     void seeking_released();

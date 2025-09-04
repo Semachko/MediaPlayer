@@ -23,11 +23,11 @@ VideoContext::VideoContext(AVStream* stream, Synchronizer* sync, MediaParameters
     outputThread = new QThread(this);
     output->moveToThread(outputThread);
     outputThread->start();
-
     connect(output,&FrameOutput::imageOutputted, this, &VideoContext::process_packet);
     QMetaObject::invokeMethod(output,&FrameOutput::start_output, Qt::QueuedConnection);
 
     connect(this,&VideoContext::newPacketArrived, this, &VideoContext::process_packet);
+    connect(this,&IMediaContext::endReached, [this]{decoder.drain_decoder(); get_and_output_frames();});
 }
 
 VideoContext::~VideoContext()
@@ -43,18 +43,16 @@ VideoContext::~VideoContext()
 
 void VideoContext::process_packet()
 {
-    std::lock_guard _(mutex);
-    if (buffer_available() <= 0)
-        return;
-    Packet packet = packet_queue.try_pop();
-    emit requestPacket();
-    if (!packet)
-        return;
-    decode_packet(packet);
-    auto queue = decoder.receive_frames();
-    if(queue.empty())
-        return;
-    output->image_queue.push(std::move(queue));
+    while(buffer_available() > 0)
+    {
+        std::lock_guard _(mutex);
+        Packet packet = packet_queue.try_pop();
+        emit requestPacket();
+        if (!packet)
+            return;
+        decode_packet(packet);
+        get_and_output_frames();
+    }
 }
 void VideoContext::decode_packet(Packet& packet)
 {
@@ -62,10 +60,18 @@ void VideoContext::decode_packet(Packet& packet)
     qreal currTime = sync->get_time() / 1000.0;
     qreal diff = currTime - packetTime;
     if (diff > 0.15){
-        qDebug()<<"Packet is lating skipping:"<<diff<<"sec";
+        qDebug()<<"Video packet is lating, skipping:"<<diff<<"sec";
         return;
     }
     decoder.decode_packet(packet);
+}
+
+void VideoContext::get_and_output_frames()
+{
+    auto queue = decoder.receive_frames();
+    if(queue.empty())
+        return;
+    output->image_queue.push(std::move(queue));
 }
 
 qint64 VideoContext::buffer_available()

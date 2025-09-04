@@ -11,7 +11,6 @@ AudioContext::AudioContext(AVStream* stream,  Synchronizer* sync, MediaParameter
     :
     IMediaContext(stream,10),
     params(params_),
-    decoder(codec),
     sync(sync)
 {
     // Initiating output audio device FORMAT
@@ -53,6 +52,7 @@ AudioContext::AudioContext(AVStream* stream,  Synchronizer* sync, MediaParameter
 
     connect(this, &AudioContext::newPacketArrived, this,&AudioContext::process_packet);
     connect(audio_outputer, &AudioOutputer::framesReaded, this,&AudioContext::process_packet);
+    connect(this,&IMediaContext::endReached, [this]{decoder.drain_decoder(); get_and_output_frames();});
 }
 
 AudioContext::~AudioContext()
@@ -86,35 +86,37 @@ void AudioContext::pause_changed()
 
 void AudioContext::process_packet()
 {
-    std::lock_guard _(mutex);
-    //while(buffer_available() > 0)
-    if (buffer_available() <= 0)
-        return;
-    Packet packet = packet_queue.try_pop();
-    emit requestPacket();
-    if (!packet)
-        return;
-    decode_packet(packet);
-    auto queue = decoder.receive_frames();
-    if(queue.empty()){
-        QMetaObject::invokeMethod(this,&AudioContext::process_packet, Qt::QueuedConnection);
-        return;
+    while(buffer_available() > 0)
+    {
+        std::lock_guard _(mutex);
+        Packet packet = packet_queue.try_pop();
+        emit requestPacket();
+        if (!packet)
+            return;
+        decode_packet(packet);
+        get_and_output_frames();
     }
-    audio_outputer->frame_queue.push(std::move(queue));
-    emit audio_outputer->framesPushed();
 }
 
 void AudioContext::decode_packet(Packet& packet)
 {
     qreal packetTime = packet->pts * av_q2d(codec.timeBase);
     qreal currTime = sync->get_time() / 1000.0;
-    //qDebug()<<"Audio packet time:"<<packetTime<<"sec."<< "Current time:"<<currTime;
     qreal diff = currTime - packetTime;
     if (diff > 0.15){
-        qDebug()<<"Audio packet is lating skipping:"<<diff<<"sec";
+        qDebug()<<"Audio packet is lating, skipping:"<<diff<<"sec";
         return;
     }
     decoder.decode_packet(packet);
+    emit audio_outputer->framesPushed();
+}
+
+void AudioContext::get_and_output_frames()
+{
+    auto queue = decoder.receive_frames();
+    if(queue.empty())
+        return;
+    audio_outputer->frame_queue.push(std::move(queue));
     emit audio_outputer->framesPushed();
 }
 
