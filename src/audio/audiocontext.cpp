@@ -29,15 +29,15 @@ AudioContext::AudioContext(AVStream* stream,  Synchronizer* sync, MediaParameter
     av_channel_layout_default(&outlayout, format.channelCount());
     //SampleFormat outputFormat{convert_to_AVFormat(format.sampleFormat()),format.sampleRate(),format.bytesPerSample(),outlayout};
     SampleFormat outputFormat {convert_to_AVFormat(format.sampleFormat()),format.sampleRate(),format.bytesPerSample(),outlayout};
-    audio_outputer = new AudioOutputer(sync, codec, outputFormat, params);
+    outputer = new AudioOutputer(sync, codec, outputFormat, params);
     audioSink = new QAudioSink(format, this);
-    audioSink->setBufferSize(audio_outputer->MIN_BUFFER_SIZE);
+    audioSink->setBufferSize(outputer->MIN_BUFFER_SIZE);
     audioSink->setVolume(last_volume);
-    audioSink->start(audio_outputer);
+    audioSink->start(outputer);
     audioSink->suspend();
 
     outputThread = new QThread(this);
-    audio_outputer->moveToThread(outputThread);
+    outputer->moveToThread(outputThread);
     outputThread->start();
 
     // Getting MAX SIZE of audio output buffer
@@ -51,14 +51,14 @@ AudioContext::AudioContext(AVStream* stream,  Synchronizer* sync, MediaParameter
     connect(params->audio, &AudioParameters::volumeChanged,this,&AudioContext::set_volume);
 
     connect(this, &AudioContext::newPacketArrived, this,&AudioContext::process_packet);
-    connect(audio_outputer, &AudioOutputer::framesReaded, this,&AudioContext::process_packet);
+    connect(outputer, &AudioOutputer::framesReaded, this,&AudioContext::process_packet);
     connect(this,&IMediaContext::endReached, [this]{decoder.drain_decoder();});
 }
 
 AudioContext::~AudioContext()
 {
     delete audioSink;
-    delete audio_outputer;
+    delete outputer;
 }
 
 void AudioContext::mute_unmute()
@@ -80,7 +80,7 @@ void AudioContext::pause_changed()
         audioSink->suspend();
     else{
         audioSink->resume();
-        emit audio_outputer->readyRead();
+        emit outputer->readyRead();
     }
 }
 
@@ -108,7 +108,7 @@ void AudioContext::decode_packet(Packet& packet)
         return;
     }
     decoder.decode_packet(packet);
-    emit audio_outputer->framesPushed();
+    emit outputer->framesPushed();
 }
 
 void AudioContext::get_and_output_samples()
@@ -116,13 +116,13 @@ void AudioContext::get_and_output_samples()
     auto queue = decoder.receive_frames();
     if(queue.empty())
         return;
-    audio_outputer->frame_queue.push(std::move(queue));
-    emit audio_outputer->framesPushed();
+    outputer->frame_queue.push(std::move(queue));
+    emit outputer->framesPushed();
 }
 
 qint64 AudioContext::buffer_available()
 {
-    qint64 available_bytes = maxBufferSize - audio_outputer->bytesAvailable();
+    qint64 available_bytes = maxBufferSize - outputer->bytesAvailable();
     return available_bytes;
 }
 

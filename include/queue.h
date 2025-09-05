@@ -52,6 +52,11 @@ public:
         return queue.dequeue();
     }
 
+    T& front() {
+        std::unique_lock lock(mutex);
+        cv.wait(lock, [this] {return !queue.empty();});
+        return queue.front();
+    }
     bool empty() const{
         std::lock_guard _(mutex);
         return queue.empty();

@@ -51,7 +51,7 @@ private:
 ///////////////////////////////////////////////
 public:
     QAudioSink* audioSink;
-    AudioOutputer* audio_outputer;
+    AudioOutputer* outputer;
     MediaParameters* params;
     QAudioFormat format;
     std::mutex mutex;

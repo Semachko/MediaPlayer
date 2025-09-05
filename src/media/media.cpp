@@ -140,9 +140,9 @@ void Media::seek_time(int64_t seek_target)
     if(audio){
         std::lock_guard _(audio->mutex);
         audio->packet_queue.clear();
-        audio->audio_outputer->clear();
-        audio->audio_outputer->reset();
-        audio->audio_outputer->readAll();
+        audio->outputer->clear();
+        audio->outputer->reset();
+        audio->outputer->readAll();
         audio->decoder.clear_decoder();
     }
     if(video){
@@ -152,12 +152,17 @@ void Media::seek_time(int64_t seek_target)
         video->decoder.clear_decoder();
     }
     demuxer->seek(seek_target);
-    qint64 current_time = get_real_time_ms();
-    sync->clock->set_time(current_time);
+    sync->clock->set_time(0);
     demuxer->mutex.unlock();
 
-    if (video)
+    if (audio){
+        audio->outputer->pop_frames_by_time(seek_target);
+    }
+    if (video){
+        video->output->pop_frames_by_time(seek_target);
         video->output->process_one_image();
+    }
+    sync->clock->set_time(seek_target/1000);
 }
 
 qint64 Media::get_real_time_ms()
@@ -171,7 +176,6 @@ qint64 Media::get_real_time_ms()
             IMediaContext* media = demuxer->medias[temp_packet->stream_index];
             media->packet_queue.push(std::move(temp_packet));
             emit media->newPacketArrived();
-
         }
     }
     return seeked_time_ms;

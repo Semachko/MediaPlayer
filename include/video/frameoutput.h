@@ -26,6 +26,7 @@ public:
     void process_image();
     void process_one_image();
     void set_filters_on_currentFrame();
+    void pop_frames_by_time(qint64 time);
 signals:
     void imageOutputted();
 private:

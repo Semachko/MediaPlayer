@@ -79,3 +79,16 @@ QVideoFrame FrameOutput::filter_and_convert_frame(Frame frame)
     return QVideoFrame(image);
 }
 
+void FrameOutput::pop_frames_by_time(qint64 time_us)
+{
+    for(;;){
+        if (image_queue.size()==0)
+            emit imageOutputted();
+        qint64 frame_time = image_queue.front()->best_effort_timestamp * av_q2d(codec.timeBase) * 1'000'000;
+        if (frame_time < time_us)
+            image_queue.try_pop();
+        else
+            return;
+        emit imageOutputted();
+    }
+}

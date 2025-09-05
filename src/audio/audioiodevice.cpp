@@ -3,11 +3,12 @@
 
 constexpr auto OUTPUT = "\033[34m[Output]\033[0m";
 
-AudioOutputer::AudioOutputer(Synchronizer* sync, Codec& codec, SampleFormat format_, MediaParameters* params_)
+AudioOutputer::AudioOutputer(Synchronizer* sync, Codec& codec_, SampleFormat format_, MediaParameters* params_)
 
     : QIODevice(),
     format(format_),
     params(params_),
+    codec(codec_),
     converter(codec.context, format_),
     equalizer(codec, params),
     sync(sync)
@@ -18,6 +19,7 @@ AudioOutputer::AudioOutputer(Synchronizer* sync, Codec& codec, SampleFormat form
 
 void AudioOutputer::push_data_to_buffer()
 {
+    sync->check_pause();
     while(!frame_queue.empty())
     {
         Frame frame = frame_queue.try_pop();
@@ -54,6 +56,20 @@ qint64 AudioOutputer::bytesAvailable() const
 {
     std::lock_guard _(buff_mutex);
     return buffer.size() + QIODevice::bytesAvailable();
+}
+
+void  AudioOutputer::pop_frames_by_time(qint64 time_us)
+{
+    for(;;){
+        if (frame_queue.size() == 0)
+            emit framesReaded();
+        qint64 frame_time = frame_queue.front()->best_effort_timestamp * av_q2d(codec.timeBase) * 1'000'000;
+        if (frame_time < time_us)
+            frame_queue.try_pop();
+        else
+            return;
+        emit framesReaded();
+    }
 }
 void AudioOutputer::clear()
 {

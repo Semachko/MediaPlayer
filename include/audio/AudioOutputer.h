@@ -19,6 +19,7 @@ public:
 
     void clear();
     qint64 bytesAvailable() const override;
+    void pop_frames_by_time(qint64 time);
 protected:
     void push_data_to_buffer();
     qint64 readData(char* data, qint64 maxlen) override;
@@ -32,6 +33,7 @@ public:
     Queue<Frame> frame_queue{75};
     const qint64 MIN_BUFFER_SIZE = 4092;
 private:
+    Codec& codec;
     Synchronizer* sync;
     MediaParameters* params;
     SampleConverter converter;

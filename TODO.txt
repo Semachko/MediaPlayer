@@ -1,5 +1,4 @@
-﻿seeking in exact time
-ui menubar hides when seeking
+﻿ui menubar hides when seeking
 add timebar above handle when seeking
 add preload image on seeking
 make correct destroying frameoutput loop (QML VideoSink destroys first)
