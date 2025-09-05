@@ -18,6 +18,15 @@ void Decoder::decode_packet(Packet packet)
 
 QQueue<Frame> Decoder::receive_frames()
 {
+    QQueue<Frame> queue = get_frames();
+    if (drained && queue.isEmpty()){
+        avcodec_send_packet(codec.context, nullptr);
+        return get_frames();
+    }
+    return queue;
+}
+QQueue<Frame> Decoder::get_frames()
+{
     QQueue<Frame> queue;
     Frame frame = make_shared_frame();
     while (avcodec_receive_frame(codec.context, frame.get()) == 0){
@@ -29,12 +38,16 @@ QQueue<Frame> Decoder::receive_frames()
 
 void Decoder::drain_decoder()
 {
-    avcodec_send_packet(codec.context, nullptr);
-    qDebug()<<"Decoder drained";
+    drained  = true;
 }
 
 void Decoder::clear_decoder()
 {
+    drained  = false;
     avcodec_flush_buffers(codec.context);
 }
 
+bool Decoder::is_drained()
+{
+    return drained;
+}

@@ -22,8 +22,14 @@ public:
     QQueue<Frame> receive_frames();
     void clear_decoder();
     void drain_decoder();
+    bool is_drained();
 public:
     Codec& codec;
+
+private:
+    QQueue<Frame> get_frames();
+private:
+    bool drained = false;
 };
 
 #endif // DECODER_H

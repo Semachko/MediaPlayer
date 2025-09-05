@@ -30,6 +30,7 @@ signals:
     void imageOutputted();
 private:
     void copy_frame(Frame source, Frame destination);
+    QVideoFrame filter_and_convert_frame(Frame frame);
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
 public:

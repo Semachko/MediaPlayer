@@ -18,12 +18,11 @@ AudioOutputer::AudioOutputer(Synchronizer* sync, Codec& codec, SampleFormat form
 
 void AudioOutputer::push_data_to_buffer()
 {
-    auto start = std::chrono::high_resolution_clock::now();
     while(!frame_queue.empty())
     {
         Frame frame = frame_queue.try_pop();
         if(!frame)
-            break;
+            continue;
         Frame equalized_frame = equalizer.applyEqualizer(frame);
         if (!equalized_frame)
             continue;

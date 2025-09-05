@@ -52,7 +52,7 @@ AudioContext::AudioContext(AVStream* stream,  Synchronizer* sync, MediaParameter
 
     connect(this, &AudioContext::newPacketArrived, this,&AudioContext::process_packet);
     connect(audio_outputer, &AudioOutputer::framesReaded, this,&AudioContext::process_packet);
-    connect(this,&IMediaContext::endReached, [this]{decoder.drain_decoder(); get_and_output_frames();});
+    connect(this,&IMediaContext::endReached, [this]{decoder.drain_decoder();});
 }
 
 AudioContext::~AudioContext()
@@ -86,16 +86,16 @@ void AudioContext::pause_changed()
 
 void AudioContext::process_packet()
 {
-    while(buffer_available() > 0)
-    {
-        std::lock_guard _(mutex);
-        Packet packet = packet_queue.try_pop();
+    if (buffer_available() <= 0)
+        return;
+    std::lock_guard _(mutex);
+    Packet packet = packet_queue.try_pop();
+    if (!decoder.is_drained()){
         emit requestPacket();
-        if (!packet)
-            return;
-        decode_packet(packet);
-        get_and_output_frames();
     }
+    if (packet)
+        decode_packet(packet);
+    get_and_output_samples();
 }
 
 void AudioContext::decode_packet(Packet& packet)
@@ -111,7 +111,7 @@ void AudioContext::decode_packet(Packet& packet)
     emit audio_outputer->framesPushed();
 }
 
-void AudioContext::get_and_output_frames()
+void AudioContext::get_and_output_samples()
 {
     auto queue = decoder.receive_frames();
     if(queue.empty())

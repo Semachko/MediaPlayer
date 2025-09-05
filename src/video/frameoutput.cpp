@@ -34,13 +34,9 @@ void FrameOutput::process_image()
     if (!frame)
         return;
     copy_frame(frame, current_frame);
-    Frame filtered_frame = filters.applyFilters(frame);
-    Frame output_frame = converter.convert(filtered_frame);
-    QImage image(output_frame->data[0], codec.context->width, codec.context->height, output_frame->linesize[0], QImage::Format_RGB32);
-    QVideoFrame videoframe = QVideoFrame(image);
-    qint64 frametime = filtered_frame->best_effort_timestamp * 1000 * av_q2d(codec.timeBase);
+    qint64 frametime = frame->best_effort_timestamp * 1000 * av_q2d(codec.timeBase);
+    QVideoFrame videoframe = filter_and_convert_frame(frame);
     qint64 delay = frametime - sync->get_time();
-    //qDebug()<<"Delay: "<<delay;
     if (delay>0)
         QThread::msleep(delay);
     videosink->setVideoFrame(videoframe);
@@ -51,22 +47,7 @@ void FrameOutput::process_one_image()
 {
     Frame frame = image_queue.wait_pop();
     copy_frame(frame, current_frame);
-    Frame filtered_frame = filters.applyFilters(frame);
-    Frame output_frame = converter.convert(filtered_frame);
-    QImage image(output_frame->data[0], codec.context->width, codec.context->height, output_frame->linesize[0], QImage::Format_RGB32);
-    QVideoFrame videoframe{std::move(image)};
-    videosink->setVideoFrame(videoframe);
-    emit imageOutputted();
-}
-
-void FrameOutput::set_filters_on_currentFrame()
-{
-    Frame frame = make_shared_frame();
-    copy_frame(current_frame, frame);
-    Frame filtered_frame = filters.applyFilters(frame);
-    Frame output_frame = converter.convert(filtered_frame);
-    QImage image(output_frame->data[0], codec.context->width, codec.context->height, output_frame->linesize[0], QImage::Format_RGB32);
-    QVideoFrame videoframe = QVideoFrame(image);
+    QVideoFrame videoframe = filter_and_convert_frame(frame);
     videosink->setVideoFrame(videoframe);
     emit imageOutputted();
 }
@@ -81,5 +62,20 @@ void FrameOutput::copy_frame(Frame source, Frame destination)
     av_frame_get_buffer(destination.get(), 32);
     av_frame_copy(destination.get(),source.get());
     av_frame_copy_props(destination.get(),source.get());
+}
+void FrameOutput::set_filters_on_currentFrame()
+{
+    Frame frame = make_shared_frame();
+    copy_frame(current_frame, frame);
+    QVideoFrame videoframe = filter_and_convert_frame(frame);
+    videosink->setVideoFrame(videoframe);
+    emit imageOutputted();
+}
+QVideoFrame FrameOutput::filter_and_convert_frame(Frame frame)
+{
+    Frame filtered_frame = filters.applyFilters(frame);
+    Frame output_frame = converter.convert(filtered_frame);
+    QImage image(output_frame->data[0], codec.context->width, codec.context->height, output_frame->linesize[0], QImage::Format_RGB32);
+    return QVideoFrame(image);
 }
 

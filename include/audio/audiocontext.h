@@ -39,7 +39,7 @@ public:
 
     void process_packet() override;
     void decode_packet(Packet& packet);
-    void get_and_output_frames();
+    void get_and_output_samples();
     qint64 buffer_available() override;
 
     void mute_unmute();

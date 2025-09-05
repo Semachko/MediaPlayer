@@ -40,7 +40,6 @@ bool Demuxer::push_packet_to_queues()
         }
         return false;
     }
-
     if (medias.contains(packet->stream_index)){
         IMediaContext* media = medias[packet->stream_index];
         media->packet_queue.push(std::move(packet));

@@ -24,7 +24,7 @@ extern "C" {
 
 class VideoContext : public IMediaContext
 {
-    Q_OBJECT
+//Q_OBJECT
 public:
     VideoContext(AVStream* stream, Synchronizer* sync, MediaParameters* params, qreal bufferization_time);
     ~VideoContext();

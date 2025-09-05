@@ -27,9 +27,8 @@ VideoContext::VideoContext(AVStream* stream, Synchronizer* sync, MediaParameters
     QMetaObject::invokeMethod(output,&FrameOutput::start_output, Qt::QueuedConnection);
 
     connect(this,&VideoContext::newPacketArrived, this, &VideoContext::process_packet);
-    connect(this,&IMediaContext::endReached, [this]{decoder.drain_decoder(); get_and_output_frames();});
+    connect(this,&IMediaContext::endReached, [this]{decoder.drain_decoder(); emit newPacketArrived();});
 }
-
 VideoContext::~VideoContext()
 {
     outputThread->quit();
@@ -40,19 +39,18 @@ VideoContext::~VideoContext()
     delete imageReady;
 }
 
-
 void VideoContext::process_packet()
 {
-    while(buffer_available() > 0)
-    {
-        std::lock_guard _(mutex);
-        Packet packet = packet_queue.try_pop();
+    if (buffer_available() <= 0)
+        return;
+    std::lock_guard _(mutex);
+    Packet packet = packet_queue.try_pop();
+    if (!decoder.is_drained()){
         emit requestPacket();
-        if (!packet)
-            return;
-        decode_packet(packet);
-        get_and_output_frames();
     }
+    if (packet)
+        decode_packet(packet);
+    get_and_output_frames();
 }
 void VideoContext::decode_packet(Packet& packet)
 {

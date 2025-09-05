@@ -1,5 +1,4 @@
-﻿add pushing out frames from decoder at the end of mediafile
-seeking in exact time
+﻿seeking in exact time
 ui menubar hides when seeking
 add timebar above handle when seeking
 add preload image on seeking
