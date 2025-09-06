@@ -143,6 +143,7 @@ void Media::seek_time(int64_t seek_target)
         video->decoder.clear_decoder();
     }
     demuxer->seek(seek_target);
+    params->setCurrentTime(seek_target/1000);
     sync->set_time(0);
     demuxer->mutex.unlock();
 
