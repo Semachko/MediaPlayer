@@ -11,6 +11,7 @@ AudioContext::AudioContext(AVStream* stream,  Synchronizer* sync, MediaParameter
     :
     IMediaContext(stream,10),
     params(params_),
+    last_volume(params->audio->volume),
     sync(sync)
 {
     // Initiating output audio device FORMAT
@@ -23,28 +24,23 @@ AudioContext::AudioContext(AVStream* stream,  Synchronizer* sync, MediaParameter
         qWarning() << "Error with supporting default audio device!";
         throw;
     }
-
     // Initiating output CONVERTER and OUTPUTER
     AVChannelLayout outlayout;
     av_channel_layout_default(&outlayout, format.channelCount());
-    //SampleFormat outputFormat{convert_to_AVFormat(format.sampleFormat()),format.sampleRate(),format.bytesPerSample(),outlayout};
     SampleFormat outputFormat {convert_to_AVFormat(format.sampleFormat()),format.sampleRate(),format.bytesPerSample(),outlayout};
-    outputer = new AudioOutputer(sync, codec, outputFormat, params);
-    audioSink = new QAudioSink(format, this);
-    audioSink->setBufferSize(outputer->MIN_BUFFER_SIZE);
-    audioSink->setVolume(last_volume);
-    audioSink->start(outputer);
-    audioSink->suspend();
-
-    outputThread = new QThread(this);
-    outputer->moveToThread(outputThread);
-    outputThread->start();
 
     // Getting MAX SIZE of audio output buffer
     qint64 bytesPerSample = av_get_bytes_per_sample((AVSampleFormat)outputFormat.format);
     qint64 bytesPerSecond = bytesPerSample * outputFormat.layout.nb_channels * outputFormat.sample_rate;
     maxBufferSize = bytesPerSecond * bufferization_time;
-    qDebug()<<"AUDIO BUFF SIZE:"<<maxBufferSize;
+
+    outputer = new AudioOutputer(sync, codec, outputFormat, params);
+    audioSink = new QAudioSink(format, this);
+    audioSink->setBufferSize(outputer->MIN_BUFFER_SIZE);
+    audioSink->setVolume(last_volume);
+    outputThread = new QThread();
+    outputer->moveToThread(outputThread);
+    outputThread->start();
 
     connect(params, &MediaParameters::isPausedChanged, this,&AudioContext::pause_changed);
     connect(params->audio, &AudioParameters::isMutedChanged,this,&AudioContext::mute_unmute);
@@ -53,12 +49,19 @@ AudioContext::AudioContext(AVStream* stream,  Synchronizer* sync, MediaParameter
     connect(this, &AudioContext::newPacketArrived, this,&AudioContext::process_packet);
     connect(outputer, &AudioOutputer::framesReaded, this,&AudioContext::process_packet);
     connect(this,&IMediaContext::endReached, [this]{decoder.drain_decoder();});
+
+    audioSink->start(outputer);
+    if(params->isPaused)
+        audioSink->suspend();
 }
 
 AudioContext::~AudioContext()
 {
+    outputer->deleteLater();
+    outputThread->quit();
+    outputThread->wait();
+    outputThread->deleteLater();
     delete audioSink;
-    delete outputer;
 }
 
 void AudioContext::mute_unmute()

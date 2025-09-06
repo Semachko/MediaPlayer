@@ -1,57 +1,34 @@
 ﻿#include "sync/clock.h"
 #include <QDebug>
 
-Clock::Clock(): speed(1.0), paused(true), baseTime(0) {}
-
-void Clock::start(qint64 pts)
+Clock::Clock(MediaParameters* params_)
+    : params(params_), speed(params_->speed)
 {
     timer.start();
-    baseTime = pts;
 }
-
 void Clock::pause()
 {
-    if (!paused) {
-        paused = true;
-        pausedTime = timer.elapsed();
-    }
+    current_time += timer.elapsed() * speed;
 }
-
 void Clock::resume()
 {
-    if (paused) {
-        paused = false;
-        timer.start();
-        baseTime += (pausedTime * speed);
-    }
+    timer.start();
 }
-
-void Clock::setSpeed(double newSpeed)
+void Clock::set_speed(qreal new_speed)
 {
-    if (paused) {
-        baseTime += (pausedTime * speed);
-        pausedTime = 0;
-    } else {
-        baseTime += (timer.elapsed() * speed);
-        timer.start();
-    }
-    speed = newSpeed;
+    if (!params->isPaused)
+        current_time += timer.restart() * speed;
+    speed = new_speed;
 }
-
-
-qint64 Clock::get_time() const
+qint64 Clock::get_time()
 {
-    if (paused)
-        return baseTime + (pausedTime * speed);
-    else
-        return baseTime + (timer.elapsed() * speed);
+    if (params->isPaused)
+        return current_time;
+    current_time += timer.restart() * speed;
+    return current_time;
 }
-
 void Clock::set_time(qint64 ms)
 {
-    if (paused) {
-        baseTime = ms - (pausedTime * speed);
-    } else {
-        baseTime = ms - (timer.elapsed() * speed);
-    }
+    current_time = ms;
+    timer.start();
 }

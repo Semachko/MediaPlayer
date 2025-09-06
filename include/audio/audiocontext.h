@@ -57,10 +57,9 @@ public:
     std::mutex mutex;
 private:
     QThread* outputThread;
-
     Synchronizer* sync;
     qint64 maxBufferSize;
-    qreal last_volume = 0.2;
+    qreal last_volume;
 };
 
 #endif // AUDIOOUTPUTER_H

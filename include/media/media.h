@@ -52,7 +52,6 @@ signals:
     void endReached();
 
 private:
-    qint64 get_real_time_ms();
     void delete_members();
     void seek_time(int64_t);
 public:

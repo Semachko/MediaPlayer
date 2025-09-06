@@ -37,9 +37,11 @@ void FrameOutput::process_image()
     qint64 frametime = frame->best_effort_timestamp * 1000 * av_q2d(codec.timeBase);
     QVideoFrame videoframe = filter_and_convert_frame(frame);
     qint64 delay = frametime - sync->get_time();
+    //qDebug()<<"Delay"<<delay;
     if (delay>0)
         QThread::msleep(delay);
-    videosink->setVideoFrame(videoframe);
+    if(!abort && videosink)
+        videosink->setVideoFrame(videoframe);
     emit imageOutputted();
 }
 

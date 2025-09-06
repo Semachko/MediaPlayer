@@ -3,6 +3,7 @@
 #include <QElapsedTimer>
 #include <QThread>
 #include <QtConcurrent>
+#include <sstream>
 
 #include "video/videocontext.h"
 #include "frame.h"
@@ -20,7 +21,7 @@ VideoContext::VideoContext(AVStream* stream, Synchronizer* sync, MediaParameters
     maxBufferSize = fps * bufferization_time;
 
     output = new FrameOutput(sync, codec, params, maxBufferSize);
-    outputThread = new QThread(this);
+    outputThread = new QThread();
     output->moveToThread(outputThread);
     outputThread->start();
     connect(output,&FrameOutput::imageOutputted, this, &VideoContext::process_packet);
@@ -31,12 +32,11 @@ VideoContext::VideoContext(AVStream* stream, Synchronizer* sync, MediaParameters
 }
 VideoContext::~VideoContext()
 {
+    output->abort = true;
+    output->deleteLater();
     outputThread->quit();
     outputThread->wait();
-    output->deleteLater();
     outputThread->deleteLater();
-
-    delete imageReady;
 }
 
 void VideoContext::process_packet()
@@ -52,6 +52,7 @@ void VideoContext::process_packet()
         decode_packet(packet);
     get_and_output_frames();
 }
+
 void VideoContext::decode_packet(Packet& packet)
 {
     qreal packetTime = packet->pts * av_q2d(codec.timeBase);

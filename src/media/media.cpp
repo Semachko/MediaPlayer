@@ -32,13 +32,12 @@ void Media::set_file()
         qint64 curr_time = sync->get_time();
         params->setCurrentTime(curr_time);
     });
-    updateTimer.start(100);
 
     // How many seconds forward we want to bufferize
     const qreal bufferization_time = 0.2;
 
     demuxer = new Demuxer(format_context, sync);
-    demuxerThread = new QThread(this);
+    demuxerThread = new QThread();
     demuxer->moveToThread(demuxerThread);
     demuxerThread->start();
 
@@ -46,7 +45,7 @@ void Media::set_file()
     stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
     if (stream_id >= 0){
         audio = new AudioContext(format_context->streams[stream_id], sync, params, bufferization_time);
-        audioThread = new QThread(this);
+        audioThread = new QThread();
         audio->moveToThread(audioThread);
         audioThread->start();
         demuxer->add_context(audio);
@@ -56,7 +55,7 @@ void Media::set_file()
     stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     if (stream_id >= 0){
         video = new VideoContext(format_context->streams[stream_id], sync, params, bufferization_time);
-        videoThread = new QThread(this);
+        videoThread = new QThread();
         video->moveToThread(videoThread);
         videoThread->start();
         demuxer->add_context(video);
@@ -77,15 +76,8 @@ void Media::set_file()
     connect(this,&Media::subtruct5sec,this,&Media::subtruct_5sec);
     connect(this,&Media::add5sec,this,&Media::add_5sec);
     QMetaObject::invokeMethod(demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
-    if(video){
-        if(params->isPaused)
-            video->output->process_one_image();
-        else{
-            sync->play_or_pause();
-            video->output->process_one_image();
-            sync->play_or_pause();
-        }
-    }
+    if(video && params->isPaused)
+        video->output->process_one_image();
 }
 
 void Media::resume_pause_timer()
@@ -142,7 +134,6 @@ void Media::seek_time(int64_t seek_target)
         audio->packet_queue.clear();
         audio->outputer->clear();
         audio->outputer->reset();
-        audio->outputer->readAll();
         audio->decoder.clear_decoder();
     }
     if(video){
@@ -152,7 +143,7 @@ void Media::seek_time(int64_t seek_target)
         video->decoder.clear_decoder();
     }
     demuxer->seek(seek_target);
-    sync->clock->set_time(0);
+    sync->set_time(0);
     demuxer->mutex.unlock();
 
     if (audio){
@@ -162,54 +153,43 @@ void Media::seek_time(int64_t seek_target)
         video->output->pop_frames_by_time(seek_target);
         video->output->process_one_image();
     }
-    sync->clock->set_time(seek_target/1000);
-}
-
-qint64 Media::get_real_time_ms()
-{
-    qint64 seeked_time_ms = -1;
-    while (seeked_time_ms == -1){
-        Packet temp_packet = make_shared_packet();
-        av_read_frame(format_context, temp_packet.get());
-        if (demuxer->medias.contains(temp_packet->stream_index)){
-            seeked_time_ms = temp_packet->pts * av_q2d(format_context->streams[temp_packet->stream_index]->time_base) * 1000;
-            IMediaContext* media = demuxer->medias[temp_packet->stream_index];
-            media->packet_queue.push(std::move(temp_packet));
-            emit media->newPacketArrived();
-        }
-    }
-    return seeked_time_ms;
+    sync->set_time(seek_target/1000);
 }
 
 void Media::delete_members()
 {
-    if(params->isPaused)
+    bool was_paused = params->isPaused;
+    if(was_paused)
         params->setIsPaused(false);
+
     disconnect(this,&Media::playORpause,this,&Media::resume_pause_timer);
     disconnect(this,&Media::seekingPressed,this,&Media::seeking_pressed);
     disconnect(this,&Media::subtruct5sec,this,&Media::subtruct_5sec);
     disconnect(this,&Media::add5sec,this,&Media::add_5sec);
 
-    if (audio) {
-        audioThread->quit();
-        audioThread->wait();
-        audioThread->deleteLater();
-        audio->deleteLater();
-        audio = nullptr;
-    }
-    if (video) {
-        videoThread->quit();
-        videoThread->wait();
-        videoThread->deleteLater();
-        video->output->abort = true;
-        video->deleteLater();
-        video = nullptr;
-    }
+    demuxer->deleteLater();
     demuxerThread->quit();
     demuxerThread->wait();
     demuxerThread->deleteLater();
-    demuxer->deleteLater();
+
+    if (audio) {
+        audio->deleteLater();
+        audioThread->quit();
+        audioThread->wait();
+        audioThread->deleteLater();
+        audio = nullptr;
+    }
+    if (video) {
+        video->deleteLater();
+        videoThread->quit();
+        videoThread->wait();
+        videoThread->deleteLater();
+        video = nullptr;
+    }
 
     avformat_close_input(&format_context);
-    sync->deleteLater();
+    delete sync;
+
+    if(was_paused)
+        params->setIsPaused(true);
 }

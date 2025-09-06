@@ -19,9 +19,9 @@ AudioOutputer::AudioOutputer(Synchronizer* sync, Codec& codec_, SampleFormat for
 
 void AudioOutputer::push_data_to_buffer()
 {
-    sync->check_pause();
     while(!frame_queue.empty())
     {
+        sync->check_pause();
         Frame frame = frame_queue.try_pop();
         if(!frame)
             continue;

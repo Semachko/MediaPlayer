@@ -1,4 +1,4 @@
-#ifndef CLOCK_H
+﻿#ifndef CLOCK_H
 #define CLOCK_H
 
 #include <QObject>
@@ -6,29 +6,24 @@
 #include <QWaitCondition>
 #include <QElapsedTimer>
 
-class Clock : QObject
+#include "media/mediaparameters.h"
+
+class Clock
 {
-    Q_OBJECT
 public:
-    Clock();
-    void start(qint64 pts);
+    Clock(MediaParameters* params);
     void pause();
     void resume();
-    void setSpeed(double newSpeed);
-    qint64 get_time() const;
-    void pause_check();
+    qint64 get_time();
+    void set_speed(qreal speed);
     void set_time(qint64 pts);
 public:
 
 private:
+    MediaParameters* params;
     QElapsedTimer timer;
-    qint64 pausedTime {0};
-    qint64 baseTime {0};
-    double speed;
-    bool paused = true;
-
-    // QMutex playORpause_mutex;
-    // QWaitCondition pauseWait;
+    qint64 current_time {0};
+    qreal speed;
 };
 
 #endif // CLOCK_H

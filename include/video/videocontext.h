@@ -42,9 +42,7 @@ public:
     FrameOutput* output;
 private:
     QThread* outputThread;
-
     Synchronizer* sync;
-    QWaitCondition* imageReady;
     qint64 maxBufferSize;
 };
 
