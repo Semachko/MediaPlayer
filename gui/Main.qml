@@ -408,17 +408,15 @@ Window {
     }
 
 
-
     Timer {
         id: hideControlsTimer
-        interval: 3500
+        interval: 3000
         repeat: false
         onTriggered: {
-            if (controls_menu.opacity === 1.0){
+            var is_outside_menubar = (mouseY <= menubar_background.y) || (mouseY > root.height-30) || (mouseX < 30 || mouseX > root.width - 30);
+            if (is_outside_menubar && controls_menu.opacity === 1.0){
                 controls_menu.opacity = 0.0
-            }
-        }
-    }
+    }}}
     HoverHandler {
         id: hoverHandler
         onPointChanged: {
@@ -431,6 +429,7 @@ Window {
             mouseY = point.position.y
         }
     }
+
     WheelHandler {
         onWheel: (wheel)=> {
             if (wheel.modifiers & Qt.ControlModifier)

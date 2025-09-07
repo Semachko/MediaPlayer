@@ -23,8 +23,8 @@ FrameOutput::FrameOutput(Synchronizer * sync, Codec& codec_, MediaParameters* pa
 void FrameOutput::start_output(){
     while(!abort)
     {
-        sync->check_pause();
         process_image();
+        sync->check_pause();
     }
 }
 

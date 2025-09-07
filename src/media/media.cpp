@@ -32,6 +32,8 @@ void Media::set_file()
         qint64 curr_time = sync->get_time();
         params->setCurrentTime(curr_time);
     });
+    updateTimer.setInterval(100);
+    QMetaObject::invokeMethod(&updateTimer, static_cast<void(QTimer::*)()>(&QTimer::start), Qt::QueuedConnection);
 
     // How many seconds forward we want to bufferize
     const qreal bufferization_time = 0.2;
