@@ -21,7 +21,7 @@ class FrameOutput: public QObject
     Q_OBJECT
 public:
     FrameOutput(Synchronizer*, Codec&, MediaParameters*, qint64);
-
+    ~FrameOutput();
     void start_output();
     void process_image();
     void process_one_image();

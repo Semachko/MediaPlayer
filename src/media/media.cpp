@@ -68,6 +68,11 @@ void Media::set_file()
         qint64 total_frames = total_seconds * fps;
         qreal timeStep = 1.0 / total_frames;
         params->file->setTimeStep(timeStep);
+
+        preview = new VideoPreview(params);
+        previewThread = new QThread();
+        preview->moveToThread(previewThread);
+        previewThread->start();
     }else{
         qreal timeStep = format_context->duration / 15'000;     // ~15ms step
         params->file->setTimeStep(timeStep);
@@ -188,6 +193,12 @@ void Media::delete_members()
         videoThread->wait();
         videoThread->deleteLater();
         video = nullptr;
+
+        preview->deleteLater();
+        previewThread->quit();
+        previewThread->wait();
+        previewThread->deleteLater();
+        preview = nullptr;
     }
 
     avformat_close_input(&format_context);

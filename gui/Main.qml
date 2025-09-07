@@ -2,8 +2,8 @@
 import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import QtMultimedia
-import MediaPlayer
 import QtQuick.Dialogs
+import MediaPlayer
 
 Window {
     id: root
@@ -90,6 +90,7 @@ Window {
             }
             TimelineSlider{
                 id: timeslider
+                hoverEnabled: true
                 stepSize: player.params.file.timeStep
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -106,6 +107,25 @@ Window {
                 onPressedChanged:{
                     if (!pressed)
                         player.seekingReleased()
+                }
+                HoverHandler{
+                    property int prevX: 0
+                    onPointChanged: {
+                        if (point.position.x === prevX)
+                            return
+                        prevX = point.position.x
+                        preview.x = point.position.x - preview.width/2
+                        var spot = point.position.x / parent.width
+                        var timepoint = player.params.file.globalTime * spot
+                        preview.time = get_time_by_ms(timepoint)
+                        player.params.video.set_preview(timepoint)
+                    }
+                }
+                HoverPreview{
+                    id: preview
+                    visible: timeslider.hovered
+                    y: timeslider.y - preview.height - 15
+                    Component.onCompleted: player.params.video.set_videoSink(preview.videosink)
                 }
             }
             Text{

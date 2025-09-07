@@ -19,6 +19,7 @@ extern "C" {
 #include <condition_variable>
 
 #include "video/videocontext.h"
+#include "video/videopreview.h"
 #include "audio/audiocontext.h"
 #include "media/demuxer.h"
 #include "sync/clock.h"
@@ -50,19 +51,20 @@ signals:
     void seekingPressed(qreal);
     void seekingReleased();
     void endReached();
-
 private:
     void delete_members();
     void seek_time(int64_t);
 public:
     AudioContext* audio = nullptr;
     VideoContext* video = nullptr;
+    VideoPreview* preview = nullptr;
     Demuxer* demuxer;
 private:
     AVFormatContext* format_context = nullptr;
 
     QThread* audioThread;
     QThread* videoThread;
+    QThread* previewThread;
     QThread* demuxerThread;
 
     Synchronizer* sync;

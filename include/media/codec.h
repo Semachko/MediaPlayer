@@ -9,7 +9,7 @@ extern "C" {
 class Codec
 {
 public:
-    Codec(AVStream* stream);
+    Codec(AVStream* stream, int thread_count = 0);
     ~Codec();
 public:
     AVStream* stream;

@@ -1,7 +1,5 @@
-﻿add timebar above handle when seeking
-add preload image on seeking
-make correct destroying frameoutput loop (QML VideoSink destroys first)
+﻿bug when seeking audiofile
 fix ui resizing
-
 find out how works volume levels in samples
+add subtitles
 add stretching

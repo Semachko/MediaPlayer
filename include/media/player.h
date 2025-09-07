@@ -24,7 +24,6 @@ public:
 
     Q_INVOKABLE void seekingPressed(qreal time);
     Q_INVOKABLE void seekingReleased();
-
 ////////////////////////////////////////////////////////////////////
 private:
     Media* media;

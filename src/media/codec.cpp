@@ -1,7 +1,7 @@
 ﻿#include "media/codec.h"
 #include <QDebug>
 
-Codec::Codec(AVStream* stream) {
+Codec::Codec(AVStream* stream, int thread_count) {
     this->stream = stream;
     this->parameters = stream->codecpar;
     this->codec = avcodec_find_decoder(parameters->codec_id);
@@ -14,6 +14,8 @@ Codec::Codec(AVStream* stream) {
         throw std::runtime_error("Failed to copy codec parameters to context");
     this->context->thread_count = 0;
     this->context->thread_type = FF_THREAD_FRAME | FF_THREAD_SLICE;
+    if (thread_count == 1)
+        this->context->thread_type = 0;
     if (avcodec_open2(context, codec, nullptr) < 0)
         throw std::runtime_error("Failed to open codec");
     this->timeBase = stream->time_base;

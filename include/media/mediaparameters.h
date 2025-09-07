@@ -39,12 +39,21 @@ public:
     Q_INVOKABLE void set_brightness(qreal val) {brightness = val * 2.0 - 1.0; emit paramsChanged();}
     Q_INVOKABLE void set_contrast(qreal val) {contrast = val * 2.0; emit paramsChanged();}
     Q_INVOKABLE void set_saturation(qreal val) {saturation = val * 2.0; emit paramsChanged();}
+    Q_INVOKABLE void set_videoSink(QVideoSink* sink) {previewSink = sink;}
+    Q_INVOKABLE void set_preview(qint64 timepoint) {
+        bool expected = false;
+        if (is_preview_processing.compare_exchange_strong(expected, true))
+            emit setPreview(timepoint);
+    }
 
-    std::atomic<qreal> brightness = 0.0;
-    std::atomic<qreal> contrast = 1.0;
-    std::atomic<qreal> saturation = 1.0;
+    qreal brightness = 0.0;
+    qreal contrast = 1.0;
+    qreal saturation = 1.0;
+    QVideoSink* previewSink;
+    std::atomic<bool> is_preview_processing{false};
 signals:
     void paramsChanged();
+    void setPreview(qint64 timepoint);
 };
 
 class FileParameters: public QObject

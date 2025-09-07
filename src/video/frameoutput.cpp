@@ -20,6 +20,11 @@ FrameOutput::FrameOutput(Synchronizer * sync, Codec& codec_, MediaParameters* pa
     image_queue(queueSize)
 {}
 
+FrameOutput::~FrameOutput()
+{
+    videosink->setVideoFrame(QVideoFrame());
+}
+
 void FrameOutput::start_output(){
     while(!abort)
     {
