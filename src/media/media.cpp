@@ -151,7 +151,7 @@ void Media::seek_time(int64_t seek_target)
     }
     demuxer->seek(seek_target);
     params->setCurrentTime(seek_target/1000);
-    sync->set_time(0);
+    sync->set_time(1000); /////////////////
     demuxer->mutex.unlock();
 
     if (audio){

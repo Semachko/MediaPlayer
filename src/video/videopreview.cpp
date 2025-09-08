@@ -28,7 +28,6 @@ VideoPreview::~VideoPreview()
 
 void VideoPreview::update_preview(qint64 timepoint)
 {
-    //qDebug()<<"Current is_preview_processing:"<<params->video->is_preview_processing;
     decoder->clear_decoder();
     int64_t ts = timepoint / 1000.0 / av_q2d(codec->timeBase);
     av_seek_frame(format_context, codec->stream->index, ts, AVSEEK_FLAG_BACKWARD);

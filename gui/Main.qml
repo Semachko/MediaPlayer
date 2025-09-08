@@ -97,18 +97,25 @@ Window {
                 Connections {
                     target: player.params
                     function onCurrentTimeChanged() {
-                        timeslider.value = 1.0 * player.params.currentTime / player.params.file.globalTime
+                        if (!timeslider.pressed)
+                            timeslider.value = 1.0 * player.params.currentTime / player.params.file.globalTime
                     }
                 }
                 onMoved:{
-                    if (pressed)
+                    if (pressed){
                         player.seekingPressed(position)
+                        preview.x = position*timeslider.width - preview.width/2
+                        var timepoint = player.params.file.globalTime * position
+                        preview.time = get_time_by_ms(timepoint)
+                        player.params.video.reset_videoSink()
+                    }
                 }
                 onPressedChanged:{
                     if (!pressed)
                         player.seekingReleased()
                 }
                 HoverHandler{
+                    id: mouseOnSlider
                     property int prevX: 0
                     onPointChanged: {
                         if (point.position.x === prevX)

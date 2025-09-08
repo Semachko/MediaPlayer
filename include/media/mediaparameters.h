@@ -6,6 +6,7 @@
 #include <QString>
 #include <QUrl>
 #include <QVideoSink>
+#include <qvideoframe.h>
 
 class AudioParameters : public QObject
 {Q_OBJECT
@@ -40,6 +41,7 @@ public:
     Q_INVOKABLE void set_contrast(qreal val) {contrast = val * 2.0; emit paramsChanged();}
     Q_INVOKABLE void set_saturation(qreal val) {saturation = val * 2.0; emit paramsChanged();}
     Q_INVOKABLE void set_videoSink(QVideoSink* sink) {previewSink = sink;}
+    Q_INVOKABLE void reset_videoSink(){previewSink->setVideoFrame(QVideoFrame());}
     Q_INVOKABLE void set_preview(qint64 timepoint) {
         bool expected = false;
         if (is_preview_processing.compare_exchange_strong(expected, true))
