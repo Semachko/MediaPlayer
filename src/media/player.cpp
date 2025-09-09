@@ -5,7 +5,6 @@
 Player::Player() {
     params = new MediaParameters{this};
     media = new Media(params);
-    anti_floodseek_timer.setSingleShot(true);
     mediaThread = new QThread(this);
     media->moveToThread(mediaThread);
     mediaThread->start();
@@ -16,6 +15,7 @@ Player::~Player()
     mediaThread->wait();
     media->deleteLater();
     mediaThread->deleteLater();
+    delete params;
 }
 
 void Player::setFile(QUrl filepath){
@@ -56,11 +56,10 @@ void Player::add5sec(){
 void Player::subtruct5sec(){
     emit media->subtruct5sec();
 }
-void Player::seekingPressed(qreal time){
-    if(anti_floodseek_timer.isActive())
-        return;
-    anti_floodseek_timer.start(50);
-    emit media->seekingPressed(time);
+void Player::seekingPressed(qreal timepos){
+    bool expected = false;
+    if (media->is_seeking_processing.compare_exchange_strong(expected, true))
+        emit media->seekingPressed(timepos);
 }
 
 void Player::seekingReleased()

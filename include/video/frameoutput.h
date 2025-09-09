@@ -22,30 +22,30 @@ class FrameOutput: public QObject
 public:
     FrameOutput(Synchronizer*, Codec&, MediaParameters*, qint64);
     ~FrameOutput();
-    void start_output();
+
     void process_image();
     void process_one_image();
     void set_filters_on_currentFrame();
     void pop_frames_by_time(qint64 time);
 signals:
-    void imageOutputted();
+    void requestImage();
+    void outputImage();
 private:
     void copy_frame(Frame source, Frame destination);
     QVideoFrame filter_and_convert_frame(Frame frame);
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
 public:
-    bool abort = false;
     Queue<Frame> image_queue;
 private:
     Codec& codec;
     Filters filters;
     ImageConverter converter;
     Frame current_frame = make_shared_frame();
-
     std::mutex mutex;
     Synchronizer* sync;
     QVideoSink* videosink;
+    MediaParameters* params;
 };
 
 #endif // FRAMEOUTPUT_H

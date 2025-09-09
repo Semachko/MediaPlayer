@@ -41,6 +41,7 @@ public:
     void decode_packet(Packet& packet);
     void get_and_output_samples();
     qint64 buffer_available() override;
+    void clear();
 
     void mute_unmute();
     void set_volume();

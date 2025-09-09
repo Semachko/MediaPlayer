@@ -2,6 +2,20 @@
 #include <QDebug>
 #include <QThread>
 
+#include <chrono>
+std::string get_cur_time()
+{
+    using namespace std::chrono;
+    auto now = system_clock::now().time_since_epoch();
+    auto ms = duration_cast<milliseconds>(now).count() % 1000;
+    auto us = duration_cast<microseconds>(now).count() % 1000;
+    std::ostringstream oss;
+    oss << std::setfill('0')
+        << std::setw(3) << ms << ":"
+        << std::setw(3) << us;
+    return oss.str();
+}
+
 constexpr auto OUTPUT = "\033[34m[Output]\033[0m";
 
 // ImageFrame::ImageFrame(QVideoFrame&& videoframe, qint64 time)
@@ -10,53 +24,69 @@ constexpr auto OUTPUT = "\033[34m[Output]\033[0m";
 //     time(time)
 // {}
 
-FrameOutput::FrameOutput(Synchronizer * sync, Codec& codec_, MediaParameters* params, qint64 queueSize)
+FrameOutput::FrameOutput(Synchronizer* sync, Codec& codec_, MediaParameters* par, qint64 queueSize)
     :
     sync(sync),
     codec(codec_),
     converter(codec),
-    filters(codec, params->video),
-    videosink(params->videoSink),
+    filters(codec, par->video),
+    videosink(par->videoSink),
+    params(par),
     image_queue(queueSize)
-{}
+{
+    connect(this,&FrameOutput::outputImage,this, &FrameOutput::process_image, Qt::QueuedConnection);
+    connect(params,&MediaParameters::isPausedChanged,this, [this]{if(!params->isPaused) emit outputImage();});
+    if (!params->isPaused)
+        emit outputImage();
+}
 
 FrameOutput::~FrameOutput()
 {
     videosink->setVideoFrame(QVideoFrame());
 }
 
-void FrameOutput::start_output(){
-    while(!abort)
-    {
-        process_image();
-        sync->check_pause();
-    }
-}
-
 void FrameOutput::process_image()
 {
-    Frame frame = image_queue.try_pop();
-    if (!frame)
-        return;
-    copy_frame(frame, current_frame);
-    qint64 frametime = frame->best_effort_timestamp * 1000 * av_q2d(codec.timeBase);
-    QVideoFrame videoframe = filter_and_convert_frame(frame);
-    qint64 delay = frametime - sync->get_time();
-    //qDebug()<<"Delay"<<delay;
-    if (delay>0)
-        QThread::msleep(delay);
-    if(!abort && videosink)
+    while(!image_queue.empty()){
+        Frame frame = image_queue.try_pop();
+        if (!frame)
+            continue;
+        emit requestImage();
+        qint64 cur_time = sync->get_time();
+        qint64 frametime = frame->pts * 1000 * av_q2d(codec.timeBase);
+        qint64 delay = frametime - cur_time;
+        if (delay<0)
+            continue;
+        copy_frame(frame, current_frame);
+        QVideoFrame videoframe = filter_and_convert_frame(frame);
+        delay = frametime - cur_time;
+        if (delay>0)
+            QThread::msleep(delay);
         videosink->setVideoFrame(videoframe);
-    emit imageOutputted();
+        if(params->isPaused)
+            return;
+    }
+    if(!params->isPaused)
+        emit outputImage();
 }
 
 void FrameOutput::process_one_image()
 {
-    Frame frame = image_queue.wait_pop();
-    copy_frame(frame, current_frame);
-    QVideoFrame videoframe = filter_and_convert_frame(frame);
-    videosink->setVideoFrame(videoframe);
-    emit imageOutputted();
+    for(;;){
+        Frame frame = image_queue.wait_pop();
+        if (!frame)
+            continue;
+        emit requestImage();
+        qint64 cur_time = sync->get_time();
+        qint64 frametime = frame->pts * 1000 * av_q2d(codec.timeBase);
+        qint64 delay = frametime - cur_time;
+        if (delay<0)
+            continue;
+        copy_frame(frame, current_frame);
+        QVideoFrame videoframe = filter_and_convert_frame(frame);
+        videosink->setVideoFrame(videoframe);
+        break;
+    }
 }
 
 void FrameOutput::copy_frame(Frame source, Frame destination)
@@ -76,7 +106,7 @@ void FrameOutput::set_filters_on_currentFrame()
     copy_frame(current_frame, frame);
     QVideoFrame videoframe = filter_and_convert_frame(frame);
     videosink->setVideoFrame(videoframe);
-    emit imageOutputted();
+    emit requestImage();
 }
 QVideoFrame FrameOutput::filter_and_convert_frame(Frame frame)
 {
@@ -90,12 +120,12 @@ void FrameOutput::pop_frames_by_time(qint64 time_us)
 {
     for(;;){
         if (image_queue.size()==0)
-            emit imageOutputted();
+            emit requestImage();
         qint64 frame_time = image_queue.front()->best_effort_timestamp * av_q2d(codec.timeBase) * 1'000'000;
         if (frame_time < time_us)
             image_queue.try_pop();
         else
             return;
-        emit imageOutputted();
+        emit requestImage();
     }
 }

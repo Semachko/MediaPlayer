@@ -21,9 +21,12 @@ void AudioOutputer::push_data_to_buffer()
 {
     while(!frame_queue.empty())
     {
-        sync->check_pause();
         Frame frame = frame_queue.try_pop();
         if(!frame)
+            continue;
+        qint64 frametime = frame->best_effort_timestamp * 1000 * av_q2d(codec.timeBase);
+        qint64 delay = frametime - sync->get_time();
+        if(delay<0)
             continue;
         Frame equalized_frame = equalizer.applyEqualizer(frame);
         if (!equalized_frame)
@@ -39,7 +42,6 @@ void AudioOutputer::push_data_to_buffer()
         if (bytesAvailable() >= MIN_BUFFER_SIZE && !params->isPaused)
             emit readyRead();
     }
-
 }
 qint64 AudioOutputer::readData(char *data, qint64 maxlen)
 {

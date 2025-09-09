@@ -117,51 +117,45 @@ void Media::subtruct_5sec()
 
 void Media::seeking_pressed(qreal position)
 {
-    if (!isSeeking && !params->isPaused){
+    if (!isSeekingPressed && !params->isPaused){
         params->setIsPaused(!params->isPaused);
-        isSeeking = true;
+        isSeekingPressed = true;
     }
     int64_t seek_target = format_context->duration * position;
     seek_time(seek_target);
+    is_seeking_processing = false;
 }
 
 void Media::seeking_released()
 {
-    if (isSeeking){
+    if (isSeekingPressed){
         params->setIsPaused(!params->isPaused);
-        isSeeking = false;
+        isSeekingPressed = false;
     }
 }
 
 void Media::seek_time(int64_t seek_target)
 {
     demuxer->mutex.lock();
-    if(audio){
-        std::lock_guard _(audio->mutex);
-        audio->packet_queue.clear();
-        audio->outputer->clear();
-        audio->outputer->reset();
-        audio->decoder.clear_decoder();
-    }
-    if(video){
-        std::lock_guard _(video->mutex);
-        video->packet_queue.clear();
-        video->output->image_queue.clear();
-        video->decoder.clear_decoder();
-    }
-    demuxer->seek(seek_target);
+    if(audio)
+        audio->clear();
+    if(video)
+        video->clear();
+    sync->set_time(seek_target/1000);
     params->setCurrentTime(seek_target/1000);
-    sync->set_time(1000); /////////////////
+    demuxer->seek(seek_target);
+    QMetaObject::invokeMethod(demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
     demuxer->mutex.unlock();
 
-    if (audio){
-        audio->outputer->pop_frames_by_time(seek_target);
+    if(video){
+        qreal fps = av_q2d(video->codec.stream->avg_frame_rate);
+        qreal fpus = 1'000'000.0 / fps;                                         // frames per microsecond
+        qint64 total_dur = video->codec.stream->duration * av_q2d(video->codec.timeBase) * 1'000'000.0;
+        qint64 time_until_end = total_dur - seek_target;
+        qint64 diff = time_until_end - fpus * 1.5;
+        if (diff>0)
+            video->output->process_one_image();
     }
-    if (video){
-        video->output->pop_frames_by_time(seek_target);
-        video->output->process_one_image();
-    }
-    sync->set_time(seek_target/1000);
 }
 
 void Media::delete_members()

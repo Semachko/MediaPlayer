@@ -1,4 +1,5 @@
-﻿fix ui resizing
-find out how works volume levels in samples
+﻿audio delay problem
 add subtitles
+find out how works volume levels in samples
+fix ui resizing
 add stretching

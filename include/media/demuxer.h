@@ -24,6 +24,10 @@ public:
     void demuxe_packets();
     bool push_packet_to_queues();
     void seek(int64_t time);
+    void find_keyframes_to_time(qint64 time);
+private:
+    bool is_valid_packet(int result);
+
     ///////////////////////////////////////////////
 public:
     std::unordered_map<int,IMediaContext*> medias;

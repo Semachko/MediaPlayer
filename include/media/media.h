@@ -59,6 +59,7 @@ public:
     VideoContext* video = nullptr;
     VideoPreview* preview = nullptr;
     Demuxer* demuxer;
+    std::atomic<bool> is_seeking_processing{false};
 private:
     AVFormatContext* format_context = nullptr;
 
@@ -70,7 +71,7 @@ private:
     Synchronizer* sync;
     MediaParameters* params;
     QTimer updateTimer;
-    bool isSeeking = false;
+    bool isSeekingPressed = false;
 };
 
 #endif // MEDIA_H

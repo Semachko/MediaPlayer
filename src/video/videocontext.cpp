@@ -24,15 +24,12 @@ VideoContext::VideoContext(AVStream* stream, Synchronizer* sync, MediaParameters
     outputThread = new QThread();
     output->moveToThread(outputThread);
     outputThread->start();
-    connect(output,&FrameOutput::imageOutputted, this, &VideoContext::process_packet);
-    QMetaObject::invokeMethod(output,&FrameOutput::start_output, Qt::QueuedConnection);
-
+    connect(output,&FrameOutput::requestImage, this, &VideoContext::process_packet);
     connect(this,&VideoContext::newPacketArrived, this, &VideoContext::process_packet);
     connect(this,&IMediaContext::endReached, [this]{decoder.drain_decoder(); emit newPacketArrived();});
 }
 VideoContext::~VideoContext()
 {
-    output->abort = true;
     output->deleteLater();
     outputThread->quit();
     outputThread->wait();
@@ -41,8 +38,10 @@ VideoContext::~VideoContext()
 
 void VideoContext::process_packet()
 {
-    if (buffer_available() <= 0)
+    if (buffer_available() <= 0){
+        //qDebug()<<"Buffer is full, returning";
         return;
+    }
     std::lock_guard _(mutex);
     Packet packet = packet_queue.try_pop();
     if (!decoder.is_drained()){
@@ -55,13 +54,13 @@ void VideoContext::process_packet()
 
 void VideoContext::decode_packet(Packet& packet)
 {
-    qreal packetTime = packet->pts * av_q2d(codec.timeBase);
-    qreal currTime = sync->get_time() / 1000.0;
-    qreal diff = currTime - packetTime;
-    if (diff > 0.15){
-        qDebug()<<"Video packet is lating, skipping:"<<diff<<"sec";
-        return;
-    }
+    // qreal packetTime = packet->dts * av_q2d(codec.timeBase);
+    // qreal currTime = sync->get_time() / 1000.0;
+    // qreal diff = currTime - packetTime;
+    // if (diff > 0.3){
+    //     qDebug()<<"Video packet is lating, skipping:"<<diff<<"sec";
+    //     return;
+    // }
     decoder.decode_packet(packet);
 }
 
@@ -71,6 +70,14 @@ void VideoContext::get_and_output_frames()
     if(queue.empty())
         return;
     output->image_queue.push(std::move(queue));
+}
+
+void VideoContext::clear()
+{
+    std::lock_guard _(mutex);
+    packet_queue.clear();
+    output->image_queue.clear();
+    decoder.clear_decoder();
 }
 
 qint64 VideoContext::buffer_available()

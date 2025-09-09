@@ -28,7 +28,6 @@ public:
 private:
     Media* media;
     QThread* mediaThread;
-    QTimer anti_floodseek_timer;
     MediaParameters* params;
     Playlist playlist;
 };

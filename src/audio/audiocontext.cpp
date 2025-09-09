@@ -103,13 +103,13 @@ void AudioContext::process_packet()
 
 void AudioContext::decode_packet(Packet& packet)
 {
-    qreal packetTime = packet->pts * av_q2d(codec.timeBase);
-    qreal currTime = sync->get_time() / 1000.0;
-    qreal diff = currTime - packetTime;
-    if (diff > 0.15){
-        qDebug()<<"Audio packet is lating, skipping:"<<diff<<"sec";
-        return;
-    }
+    // qreal packetTime = packet->dts * av_q2d(codec.timeBase);
+    // qreal currTime = sync->get_time() / 1000.0;
+    // qreal diff = currTime - packetTime;
+    // if (diff > 0.3){
+    //     qDebug()<<"Audio packet is lating, skipping:"<<diff<<"sec";
+    //     return;
+    // }
     decoder.decode_packet(packet);
     emit outputer->framesPushed();
 }
@@ -127,6 +127,15 @@ qint64 AudioContext::buffer_available()
 {
     qint64 available_bytes = maxBufferSize - outputer->bytesAvailable();
     return available_bytes;
+}
+
+void AudioContext::clear()
+{
+    std::lock_guard _(mutex);
+    packet_queue.clear();
+    outputer->clear();
+    outputer->reset();
+    decoder.clear_decoder();
 }
 
 AVSampleFormat AudioContext::convert_to_AVFormat(QAudioFormat::SampleFormat format)

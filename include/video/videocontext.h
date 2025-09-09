@@ -33,6 +33,7 @@ public:
     qint64 buffer_available() override;
     void decode_packet(Packet& packet);
     void get_and_output_frames();
+    void clear();
 private:
 //////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////
