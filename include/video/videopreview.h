@@ -18,7 +18,7 @@ class VideoPreview : public QObject
 public:
     VideoPreview(MediaParameters* par);
     ~VideoPreview();
-    void update_preview(qint64 timepoint);
+    void update_preview(qreal seconds);
 private:
     int stream_id = -1;
     AVFormatContext* format_context = nullptr;

@@ -4,25 +4,19 @@
 #include <QObject>
 #include <mutex>
 
-#include "sync/clock.h"
+#include "sync/realtimeclock.h"
 #include "media/mediaparameters.h"
 
-class Synchronizer : public QObject
+class Synchronizer
 {
-    Q_OBJECT
 public:
-    Synchronizer(MediaParameters* params);
-
-    void play_or_pause();
-    void check_pause();
-    void set_time(qint64);
-    qint64 get_time();
-public:
-    Clock clock;
+    Synchronizer(IClock* clock_);
+    ~Synchronizer();
+    void set_time(qreal);
+    qreal get_time();
 private:
-    MediaParameters* params;
+    IClock* clock;
     std::mutex timer_mutex;
-    std::condition_variable pauseWait;
 };
 
 

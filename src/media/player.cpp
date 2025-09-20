@@ -26,7 +26,7 @@ void Player::setFile(QUrl filepath){
     params->file->setName(QFileInfo(newFile).fileName());
 }
 
-void Player::shuffleMedia(bool isPlaying){
+void Player::shuffleMedia(){
     if (playlist.isEmpty())
         return;
     QString newFile = playlist.shuffle_playlist();
@@ -34,7 +34,7 @@ void Player::shuffleMedia(bool isPlaying){
     params->file->setName(QFileInfo(newFile).fileName());
 }
 
-void Player::nextMedia(bool isPlaying){
+void Player::nextMedia(){
     if (playlist.isEmpty())
         return;
     QString newFile = playlist.next_file();
@@ -42,7 +42,7 @@ void Player::nextMedia(bool isPlaying){
     params->file->setName(QFileInfo(newFile).fileName());
 }
 
-void Player::prevMedia(bool isPlaying){
+void Player::prevMedia(){
     if (playlist.isEmpty())
         return;
     QString newFile = playlist.prev_file();
@@ -51,10 +51,14 @@ void Player::prevMedia(bool isPlaying){
 }
 
 void Player::add5sec(){
-    emit media->add5sec();
+    bool expected = false;
+    if (media->is_seeking_processing.compare_exchange_strong(expected, true))
+        emit media->add5sec();
 }
 void Player::subtruct5sec(){
-    emit media->subtruct5sec();
+    bool expected = false;
+    if (media->is_seeking_processing.compare_exchange_strong(expected, true))
+        emit media->subtruct5sec();
 }
 void Player::seekingPressed(qreal timepos){
     bool expected = false;

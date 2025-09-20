@@ -48,20 +48,8 @@ void VideoContext::process_packet()
         emit requestPacket();
     }
     if (packet)
-        decode_packet(packet);
+        decoder.decode_packet(packet);
     get_and_output_frames();
-}
-
-void VideoContext::decode_packet(Packet& packet)
-{
-    // qreal packetTime = packet->dts * av_q2d(codec.timeBase);
-    // qreal currTime = sync->get_time() / 1000.0;
-    // qreal diff = currTime - packetTime;
-    // if (diff > 0.3){
-    //     qDebug()<<"Video packet is lating, skipping:"<<diff<<"sec";
-    //     return;
-    // }
-    decoder.decode_packet(packet);
 }
 
 void VideoContext::get_and_output_frames()
@@ -76,8 +64,8 @@ void VideoContext::clear()
 {
     std::lock_guard _(mutex);
     packet_queue.clear();
-    output->image_queue.clear();
     decoder.clear_decoder();
+    output->stop_and_clear();
 }
 
 qint64 VideoContext::buffer_available()

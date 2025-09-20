@@ -1,4 +1,5 @@
-﻿audio delay problem
+﻿problem with seeking audiofiles
+problem with audio on slowing 50% and lower
 add subtitles
 find out how works volume levels in samples
 fix ui resizing

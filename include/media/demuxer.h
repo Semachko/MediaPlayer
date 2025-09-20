@@ -17,7 +17,7 @@ class Demuxer : public QObject
 {
     Q_OBJECT
 public:
-    explicit Demuxer(AVFormatContext* format_context,Synchronizer* sync);
+    explicit Demuxer(AVFormatContext* format_context);
     ~Demuxer();
 
     void add_context(IMediaContext* context);
@@ -34,7 +34,6 @@ public:
     std::mutex mutex;
 private:
     AVFormatContext* format_context;
-    Synchronizer* sync;
     bool end_reached = false;
 };
 

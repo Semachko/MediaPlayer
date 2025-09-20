@@ -12,6 +12,7 @@
 #include "video/filters.h"
 #include "video/imageconverter.h"
 #include "sync/synchronizer.h"
+#include "sync/threadwaiter.h"
 #include "queue.h"
 #include "frame.h"
 
@@ -27,12 +28,13 @@ public:
     void process_one_image();
     void set_filters_on_currentFrame();
     void pop_frames_by_time(qint64 time);
+    void stop_and_clear();
 signals:
     void requestImage();
     void outputImage();
 private:
     void copy_frame(Frame source, Frame destination);
-    QVideoFrame filter_and_convert_frame(Frame frame);
+    QVideoFrame filter_and_convert(Frame frame);
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
 public:
@@ -44,6 +46,7 @@ private:
     Frame current_frame = make_shared_frame();
     std::mutex mutex;
     Synchronizer* sync;
+    ThreadWaiter sleeper;
     QVideoSink* videosink;
     MediaParameters* params;
 };

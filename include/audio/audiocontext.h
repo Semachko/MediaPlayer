@@ -51,16 +51,22 @@ private:
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
 public:
+private:
     QAudioSink* audioSink;
     AudioOutputer* outputer;
     MediaParameters* params;
     QAudioFormat format;
     std::mutex mutex;
-private:
     QThread* outputThread;
+    // SampleConverter* converter;
+    // Equalizer equalizer;
+    SampleFormat outputFormat;
     Synchronizer* sync;
-    qint64 maxBufferSize;
+    qint64 bytes_per_sec;
+    qint64 MAX_BUFFER_SIZE;
+    qreal bufferization_time;
     qreal last_volume;
+
 };
 
 #endif // AUDIOOUTPUTER_H

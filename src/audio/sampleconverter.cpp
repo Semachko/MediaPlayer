@@ -41,17 +41,23 @@ Frame SampleConverter::convert(Frame input)
         input->sample_rate,
         AV_ROUND_UP
     );
+    output->best_effort_timestamp = input->best_effort_timestamp;
     if (av_frame_get_buffer(output.get(), 0) < 0) {
         qDebug() << "Allocating output frame error";
         return output;
     }
-    output->nb_samples = swr_convert(
+    int nb_samples = swr_convert(
         converter_context,
         output->data,
         output->nb_samples,
         (const uint8_t**)input->data,
         input->nb_samples
     );
+    if (nb_samples < 0){
+        qDebug()<<"Error converting frame:"<<nb_samples;
+        return Frame{};
+    }
+    output->nb_samples = nb_samples;
     return output;
 }
 

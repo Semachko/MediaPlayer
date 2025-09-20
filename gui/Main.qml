@@ -17,15 +17,17 @@ Window {
     property real mouseX: 0
     property real mouseY: 0
 
-    function get_time_by_ms(ms)
+    function get_time_by_s(sec)
     {
-        var totalSeconds = Math.floor(ms / 1000);
-        var hours = Math.floor(totalSeconds / 3600);
-        var minutes = Math.floor((totalSeconds % 3600) / 60);
-        var seconds = totalSeconds % 60;
-        return ("0" + hours).slice(-2) + ":" +
-                ("0" + minutes).slice(-2) + ":" +
-                ("0" + seconds).slice(-2);
+        const totalSeconds = Math.floor(sec);
+        const hours   = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        return (
+            ("0" + hours).slice(-2)   + ":" +
+            ("0" + minutes).slice(-2) + ":" +
+            ("0" + seconds).slice(-2)
+        );
     }
 
     Image {
@@ -83,7 +85,7 @@ Window {
             Text{
                 id: current_time
                 Layout.bottomMargin: 3
-                text: root.get_time_by_ms(player.params.currentTime)
+                text: root.get_time_by_s(player.params.currentTime)
                 color: "white"
                 font.pointSize: 15
                 font.bold: true
@@ -98,7 +100,7 @@ Window {
                     target: player.params
                     function onCurrentTimeChanged() {
                         if (!timeslider.pressed)
-                            timeslider.value = 1.0 * player.params.currentTime / player.params.file.globalTime
+                            timeslider.value = player.params.currentTime / player.params.file.globalTime
                     }
                 }
                 onMoved:{
@@ -106,7 +108,7 @@ Window {
                         player.seekingPressed(position)
                         preview.x = position*timeslider.width - preview.width/2
                         var timepoint = player.params.file.globalTime * position
-                        preview.time = get_time_by_ms(timepoint)
+                        preview.time = get_time_by_s(timepoint)
                         player.params.video.reset_videoSink()
                     }
                 }
@@ -124,7 +126,7 @@ Window {
                         preview.x = point.position.x - preview.width/2
                         var spot = point.position.x / parent.width
                         var timepoint = player.params.file.globalTime * spot
-                        preview.time = get_time_by_ms(timepoint)
+                        preview.time = get_time_by_s(timepoint)
                         player.params.video.set_preview(timepoint)
                     }
                 }
@@ -138,7 +140,7 @@ Window {
             Text{
                 id: media_time
                 Layout.bottomMargin: 3
-                text: root.get_time_by_ms(player.params.file.globalTime)
+                text: root.get_time_by_s(player.params.file.globalTime)
                 color: "white"
                 font.pointSize: 15
                 font.bold: true

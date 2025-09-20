@@ -37,6 +37,7 @@ private:
     AVFilterInOut *outputs;
     AVFilterInOut *inputs;
 
+    Codec& codec;
     MediaParameters* params;
     std::mutex mutex;
 };

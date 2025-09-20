@@ -15,32 +15,36 @@
 class AudioOutputer : public QIODevice {
     Q_OBJECT
 public:
-    explicit AudioOutputer (Synchronizer* sync, Codec& codec, SampleFormat format, MediaParameters* params);
+    explicit AudioOutputer (Synchronizer* sync, Codec& codec, SampleFormat format, MediaParameters* params, QAudioSink* sink);
 
     void clear();
     qint64 bytesAvailable() const override;
-    void pop_frames_by_time(qint64 time);
+    void push_frame(Frame frame);
 protected:
-    void push_data_to_buffer();
     qint64 readData(char* data, qint64 maxlen) override;
     qint64 writeData(const char *data, qint64 maxSize) override;
+    Frame equalizer_and_convert(Frame frame);
 signals:
-    void framesReaded();
+    void requestFrame();
     void framesPushed();
 ///////////////////////////////////////////////
 ///////////////////////////////////////////////
 public:
-    Queue<Frame> frame_queue{75};
     const qint64 MIN_BUFFER_SIZE = 4092;
+    std::atomic<qint64> buffer_size = 0;
 private:
-    Codec& codec;
+    QAudioSink* audiosink;
+    mutable std::mutex mutex;
+    qint64 bytes_per_second;
+    QByteArray reading_buffer;
+
     Synchronizer* sync;
     MediaParameters* params;
-    SampleConverter converter;
-    SampleFormat format;
+    Codec& codec;
+    SampleFormat out_format;
     Equalizer equalizer;
-    mutable std::mutex buff_mutex;
-    QByteArray buffer;
+    SampleConverter converter;
+    Queue<Frame> frame_queue;
 };
 
 #endif // AUDIOIODEVICE_H

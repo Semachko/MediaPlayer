@@ -47,21 +47,22 @@ FrameOutput::~FrameOutput()
 
 void FrameOutput::process_image()
 {
+    std::lock_guard _(mutex);
     while(!image_queue.empty()){
         Frame frame = image_queue.try_pop();
         if (!frame)
             continue;
         emit requestImage();
-        qint64 cur_time = sync->get_time();
-        qint64 frametime = frame->pts * 1000 * av_q2d(codec.timeBase);
-        qint64 delay = frametime - cur_time;
+        qreal currtime = sync->get_time();
+        qreal frametime = frame->best_effort_timestamp * av_q2d(codec.timeBase);
+        qreal delay = frametime - currtime;
         if (delay<0)
             continue;
         copy_frame(frame, current_frame);
-        QVideoFrame videoframe = filter_and_convert_frame(frame);
-        delay = frametime - cur_time;
+        QVideoFrame videoframe = filter_and_convert(frame);
+        delay = frametime - sync->get_time();
         if (delay>0)
-            QThread::msleep(delay);
+            sleeper.wait(delay);
         videosink->setVideoFrame(videoframe);
         if(params->isPaused)
             return;
@@ -77,13 +78,13 @@ void FrameOutput::process_one_image()
         if (!frame)
             continue;
         emit requestImage();
-        qint64 cur_time = sync->get_time();
-        qint64 frametime = frame->pts * 1000 * av_q2d(codec.timeBase);
-        qint64 delay = frametime - cur_time;
+        qreal currtime = sync->get_time();
+        qreal frametime = frame->best_effort_timestamp * av_q2d(codec.timeBase);
+        qreal delay = frametime - currtime;
         if (delay<0)
             continue;
         copy_frame(frame, current_frame);
-        QVideoFrame videoframe = filter_and_convert_frame(frame);
+        QVideoFrame videoframe = filter_and_convert(frame);
         videosink->setVideoFrame(videoframe);
         break;
     }
@@ -91,7 +92,6 @@ void FrameOutput::process_one_image()
 
 void FrameOutput::copy_frame(Frame source, Frame destination)
 {
-    std::lock_guard _(mutex);
     av_frame_unref(destination.get());
     destination->format = source->format;
     destination->width  = source->width;
@@ -104,11 +104,11 @@ void FrameOutput::set_filters_on_currentFrame()
 {
     Frame frame = make_shared_frame();
     copy_frame(current_frame, frame);
-    QVideoFrame videoframe = filter_and_convert_frame(frame);
+    QVideoFrame videoframe = filter_and_convert(frame);
     videosink->setVideoFrame(videoframe);
     emit requestImage();
 }
-QVideoFrame FrameOutput::filter_and_convert_frame(Frame frame)
+QVideoFrame FrameOutput::filter_and_convert(Frame frame)
 {
     Frame filtered_frame = filters.applyFilters(frame);
     Frame output_frame = converter.convert(filtered_frame);
@@ -129,3 +129,12 @@ void FrameOutput::pop_frames_by_time(qint64 time_us)
         emit requestImage();
     }
 }
+
+void FrameOutput::stop_and_clear()
+{
+    image_queue.clear();
+    sleeper.wake();
+    std::lock_guard _(mutex);
+}
+
+

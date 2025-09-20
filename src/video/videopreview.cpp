@@ -26,10 +26,10 @@ VideoPreview::~VideoPreview()
     avformat_close_input(&format_context);
 }
 
-void VideoPreview::update_preview(qint64 timepoint)
+void VideoPreview::update_preview(qreal seconds)
 {
     decoder->clear_decoder();
-    int64_t ts = timepoint / 1000.0 / av_q2d(codec->timeBase);
+    qint64 ts = seconds / av_q2d(codec->timeBase);
     av_seek_frame(format_context, codec->stream->index, ts, AVSEEK_FLAG_BACKWARD);
     for(;;)
     {
@@ -44,8 +44,8 @@ void VideoPreview::update_preview(qint64 timepoint)
         while(!queue.empty())
         {
             Frame frame = queue.dequeue();
-            qint64 frametime = frame->best_effort_timestamp * 1000 * av_q2d(codec->timeBase);
-            if (frametime < timepoint)
+            qreal frametime = frame->best_effort_timestamp * av_q2d(codec->timeBase);
+            if (frametime < seconds)
                 continue;
             Frame output_frame = converter->convert(frame);
             QImage image(output_frame->data[0], codec->context->width, codec->context->height, output_frame->linesize[0], QImage::Format_RGB32);

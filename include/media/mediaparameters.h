@@ -42,10 +42,10 @@ public:
     Q_INVOKABLE void set_saturation(qreal val) {saturation = val * 2.0; emit paramsChanged();}
     Q_INVOKABLE void set_videoSink(QVideoSink* sink) {previewSink = sink;}
     Q_INVOKABLE void reset_videoSink(){previewSink->setVideoFrame(QVideoFrame());}
-    Q_INVOKABLE void set_preview(qint64 timepoint) {
+    Q_INVOKABLE void set_preview(qreal seconds) {
         bool expected = false;
         if (is_preview_processing.compare_exchange_strong(expected, true))
-            emit setPreview(timepoint);
+            emit setPreview(seconds);
     }
 
     qreal brightness = 0.0;
@@ -64,15 +64,15 @@ public:
     explicit FileParameters(QObject *parent = nullptr) : QObject(parent) {}
     Q_PROPERTY(QString path READ getPath WRITE setPath NOTIFY pathChanged)
     Q_PROPERTY(QString name READ getName WRITE setName NOTIFY nameChanged)
-    Q_PROPERTY(qint64 globalTime READ getGlobalTime WRITE setGlobalTime NOTIFY globalTimeChanged)
+    Q_PROPERTY(qreal globalTime READ getGlobalTime WRITE setGlobalTime NOTIFY globalTimeChanged)
     Q_PROPERTY(qreal timeStep READ getTimeStep WRITE setTimeStep NOTIFY timeStepChanged)
     QString getPath() const {return path;};
     QString getName() const {return name;};
-    qint64 getGlobalTime() const {return globalTime;};
+    qreal getGlobalTime() const {return globalTime;};
     qreal getTimeStep() const {return timeStep;};
     void setPath(const QString &newPath) {path = newPath; emit pathChanged();};
     void setName(const QString &newName) {name = newName; emit nameChanged();};
-    void setGlobalTime(const qint64 newTime) {globalTime = newTime; emit globalTimeChanged();};
+    void setGlobalTime(const qreal newTime) {globalTime = newTime; emit globalTimeChanged();};
     void setTimeStep(const qreal newStep) {timeStep = newStep; emit timeStepChanged();};
 signals:
     void pathChanged();
@@ -82,7 +82,7 @@ signals:
 public:
     QString path;
     QString name = "CHOOSE FILE";
-    std::atomic<qint64> globalTime;
+    std::atomic<qreal> globalTime;
     std::atomic<qreal> timeStep = 0.001;
 };
 
@@ -104,19 +104,19 @@ public:
 
 
     Q_PROPERTY(QVideoSink* videoSink READ getVideoSink WRITE setVideoSink)
-    Q_PROPERTY(qint64 currentTime READ getCurrentTime WRITE setCurrentTime NOTIFY currentTimeChanged)
+    Q_PROPERTY(qreal currentTime READ getCurrentTime WRITE setCurrentTime NOTIFY currentTimeChanged)
     Q_PROPERTY(qreal speed READ getSpeed WRITE setSpeed NOTIFY speedChanged)
     Q_PROPERTY(bool isPaused READ getIsPaused WRITE setIsPaused NOTIFY isPausedChanged)
     Q_PROPERTY(bool isRepeating READ getIsRepeating WRITE setIsRepeating NOTIFY isRepeatingChanged)
 
     QVideoSink* getVideoSink() const { return videoSink; }
-    qint64 getCurrentTime() const { return currentTime; }
+    qreal getCurrentTime() const { return currentTime; }
     qreal getSpeed() const { return speed; }
     bool getIsPaused() const { return isPaused; }
     bool getIsRepeating() const { return isRepeating; }
 
     void setVideoSink(QVideoSink* v) { videoSink = v; }
-    void setCurrentTime(qint64 v) { currentTime = v; emit currentTimeChanged();}
+    void setCurrentTime(qreal v) { currentTime = v; emit currentTimeChanged();}
     void setSpeed(qreal v) { speed = v; emit speedChanged();}
     void setIsPaused(bool v) { isPaused = v; emit isPausedChanged(); }
     void setIsRepeating(bool v) { isRepeating = v; emit isRepeatingChanged();}
@@ -128,7 +128,7 @@ signals:
     void isRepeatingChanged();
 
 public:
-    std::atomic<qint64> currentTime = 0;
+    std::atomic<qreal> currentTime = 0;
     std::atomic<qreal> speed = 1.0;
     std::atomic<bool> isPaused = true;
     std::atomic<bool> isRepeating = false;

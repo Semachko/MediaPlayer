@@ -9,7 +9,7 @@ template<typename T>
 class Queue
 {
 public:
-    Queue(qint64 size) : max_size(size){}
+    Queue(qint64 size = 1) : max_size(size){}
     Queue(const Queue&) = delete;
     Queue& operator=(const Queue&) = delete;
 

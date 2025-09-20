@@ -5,10 +5,9 @@
 
 constexpr auto PACKET = "\033[33m[Packet]\033[0m";
 
-Demuxer::Demuxer(AVFormatContext* format_context, Synchronizer *sync)
+Demuxer::Demuxer(AVFormatContext* format_context)
     :
-    format_context(format_context),
-    sync(sync)
+    format_context(format_context)
 {
 }
 
@@ -19,7 +18,6 @@ void Demuxer::add_context(IMediaContext* context)
 
 void Demuxer::demuxe_packets()
 {
-    //sync->check_pause();
     for (auto& [_stream, context] : medias)
         while (!context->packet_queue.is_full()){
             std::lock_guard _(mutex);
