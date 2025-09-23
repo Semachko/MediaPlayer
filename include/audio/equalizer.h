@@ -25,7 +25,6 @@ public:
     explicit Equalizer(Codec& codec, MediaParameters* params_);
     ~Equalizer();
     Frame applyEqualizer(Frame frame);
-private:
     void update_equalizer();
 private:
     AVFilterGraph* filter_graph = nullptr;

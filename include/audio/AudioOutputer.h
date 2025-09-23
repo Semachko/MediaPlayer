@@ -10,12 +10,13 @@
 #include "media/mediaparameters.h"
 #include "audio/equalizer.h"
 #include "audio/sampleconverter.h"
-#include "sync/synchronizer.h"
+#include "sync/clock.h"
 
 class AudioOutputer : public QIODevice {
     Q_OBJECT
 public:
-    explicit AudioOutputer (Synchronizer* sync, Codec& codec, SampleFormat format, MediaParameters* params, QAudioSink* sink);
+    explicit AudioOutputer (Clock* clock, Codec& codec, SampleFormat format, MediaParameters* params, QAudioSink* sink);
+    ~AudioOutputer();
 
     void clear();
     qint64 bytesAvailable() const override;
@@ -38,7 +39,7 @@ private:
     qint64 bytes_per_second;
     QByteArray reading_buffer;
 
-    Synchronizer* sync;
+    Clock* clock;
     MediaParameters* params;
     Codec& codec;
     SampleFormat out_format;

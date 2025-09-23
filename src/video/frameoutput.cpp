@@ -24,9 +24,9 @@ constexpr auto OUTPUT = "\033[34m[Output]\033[0m";
 //     time(time)
 // {}
 
-FrameOutput::FrameOutput(Synchronizer* sync, Codec& codec_, MediaParameters* par, qint64 queueSize)
+FrameOutput::FrameOutput(Clock* sync, Codec& codec_, MediaParameters* par, qint64 queueSize)
     :
-    sync(sync),
+    clock(sync),
     codec(codec_),
     converter(codec),
     filters(codec, par->video),
@@ -53,14 +53,14 @@ void FrameOutput::process_image()
         if (!frame)
             continue;
         emit requestImage();
-        qreal currtime = sync->get_time();
+        qreal currtime = clock->get_time();
         qreal frametime = frame->best_effort_timestamp * av_q2d(codec.timeBase);
         qreal delay = frametime - currtime;
         if (delay<0)
             continue;
         copy_frame(frame, current_frame);
         QVideoFrame videoframe = filter_and_convert(frame);
-        delay = frametime - sync->get_time();
+        delay = frametime - clock->get_time();
         if (delay>0)
             sleeper.wait(delay);
         videosink->setVideoFrame(videoframe);
@@ -78,7 +78,7 @@ void FrameOutput::process_one_image()
         if (!frame)
             continue;
         emit requestImage();
-        qreal currtime = sync->get_time();
+        qreal currtime = clock->get_time();
         qreal frametime = frame->best_effort_timestamp * av_q2d(codec.timeBase);
         qreal delay = frametime - currtime;
         if (delay<0)

@@ -24,7 +24,7 @@ extern "C" {
 #include "media/codec.h"
 #include "media/imediacontext.h"
 #include "audio/audiooutputer.h"
-#include "sync/synchronizer.h"
+#include "sync/clock.h"
 #include "audio/equalizer.h"
 #include "audio/sampleconverter.h"
 #include "queue.h"
@@ -34,7 +34,7 @@ class AudioContext : public IMediaContext
 {
 //Q_OBJECT
 public:
-    AudioContext(AVStream* stream,  Synchronizer* sync, MediaParameters* params, qreal bufferization_time);
+    AudioContext(AVStream* stream,  Clock* clock, MediaParameters* params, qreal bufferization_time);
     ~AudioContext();
 
     void process_packet() override;
@@ -61,7 +61,7 @@ private:
     // SampleConverter* converter;
     // Equalizer equalizer;
     SampleFormat outputFormat;
-    Synchronizer* sync;
+    Clock* clock;
     qint64 bytes_per_sec;
     qint64 MAX_BUFFER_SIZE;
     qreal bufferization_time;

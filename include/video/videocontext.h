@@ -17,7 +17,7 @@ extern "C" {
 #include "media/decoder.h"
 #include "media/imediacontext.h"
 #include "media/mediaparameters.h"
-#include "sync/synchronizer.h"
+#include "sync/clock.h"
 #include "video/frameoutput.h"
 #include "video/filters.h"
 #include "video/imageconverter.h"
@@ -26,7 +26,7 @@ class VideoContext : public IMediaContext
 {
 //Q_OBJECT
 public:
-    VideoContext(AVStream* stream, Synchronizer* sync, MediaParameters* params, qreal bufferization_time);
+    VideoContext(AVStream* stream, Clock* sync, MediaParameters* params, qreal bufferization_time);
     ~VideoContext();
 
     void process_packet() override;
@@ -42,7 +42,7 @@ public:
     FrameOutput* output;
 private:
     QThread* outputThread;
-    Synchronizer* sync;
+    Clock* clock;
     qint64 maxBufferSize;
 };
 

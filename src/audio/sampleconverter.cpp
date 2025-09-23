@@ -106,4 +106,9 @@ Frame SampleConverter::flush()
     return output;
 }
 
+void SampleConverter::clear()
+{
+    swr_convert(converter_context, nullptr, 0, nullptr, 0);
+}
+
 

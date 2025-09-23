@@ -6,8 +6,6 @@
 
 #include "media/media.h"
 #include "media/codec.h"
-#include "sync/audioclock.h"
-#include "sync/realtimeclock.h"
 
 Media::Media(MediaParameters* parameters)
     : params(parameters)
@@ -27,6 +25,7 @@ void Media::set_file()
     avformat_find_stream_info(format_context, nullptr);
     params->file->setGlobalTime(format_context->duration/1'000'000.0);
 
+    clock = new Clock(params);
     demuxer = new Demuxer(format_context);
     demuxerThread = new QThread();
     demuxer->moveToThread(demuxerThread);
@@ -35,20 +34,17 @@ void Media::set_file()
     int stream_id = -1;
     stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
     if (stream_id >= 0){
-        sync = new Synchronizer(new AudioClock);
-        audio = new AudioContext(format_context->streams[stream_id], sync, params, bufferization_time);
+        audio = new AudioContext(format_context->streams[stream_id], clock, params, bufferization_time);
         audioThread = new QThread();
         audio->moveToThread(audioThread);
         audioThread->start();
         demuxer->add_context(audio);
         connect(audio,&AudioContext::requestPacket,demuxer,&Demuxer::demuxe_packets);
     }
-    else
-        sync = new Synchronizer(new RealTimeClock(params));
 
     stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     if (stream_id >= 0){
-        video = new VideoContext(format_context->streams[stream_id], sync, params, bufferization_time);
+        video = new VideoContext(format_context->streams[stream_id], clock, params, bufferization_time);
         videoThread = new QThread();
         video->moveToThread(videoThread);
         videoThread->start();
@@ -71,7 +67,7 @@ void Media::set_file()
     }
 
     connect(&updateTimer, &QTimer::timeout, this, [this]() {
-        qreal currtime = sync->get_time();
+        qreal currtime = clock->get_time();
         params->setCurrentTime(currtime);
     });
     updateTimer.setInterval(100);
@@ -98,7 +94,7 @@ void Media::resume_pause_timer()
 
 void Media::add_5sec()
 {
-    qint64 seek_target = AV_TIME_BASE * (sync->get_time() + 5.0); // +5 sec
+    qint64 seek_target = AV_TIME_BASE * (clock->get_time() + 5.0); // +5 sec
     if (seek_target > format_context->duration)
         seek_target = format_context->duration;
     seek_time(seek_target);
@@ -106,7 +102,7 @@ void Media::add_5sec()
 
 void Media::subtruct_5sec()
 {
-    qint64 seek_target = AV_TIME_BASE * (sync->get_time() - 5.0); // -5 sec
+    qint64 seek_target = AV_TIME_BASE * (clock->get_time() - 5.0); // -5 sec
     if (seek_target < 0)
         seek_target = 0;
     seek_time(seek_target);
@@ -138,7 +134,7 @@ void Media::seek_time(qint64 seek_target_us)
         audio->clear();
     if(video)
         video->clear();
-    sync->set_time(seek_target_s);
+    clock->set_time(seek_target_s);
     params->setCurrentTime(seek_target_s);
     demuxer->seek(seek_target_us);
     QMetaObject::invokeMethod(demuxer,&Demuxer::demuxe_packets, Qt::QueuedConnection);
@@ -189,5 +185,5 @@ void Media::delete_members()
     }
 
     avformat_close_input(&format_context);
-    delete sync;
+    delete clock;
 }

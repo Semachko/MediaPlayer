@@ -11,7 +11,7 @@
 #include "media/mediaparameters.h"
 #include "video/filters.h"
 #include "video/imageconverter.h"
-#include "sync/synchronizer.h"
+#include "sync/clock.h"
 #include "sync/threadwaiter.h"
 #include "queue.h"
 #include "frame.h"
@@ -21,7 +21,7 @@ class FrameOutput: public QObject
 {
     Q_OBJECT
 public:
-    FrameOutput(Synchronizer*, Codec&, MediaParameters*, qint64);
+    FrameOutput(Clock*, Codec&, MediaParameters*, qint64);
     ~FrameOutput();
 
     void process_image();
@@ -45,7 +45,7 @@ private:
     ImageConverter converter;
     Frame current_frame = make_shared_frame();
     std::mutex mutex;
-    Synchronizer* sync;
+    Clock* clock;
     ThreadWaiter sleeper;
     QVideoSink* videosink;
     MediaParameters* params;

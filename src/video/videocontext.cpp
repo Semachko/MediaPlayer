@@ -11,16 +11,16 @@
 constexpr auto DECODING = "\033[31m[Decoding]\033[0m";
 constexpr auto IMAGE = "\033[35m[Image]\033[0m";
 
-VideoContext::VideoContext(AVStream* stream, Synchronizer* sync, MediaParameters* params, qreal bufferization_time)
+VideoContext::VideoContext(AVStream* stream, Clock* clock_, MediaParameters* params, qreal bufferization_time)
     :
     IMediaContext(stream, 10),
     decoder(codec),
-    sync(sync)
+    clock(clock_)
 {
     qreal fps = av_q2d(codec.stream->avg_frame_rate);
     maxBufferSize = fps * bufferization_time;
 
-    output = new FrameOutput(sync, codec, params, maxBufferSize);
+    output = new FrameOutput(clock, codec, params, maxBufferSize);
     outputThread = new QThread();
     output->moveToThread(outputThread);
     outputThread->start();

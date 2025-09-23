@@ -4,7 +4,7 @@
 
 constexpr auto OUTPUT = "\033[34m[Output]\033[0m";
 
-AudioOutputer::AudioOutputer(Synchronizer* sync_, Codec& codec_, SampleFormat format_, MediaParameters* params_, QAudioSink* sink)
+AudioOutputer::AudioOutputer(Clock* clock_, Codec& codec_, SampleFormat format_, MediaParameters* params_, QAudioSink* sink)
 
     : QIODevice(),
     equalizer(codec, params),
@@ -12,12 +12,16 @@ AudioOutputer::AudioOutputer(Synchronizer* sync_, Codec& codec_, SampleFormat fo
     out_format(format_),
     params(params_),
     codec(codec_),
-    sync(sync_),
+    clock(clock_),
     audiosink(sink)
-    //buffer(sync_, codec_, format_)
 {
     open(QIODevice::ReadOnly);
     bytes_per_second = out_format.layout.nb_channels * out_format.sample_rate * av_get_bytes_per_sample((AVSampleFormat)out_format.format);
+}
+
+AudioOutputer::~AudioOutputer()
+{
+    clear();
 }
 
 void AudioOutputer::push_frame(Frame frame)
@@ -38,6 +42,7 @@ qint64 AudioOutputer::readData(char *data, qint64 maxlen)
         int len = std::min(reading_buffer.size(), maxlen);
         memcpy(data, reading_buffer.constData(), len);
         reading_buffer.remove(0, len);
+        emit requestFrame();
         return len;
     }
     Frame frame = frame_queue.try_pop();
@@ -56,7 +61,7 @@ qint64 AudioOutputer::readData(char *data, qint64 maxlen)
         memcpy(data, reading_buffer.constData(), len);
         reading_buffer.remove(0, len);
         qreal frametime = processed_frame->best_effort_timestamp * av_q2d(codec.timeBase);
-        sync->set_time(frametime);
+        clock->set_time(frametime);
         return len;
     }
     return 0;
@@ -83,6 +88,8 @@ void AudioOutputer::clear()
     std::lock_guard _(mutex);
     reading_buffer.clear();
     frame_queue.clear();
+    equalizer.update_equalizer();
+    converter.clear();
     buffer_size = 0;
 }
 qint64 AudioOutputer::writeData(const char *data, qint64 maxSize)

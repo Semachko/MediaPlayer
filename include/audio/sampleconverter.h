@@ -28,6 +28,7 @@ public:
 
     Frame convert(Frame input);
     Frame flush();
+    void clear();
 private:
     SwrContext* converter_context;
     SampleFormat output_format;

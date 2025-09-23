@@ -40,7 +40,7 @@ bool Demuxer::push_packet_to_queues()
     return true;
 }
 
-void Demuxer::seek(int64_t time)
+void Demuxer::seek(qint64 time)
 {
     end_reached = false;
     av_seek_frame(format_context, -1, time, AVSEEK_FLAG_BACKWARD);

@@ -21,9 +21,8 @@ extern "C" {
 #include "video/videocontext.h"
 #include "video/videopreview.h"
 #include "audio/audiocontext.h"
+#include "sync/clock.h"
 #include "media/demuxer.h"
-#include "sync/realtimeclock.h"
-#include "sync/synchronizer.h"
 #include "media/mediaparameters.h"
 
 class Media : public QObject
@@ -61,7 +60,7 @@ private:
     VideoContext* video = nullptr;
     VideoPreview* preview = nullptr;
     Demuxer* demuxer = nullptr;
-    Synchronizer* sync = nullptr;
+    Clock* clock = nullptr;
 
     AVFormatContext* format_context = nullptr;
 
