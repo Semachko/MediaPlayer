@@ -316,7 +316,7 @@ Window {
                         implicitHeight: textItem.implicitHeight
                         Text{
                             id: textItem
-                            text: speedslider.value+"x"
+                            text: speedslider.value.toFixed(2) + "x"
                             color: "white"
                             font.pointSize: 20
                             font.bold: true
@@ -324,11 +324,14 @@ Window {
                         }
                     }
                     SpeedSlider{
+                        property real prev: player.params.speed
                         id: speedslider
                         height: 230
                         Layout.fillWidth: true
                         onMoved:{
-                            player.params.speed = speedslider.value
+                            if (prev !== speedslider.value)
+                                player.params.speed = speedslider.value
+                            prev = speedslider.value
                         }
                     }
                 }

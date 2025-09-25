@@ -31,6 +31,11 @@ AudioContext::AudioContext(AVStream* stream,  Clock* clock_, MediaParameters* pa
     av_channel_layout_default(&outlayout, format.channelCount());
     outputFormat = SampleFormat{convert_to_AVFormat(format.sampleFormat()),format.sampleRate(),format.bytesPerSample(),outlayout};
 
+    qDebug()<<"Audio sample rate:"<< codec.parameters->sample_rate;
+    qDebug()<<"Audio sample format:"<<av_get_sample_fmt_name(static_cast<AVSampleFormat>(codec.parameters->format));
+    qDebug()<<"Audio channels:"<< codec.parameters->ch_layout.nb_channels;
+    qDebug()<<"Audio bitrate:"<<codec.parameters->bit_rate;
+
     // Getting MAX SIZE of audio output buffer
     bytes_per_sec = outputFormat.layout.nb_channels * outputFormat.sample_rate * av_get_bytes_per_sample((AVSampleFormat)outputFormat.format);
     MAX_BUFFER_SIZE = bytes_per_sec * bufferization_time;

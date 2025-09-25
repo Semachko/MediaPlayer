@@ -21,8 +21,6 @@ Equalizer::Equalizer(Codec& codec_, MediaParameters* params_)
 Frame Equalizer::applyEqualizer(Frame frame)
 {
     std::lock_guard _(mutex);
-    // int best_effort_timestamp = frame->best_effort_timestamp;
-    // int pts = frame->pts;
     int ret = av_buffersrc_add_frame(buffersrc_ctx, frame.get());
     if (ret < 0) {
         qDebug() << "av_buffersrc_add_frame error:" << ret;
@@ -34,10 +32,6 @@ Frame Equalizer::applyEqualizer(Frame frame)
         qDebug() << "av_buffersink_get_frame error:" << ret;
         return nullptr;
     }
-    // qreal timestamp_diff = (equalized_frame->best_effort_timestamp - best_effort_timestamp) * av_q2d(codec.timeBase);
-    // qreal pts_diff = (equalized_frame->pts - pts) * av_q2d(codec.timeBase);
-    // qDebug()<<"timestamp_diff:"<<timestamp_diff;
-    // qDebug()<<"pts_diff:"<<pts_diff;
     return equalized_frame;
 }
 

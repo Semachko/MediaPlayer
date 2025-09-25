@@ -1,6 +1,7 @@
 ﻿#include "video/frameoutput.h"
 #include <QDebug>
 #include <QThread>
+#include <QMediaMetaData>
 
 #include <chrono>
 std::string get_cur_time()
@@ -42,6 +43,7 @@ FrameOutput::FrameOutput(Clock* sync, Codec& codec_, MediaParameters* par, qint6
 
 FrameOutput::~FrameOutput()
 {
+    QMediaMetaData data;
     videosink->setVideoFrame(QVideoFrame());
 }
 

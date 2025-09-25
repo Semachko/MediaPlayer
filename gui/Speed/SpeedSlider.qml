@@ -8,7 +8,7 @@ Slider {
     from: 0.5
     to: 2.0
     value: 1.0
-    stepSize: 0.25
+    stepSize: 0.05
     snapMode: Slider.SnapAlways
     orientation: Qt.Vertical
 

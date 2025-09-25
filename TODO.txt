@@ -1,6 +1,5 @@
-﻿problem with seeking audiofiles
-problem with audio on slowing 50% and lower
-add subtitles
-find out how works volume levels in samples
+﻿add subtitles
+add hardware decoding
+
 fix ui resizing
 add stretching
