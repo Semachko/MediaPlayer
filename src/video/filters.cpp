@@ -1,7 +1,7 @@
 ﻿#include "video/filters.h"
 #include <QDebug>
 
-Filters::Filters(Codec& codec, VideoParameters* params_)
+Filters::Filters(const Codec& codec, VideoParameters* params_)
     : params(params_)
 {
     //av_log_set_level(AV_LOG_ERROR);

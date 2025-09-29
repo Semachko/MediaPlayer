@@ -5,10 +5,11 @@ Button {
     property string label
     property url iconSRC
     id: button
-    implicitWidth: 200
-    height: 50
     checkable: true
+    implicitWidth: 265
+    implicitHeight: 50
     contentItem: Text {
+        id: txt
         verticalAlignment: Text.AlignVCenter
         leftPadding: 50
         bottomPadding: 3
@@ -21,12 +22,13 @@ Button {
             id: rect
             anchors.fill: parent
             radius: 5
-            color: button.hovered ? "#9D9D9D" : checked ? "#4A4A4A" : "transparent"
+            color: button.hovered ? "#9D9D9D" : "transparent"
             opacity: 0.5
             border.width: button.pressed ? 3 : 0
             border.color: "white"
         }
         Image {
+            id: iconImg
             scale: 0.8
             anchors.verticalCenter: parent.verticalCenter
             anchors.left: parent.left
@@ -34,5 +36,14 @@ Button {
             source: button.iconSRC
             fillMode: Image.PreserveAspectFit
         }
+    }
+    Switch {
+        id: powerSwitch
+        visible: button.checkable
+        anchors.right: parent.right
+        anchors.verticalCenter: parent.verticalCenter
+        scale: parent.height/height * 0.7
+        checked: false
+        onClicked: button.checked = powerSwitch.checked
     }
 }

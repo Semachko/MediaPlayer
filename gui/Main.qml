@@ -36,9 +36,6 @@ Window {
         scale: 2.5
         source: "qrc:/resources/icons/BackGroundLogo.svg"
     }
-    Component.onCompleted: {
-        player.videoSink = videoOutput.videoSink
-    }
     Item {
         id: video
         width: parent.width
@@ -187,7 +184,9 @@ Window {
                 onEqualizerClicked: equalizerwindow.visible = true
                 onRotateClicked: videoOutput.rotation += 90
                 onShuffleClicked: player.shuffleMedia(playbutton.checked)
-                onRepeatClicked: player.params.isRepeating = toolsmenu.isRepeating
+                onIsRepeatingChanged: player.params.isRepeating = toolsmenu.isRepeating
+                //onIsSubtitlesChanged:
+                onSubtitlesClicked: subtitleswindow.visible = true
                 Shortcut {
                     sequence: "E"
                     onActivated: equalizerwindow.visible = !equalizerwindow.visible
@@ -210,7 +209,7 @@ Window {
                 id: changemediabtnleft
                 scale: -0.6
                 Layout.fillWidth: true
-                onClicked: player.prevMedia(playbutton.checked)
+                onClicked: player.prevMedia()
                 Shortcut {
                     sequence: "ctrl+left"
                     onActivated: changemediabtnleft.click()
@@ -276,7 +275,7 @@ Window {
                 id: changemediabtnright
                 scale: 0.6
                 Layout.fillWidth: true
-                onClicked: player.nextMedia(playbutton.checked)
+                onClicked: player.nextMedia()
                 Shortcut {
                     sequence: "ctrl+right"
                     onActivated: changemediabtnright.click()
@@ -310,7 +309,7 @@ Window {
                     anchors.bottom: speedbutton.top
                     anchors.bottomMargin: 5
                     anchors.horizontalCenter: speedbutton.horizontalCenter
-                    width: speedbutton.width*0.4
+                    width: speedbutton.width*0.35
                     Item{
                         Layout.fillWidth: true
                         implicitHeight: textItem.implicitHeight
@@ -318,7 +317,7 @@ Window {
                             id: textItem
                             text: speedslider.value.toFixed(2) + "x"
                             color: "white"
-                            font.pointSize: 20
+                            font.pointSize: 19
                             font.bold: true
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
@@ -326,7 +325,7 @@ Window {
                     SpeedSlider{
                         property real prev: player.params.speed
                         id: speedslider
-                        height: 230
+                        height: 200
                         Layout.fillWidth: true
                         onMoved:{
                             if (prev !== speedslider.value)
@@ -437,12 +436,19 @@ Window {
             onMidChanged: player.params.audio.set_mid(equalizerwindow.mid)
             onHighChanged: player.params.audio.set_high(equalizerwindow.high)
         }
+        Subtitles{
+            id: subtitleswindow
+            visible: false
+            anchors.centerIn: parent
+            model: player.params.subs.subtitles
+            onCurrentIndexChanged: player.params.subs.index = currentIndex
+        }
     }
 
 
     Timer {
         id: hideControlsTimer
-        interval: 3000
+        interval: 2000
         repeat: false
         onTriggered: {
             var is_outside_menubar = (mouseY <= menubar_background.y) || (mouseY > root.height-30) || (mouseX < 30 || mouseX > root.width - 30);

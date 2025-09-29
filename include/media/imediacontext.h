@@ -13,10 +13,9 @@ class IMediaContext : public QObject
     Q_OBJECT
 public:
     virtual ~IMediaContext() = default;
-    IMediaContext(AVStream* stream, qint64 queue_size)
+    IMediaContext(AVStream* stream, qint64 threadsToUse = 0)
         :
-        packet_queue(queue_size),
-        codec(stream),
+        codec(stream, threadsToUse),
         decoder(codec)
     {
         connect(this,&IMediaContext::newPacketArrived, this, &IMediaContext::process_packet);
@@ -24,6 +23,7 @@ public:
 
     virtual void process_packet() = 0;
     virtual qint64 buffer_available() = 0;
+    virtual void clear() = 0;
 signals:
     void requestPacket();
     void newPacketArrived();

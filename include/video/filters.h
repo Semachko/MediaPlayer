@@ -20,7 +20,7 @@ extern "C" {
 class Filters : public QObject
 {Q_OBJECT
 public:
-    explicit Filters(Codec&, VideoParameters*);
+    explicit Filters(const Codec&, VideoParameters*);
     ~Filters();
 
     Frame applyFilters(Frame frame);

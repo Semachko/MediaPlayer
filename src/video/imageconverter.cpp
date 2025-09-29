@@ -1,7 +1,7 @@
 ﻿#include "video/imageconverter.h"
 #include <QDebug>
 
-ImageConverter::ImageConverter(Codec& codec) {
+ImageConverter::ImageConverter(const Codec& codec) {
     output = make_shared_frame();
     output->width  = codec.context->width;
     output->height = codec.context->height;

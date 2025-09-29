@@ -19,7 +19,9 @@ VideoPreview::VideoPreview(MediaParameters *par)
 
 VideoPreview::~VideoPreview()
 {
-    videosink->setVideoFrame(QVideoFrame());
+    QMetaObject::invokeMethod(params->video->previewSink, [videoSink = params->video->previewSink] {
+        videoSink->setVideoFrame(QVideoFrame());
+    }, Qt::QueuedConnection);
     delete converter;
     delete decoder;
     delete codec;
@@ -39,8 +41,7 @@ void VideoPreview::update_preview(qreal seconds)
             return;
         if (packet->stream_index != codec->stream->index)
             continue;
-        decoder->decode_packet(packet);
-        auto queue = decoder->receive_frames();
+        auto queue = decoder->decode_packet(packet);
         while(!queue.empty())
         {
             Frame frame = queue.dequeue();
@@ -49,7 +50,9 @@ void VideoPreview::update_preview(qreal seconds)
                 continue;
             Frame output_frame = converter->convert(frame);
             QImage image(output_frame->data[0], codec->context->width, codec->context->height, output_frame->linesize[0], QImage::Format_RGB32);
-            videosink->setVideoFrame(QVideoFrame(image));
+            QMetaObject::invokeMethod(params->video->previewSink, [videoSink = params->video->previewSink, frame = std::move(QVideoFrame(image))] {
+                videoSink->setVideoFrame(frame);
+            }, Qt::QueuedConnection);
             params->video->is_preview_processing = false;
             return;
         }

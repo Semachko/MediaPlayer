@@ -38,10 +38,9 @@ public:
     ~AudioContext();
 
     void process_packet() override;
-    void decode_packet(Packet& packet);
-    void get_and_output_samples();
     qint64 buffer_available() override;
-    void clear();
+    void clear() override;
+    void push_to_outputer(QQueue<Frame>&);
 
     void mute_unmute();
     void set_volume();
@@ -55,12 +54,10 @@ private:
     QAudioSink* audioSink;
     AudioOutputer* outputer;
     MediaParameters* params;
-    QAudioFormat format;
     std::mutex mutex;
     QThread* outputThread;
-    // SampleConverter* converter;
-    // Equalizer equalizer;
     SampleFormat outputFormat;
+    QAudioFormat format;
     Clock* clock;
     qint64 bytes_per_sec;
     qint64 MAX_BUFFER_SIZE;

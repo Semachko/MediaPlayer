@@ -1,6 +1,7 @@
 ﻿#include "media/player.h"
 #include "media/mediaparameters.h"
 #include <QDebug>
+#include <QRegularExpression>
 
 Player::Player() {
     params = new MediaParameters{this};

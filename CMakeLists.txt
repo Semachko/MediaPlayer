@@ -28,6 +28,7 @@ qt_add_qml_module(appMediaPlayer
     VERSION 1.0
     QML_FILES ${QML_FILES}
 )
+message(${QML_FILES})
 
 file(GLOB_RECURSE ICONS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "resources/icons/*.svg")
 qt_add_resources(appMediaPlayer

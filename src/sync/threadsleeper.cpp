@@ -1,8 +1,8 @@
-#include "sync/threadwaiter.h"
+#include "sync/threadsleeper.h"
 
-ThreadWaiter::ThreadWaiter() {}
+ThreadSleeper::ThreadSleeper() {}
 
-void ThreadWaiter::wait(qreal seconds)
+void ThreadSleeper::wait(qreal seconds)
 {
     auto wait_time = std::chrono::duration<double>(seconds);
     std::unique_lock locker(mutex);
@@ -10,7 +10,7 @@ void ThreadWaiter::wait(qreal seconds)
     cv.wait_for(locker, wait_time,[this]{return waked;});
 }
 
-void ThreadWaiter::wake()
+void ThreadSleeper::wake()
 {
     std::lock_guard _(mutex);
     waked = true;

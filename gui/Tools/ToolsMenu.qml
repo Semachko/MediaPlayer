@@ -21,8 +21,9 @@ Item {
     signal equalizerClicked
     signal rotateClicked
     signal shuffleClicked
-    signal repeatClicked
+    signal subtitlesClicked
     property bool isRepeating: false
+    property bool isSubtitles: false
     Popup {
         id: popup
         modal: false
@@ -40,9 +41,9 @@ Item {
             //Layout.fillHeight: true
             ToolsMenuButton {
                 id: filters
+                checkable: false
                 label: "Filters (V)"
                 iconSRC: "qrc:/resources/icons/filters.svg"
-                checkable: false
                 onClicked: {
                     popup.close()
                     root.filtersClicked()
@@ -50,9 +51,9 @@ Item {
             }
             ToolsMenuButton {
                 id: equalizer
+                checkable: false
                 label: "Equalizer (E)"
                 iconSRC: "qrc:/resources/icons/equalizer.svg"
-                checkable: false
                 onClicked: {
                     popup.close()
                     root.equalizerClicked()
@@ -60,9 +61,9 @@ Item {
             }
             ToolsMenuButton {
                 id: rotate
+                checkable: false
                 label: "Rotate (R)"
                 iconSRC: "qrc:/resources/icons/rotate.svg"
-                checkable: false
                 onClicked: {
                     popup.close()
                     root.rotateClicked()
@@ -74,15 +75,15 @@ Item {
             }
             ToolsMenuButton {
                 id: shuffle
-                label: "Shuffle (S)"
-                iconSRC: "qrc:/resources/icons/shuffle.svg"
                 checkable: false
+                label: "Shuffle (H)"
+                iconSRC: "qrc:/resources/icons/shuffle.svg"
                 onClicked: {
                     popup.close()
                     root.shuffleClicked()
                 }
                 Shortcut {
-                    sequence: "S"
+                    sequence: "H"
                     onActivated: shuffle.click()
                 }
             }
@@ -93,12 +94,22 @@ Item {
                 onClicked: {
                     popup.close()
                     isRepeating = repeat.checked
-                    root.repeatClicked()
+                    root.repeatChanged()
                 }
                 Shortcut {
                     sequence: "T"
                     onActivated: repeat.click()
                 }
+            }
+            ToolsMenuButton {
+                id: subtitles
+                label: "Subtitles (S)"
+                iconSRC: "qrc:/resources/icons/subtitles.svg"
+                onClicked: {
+                    popup.close()
+                    root.subtitlesClicked()
+                }
+                onCheckableChanged: isSubtitles = subtitles.checked
             }
         }
     }

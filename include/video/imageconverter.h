@@ -16,7 +16,7 @@ extern "C" {
 class ImageConverter
 {
 public:
-    ImageConverter(Codec&);
+    ImageConverter(const Codec&);
     ~ImageConverter();
 
     Frame convert(Frame input);

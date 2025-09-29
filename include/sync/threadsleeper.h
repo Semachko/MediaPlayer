@@ -1,13 +1,13 @@
-#ifndef THREADWAITER_H
-#define THREADWAITER_H
+#ifndef THREADSLEEPER_H
+#define THREADSLEEPER_H
 
 #include <QObject>
 #include <mutex>
 
-class ThreadWaiter
+class ThreadSleeper
 {
 public:
-    ThreadWaiter();
+    ThreadSleeper();
     void wait(qreal seconds);
     void wake();
 
@@ -17,4 +17,4 @@ private:
     bool waked = false;
 };
 
-#endif // THREADWAITER_H
+#endif // THREADSLEEPER_H

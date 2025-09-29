@@ -24,22 +24,17 @@ extern "C" {
 
 class VideoContext : public IMediaContext
 {
-//Q_OBJECT
 public:
-    VideoContext(AVStream* stream, Clock* sync, MediaParameters* params, qreal bufferization_time);
+    VideoContext(AVStream* stream, Clock* clock, MediaParameters* params, qreal bufferization_time);
     ~VideoContext();
 
     void process_packet() override;
     qint64 buffer_available() override;
-    void get_and_output_frames();
-    void clear();
-private:
-//////////////////////////////////////////////////////////
+    void clear() override;
 //////////////////////////////////////////////////////////
 public:
     std::mutex mutex;
-    Decoder decoder;
-    FrameOutput* output;
+    FrameOutput* outputer;
 private:
     QThread* outputThread;
     Clock* clock;

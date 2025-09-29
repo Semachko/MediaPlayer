@@ -12,7 +12,7 @@
 #include "video/filters.h"
 #include "video/imageconverter.h"
 #include "sync/clock.h"
-#include "sync/threadwaiter.h"
+#include "sync/threadsleeper.h"
 #include "queue.h"
 #include "frame.h"
 
@@ -36,19 +36,17 @@ private:
     void copy_frame(Frame source, Frame destination);
     QVideoFrame filter_and_convert(Frame frame);
 //////////////////////////////////////////////////
-//////////////////////////////////////////////////
 public:
     Queue<Frame> image_queue;
 private:
-    Codec& codec;
+    const Codec& codec;
     Filters filters;
     ImageConverter converter;
     Frame current_frame = make_shared_frame();
     std::mutex mutex;
-    Clock* clock;
-    ThreadWaiter sleeper;
-    QVideoSink* videosink;
-    MediaParameters* params;
+    ThreadSleeper sleeper;
+    Clock* const clock;
+    MediaParameters* const params;
 };
 
 #endif // FRAMEOUTPUT_H

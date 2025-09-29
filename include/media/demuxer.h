@@ -20,6 +20,7 @@ public:
     ~Demuxer();
 
     void add_context(IMediaContext* context);
+    void remove_context(IMediaContext* context);
     void demuxe_packets();
     bool push_packet_to_queues();
     void seek(qint64 time);

@@ -2,21 +2,26 @@
 #define SYNCHRONIZER_H
 
 #include <QObject>
+#include <QElapsedTimer>
 #include <mutex>
 
-#include "sync/realtimeclock.h"
 #include "media/mediaparameters.h"
 
-class Synchronizer
-{
+class Clock : public QObject
+{   Q_OBJECT
 public:
-    Synchronizer(IClock* clock_);
-    ~Synchronizer();
+    Clock(MediaParameters* params);
     void set_time(qreal);
     qreal get_time();
+    void pause();
+    void resume();
+    void set_speed(qreal);
 private:
-    IClock* clock;
-    std::mutex timer_mutex;
+    std::mutex mutex;
+    qreal speed;
+    qreal current_time = 0;
+    MediaParameters* params;
+    QElapsedTimer timer;
 };
 
 

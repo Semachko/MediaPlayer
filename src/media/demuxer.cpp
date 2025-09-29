@@ -13,7 +13,16 @@ Demuxer::Demuxer(AVFormatContext* format_context)
 
 void Demuxer::add_context(IMediaContext* context)
 {
+    std::lock_guard _(mutex);
     medias[context->codec.stream->index] = context;
+    connect(context,&IMediaContext::requestPacket,this,&Demuxer::demuxe_packets);
+}
+
+void Demuxer::remove_context(IMediaContext *context)
+{
+    std::lock_guard _(mutex);
+    medias.erase(context->codec.stream->index);
+    disconnect(this, nullptr, context, nullptr);
 }
 
 void Demuxer::demuxe_packets()

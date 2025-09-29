@@ -137,7 +137,6 @@ Item{
             id: closebutton
             Layout.preferredWidth: root.width * 0.3
             Layout.preferredHeight: parent.height * 0.7
-
             contentItem: Text {
                 verticalAlignment: Text.AlignVCenter
                 horizontalAlignment: Text.AlignHCenter

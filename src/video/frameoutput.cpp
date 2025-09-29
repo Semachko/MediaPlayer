@@ -2,37 +2,17 @@
 #include <QDebug>
 #include <QThread>
 #include <QMediaMetaData>
-
 #include <chrono>
-std::string get_cur_time()
-{
-    using namespace std::chrono;
-    auto now = system_clock::now().time_since_epoch();
-    auto ms = duration_cast<milliseconds>(now).count() % 1000;
-    auto us = duration_cast<microseconds>(now).count() % 1000;
-    std::ostringstream oss;
-    oss << std::setfill('0')
-        << std::setw(3) << ms << ":"
-        << std::setw(3) << us;
-    return oss.str();
-}
 
 constexpr auto OUTPUT = "\033[34m[Output]\033[0m";
 
-// ImageFrame::ImageFrame(QVideoFrame&& videoframe, qint64 time)
-//     :
-//     image(videoframe),
-//     time(time)
-// {}
-
-FrameOutput::FrameOutput(Clock* sync, Codec& codec_, MediaParameters* par, qint64 queueSize)
+FrameOutput::FrameOutput(Clock* clock_, Codec& codec_, MediaParameters* params_, qint64 queueSize)
     :
-    clock(sync),
+    clock(clock_),
     codec(codec_),
     converter(codec),
-    filters(codec, par->video),
-    videosink(par->videoSink),
-    params(par),
+    filters(codec, params_->video),
+    params(params_),
     image_queue(queueSize)
 {
     connect(this,&FrameOutput::outputImage,this, &FrameOutput::process_image, Qt::QueuedConnection);
@@ -43,8 +23,9 @@ FrameOutput::FrameOutput(Clock* sync, Codec& codec_, MediaParameters* par, qint6
 
 FrameOutput::~FrameOutput()
 {
-    QMediaMetaData data;
-    videosink->setVideoFrame(QVideoFrame());
+    QMetaObject::invokeMethod(params->videoSink, [videoSink = params->videoSink] {
+        videoSink->setVideoFrame(QVideoFrame());
+    }, Qt::QueuedConnection);
 }
 
 void FrameOutput::process_image()
@@ -63,9 +44,12 @@ void FrameOutput::process_image()
         copy_frame(frame, current_frame);
         QVideoFrame videoframe = filter_and_convert(frame);
         delay = frametime - clock->get_time();
+        //qDebug()<<"delay:"<<delay;
         if (delay>0)
             sleeper.wait(delay);
-        videosink->setVideoFrame(videoframe);
+        QMetaObject::invokeMethod(params->videoSink, [videoSink = params->videoSink, frame = std::move(videoframe)] {
+            videoSink->setVideoFrame(frame);
+        }, Qt::QueuedConnection);
         if(params->isPaused)
             return;
     }
@@ -87,7 +71,9 @@ void FrameOutput::process_one_image()
             continue;
         copy_frame(frame, current_frame);
         QVideoFrame videoframe = filter_and_convert(frame);
-        videosink->setVideoFrame(videoframe);
+        QMetaObject::invokeMethod(params->videoSink, [videoSink = params->videoSink, frame = std::move(videoframe)] {
+            videoSink->setVideoFrame(frame);
+        }, Qt::QueuedConnection);
         break;
     }
 }
@@ -107,7 +93,9 @@ void FrameOutput::set_filters_on_currentFrame()
     Frame frame = make_shared_frame();
     copy_frame(current_frame, frame);
     QVideoFrame videoframe = filter_and_convert(frame);
-    videosink->setVideoFrame(videoframe);
+    QMetaObject::invokeMethod(params->videoSink, [videoSink = params->videoSink, frame = std::move(videoframe)] {
+        videoSink->setVideoFrame(frame);
+    }, Qt::QueuedConnection);
     emit requestImage();
 }
 QVideoFrame FrameOutput::filter_and_convert(Frame frame)

@@ -21,6 +21,7 @@ extern "C" {
 #include "video/videocontext.h"
 #include "video/videopreview.h"
 #include "audio/audiocontext.h"
+#include "subtitles/subtitles.h"
 #include "sync/clock.h"
 #include "media/demuxer.h"
 #include "media/mediaparameters.h"
@@ -32,6 +33,7 @@ public:
     Media(MediaParameters* parameters_);
     ~Media();
 
+    void extracted();
     void set_file();
     void resume_pause_timer();
     void seeking_pressed(qreal);
@@ -41,6 +43,10 @@ public:
 private:
     void delete_members();
     void seek_time(qint64);
+
+    void try_initialize_audio();
+    void try_initialize_video();
+    void try_initialize_subtitles();
 
 signals:
     void subtruct5sec();
@@ -59,6 +65,7 @@ private:
     AudioContext* audio = nullptr;
     VideoContext* video = nullptr;
     VideoPreview* preview = nullptr;
+    Subtitles* subs = nullptr;
     Demuxer* demuxer = nullptr;
     Clock* clock = nullptr;
 
@@ -67,11 +74,13 @@ private:
     QThread* audioThread;
     QThread* videoThread;
     QThread* previewThread;
+    QThread* subtitlesThread;
     QThread* demuxerThread;
 
     MediaParameters* params;
     QTimer updateTimer;
     bool isSeekingPressed = false;
+    void initialize_demuxer();
 };
 
 #endif // MEDIA_H

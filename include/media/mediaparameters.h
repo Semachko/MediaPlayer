@@ -58,6 +58,28 @@ signals:
     void setPreview(qint64 timepoint);
 };
 
+class SubtitleParameters : public QObject
+{Q_OBJECT
+public:
+    explicit SubtitleParameters(QObject *parent = nullptr) : QObject(parent) {}
+    Q_PROPERTY(QStringList subtitles READ subtitles NOTIFY subtitlesChanged)
+    Q_PROPERTY(qint64 index WRITE setIndex NOTIFY currentSubChanged)
+    QStringList subtitles() const { return subs; }
+    void setIndex(qint64 newIndex) {
+        index = newIndex;
+        emit currentSubChanged();
+    }
+
+    void clear() { subs.clear(); emit subtitlesChanged();}
+    void set_subtitles (QStringList&& new_subs) {subs = std::move(new_subs); emit subtitlesChanged(); if(!subs.empty()) setIndex(0);}
+    void add_subs (QStringList& new_subs) {subs.append(new_subs); emit subtitlesChanged();}
+    QStringList subs;
+    qint64 index = -1;
+signals:
+    void subtitlesChanged();
+    void currentSubChanged();
+};
+
 class FileParameters: public QObject
 {Q_OBJECT
 public:
@@ -94,13 +116,16 @@ public:
         file(new FileParameters(this)),
         audio(new AudioParameters(this)),
         video(new VideoParameters(this)),
-        videoSink(new QVideoSink(this)) {}
+        videoSink(new QVideoSink(this)),
+        subs(new SubtitleParameters(this)) {}
     Q_PROPERTY(FileParameters* file READ getFile CONSTANT)
     Q_PROPERTY(AudioParameters* audio READ getAudio CONSTANT)
     Q_PROPERTY(VideoParameters* video READ getVideo CONSTANT)
+    Q_PROPERTY(SubtitleParameters* subs READ getSubs CONSTANT)
     FileParameters* getFile() const { return file; }
     AudioParameters* getAudio() const { return audio; }
     VideoParameters* getVideo() const { return video; }
+    SubtitleParameters* getSubs() const { return subs; }
 
 
     Q_PROPERTY(QVideoSink* videoSink READ getVideoSink WRITE setVideoSink)
@@ -136,6 +161,7 @@ public:
     FileParameters* file;
     AudioParameters* audio;
     VideoParameters* video;
+    SubtitleParameters* subs;
     QVideoSink* videoSink;
 private:
 };
