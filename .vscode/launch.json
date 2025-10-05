@@ -1,0 +1,30 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+  "configurations": [
+    {
+        "name": "Debug MediaPlayer (Windows)",
+        "type": "cppvsdbg",
+        "request": "launch",
+        "program": "${command:cmake.launchTargetPath}",
+        "cwd": "${command:cmake.launchTargetDirectory}",
+        "visualizerFile": "c:\\Users\\danya\\AppData\\Roaming\\Code\\User\\workspaceStorage\\2398bf50acd3e961aa52f951108b7462\\tonka3000.qtvsctools\\qt.natvis.xml",
+    },
+    {
+        "name": "Debug MediaPlayer (macOS/Linux)",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${command:cmake.launchTargetPath}",
+        "cwd": "${command:cmake.launchTargetDirectory}",
+        "linux": {
+            "MIMode": "gdb"
+        },
+        "osx": {
+            "MIMode": "lldb"
+        },
+        "visualizerFile": "c:\\Users\\danya\\AppData\\Roaming\\Code\\User\\workspaceStorage\\2398bf50acd3e961aa52f951108b7462\\tonka3000.qtvsctools\\qt.natvis.xml"
+    }
+]
+}

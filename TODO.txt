@@ -1,8 +1,10 @@
-﻿add subtitles
+﻿adding files on drag
+add removing {} in subs
+add subtitles
+add multiple subs
 check big delays on seeking
 fix repeating
 try to fix audio noice while changing audio params
-adding files on drag
 add hardware decoding
 fix ui resizing
 add stretching
