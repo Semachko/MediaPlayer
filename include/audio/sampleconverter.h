@@ -2,37 +2,37 @@
 #define SAMPLECONVERTER_H
 
 extern "C" {
-#include "libavformat/avformat.h"
 #include <libavcodec/avcodec.h>
-#include <libswresample/swresample.h>
-#include <libavutil/opt.h>
-#include <libavutil/channel_layout.h>
 #include <libavutil/avutil.h>
+#include <libavutil/channel_layout.h>
+#include <libavutil/opt.h>
+#include <libswresample/swresample.h>
+
+#include "libavformat/avformat.h"
 }
 #include <QAudioSink>
+
 #include "frame.h"
 
-struct SampleFormat{
-    int format;
-    int sample_rate;
-    int bytes_per_sample;
-    AVChannelLayout layout;
+struct SampleFormat {
+        int format;
+        int sample_rate;
+        int bytes_per_sample;
+        AVChannelLayout layout;
 };
 
+class SampleConverter {
+    public:
+        SampleConverter(AVCodecContext* input, SampleFormat output);
+        ~SampleConverter();
 
-class SampleConverter
-{
-public:
-    SampleConverter(AVCodecContext* input, SampleFormat output);
-    ~SampleConverter();
+        Frame convert(Frame input);
+        Frame flush();
+        void clear();
 
-    Frame convert(Frame input);
-    Frame flush();
-    void clear();
-private:
-    SwrContext* converter_context;
-    SampleFormat output_format;
+    private:
+        SwrContext* converter_context;
+        SampleFormat output_format;
 };
 
-
-#endif // SAMPLECONVERTER_H
+#endif  // SAMPLECONVERTER_H

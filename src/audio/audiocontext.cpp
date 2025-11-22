@@ -1,20 +1,19 @@
-﻿#include <QDebug>
+﻿#include "audio/audiocontext.h"
+
+#include <QDebug>
 #include <QMediaDevices>
 
-#include "audio/audiocontext.h"
 #include "frame.h"
 
 constexpr auto DECODING = "\033[31m[Decoding]\033[0m";
 constexpr auto SAMPLE = "\033[35m[Sample]\033[0m";
 
-AudioContext::AudioContext(AVStream* stream,  Clock* clock_, MediaParameters* params_, qreal bufferization_time_)
-    :
-    IMediaContext(stream),
-    bufferization_time(bufferization_time_),
-    last_volume(params->audio->volume),
-    params(params_),
-    clock(clock_)
-{
+AudioContext::AudioContext(AVStream* stream, Clock* clock_, MediaParameters* params_, qreal bufferization_time_) :
+        IMediaContext(stream),
+        bufferization_time(bufferization_time_),
+        last_volume(params->audio->volume),
+        params(params_),
+        clock(clock_) {
     packet_queue.set_full_size(10);
     // Initiating output audio device FORMAT
     format = QMediaDevices::defaultAudioOutput().preferredFormat();
@@ -29,45 +28,45 @@ AudioContext::AudioContext(AVStream* stream,  Clock* clock_, MediaParameters* pa
     // Initiating output CONVERTER and OUTPUTER
     AVChannelLayout outlayout;
     av_channel_layout_default(&outlayout, format.channelCount());
-    outputFormat = SampleFormat{convert_to_AVFormat(format.sampleFormat()),format.sampleRate(),format.bytesPerSample(),outlayout};
+    outputFormat = SampleFormat{
+        convert_to_AVFormat(format.sampleFormat()), format.sampleRate(), format.bytesPerSample(), outlayout};
 
     // Getting MAX SIZE of audio output buffer
-    bytes_per_sec = outputFormat.layout.nb_channels * outputFormat.sample_rate * av_get_bytes_per_sample((AVSampleFormat)outputFormat.format);
+    bytes_per_sec = outputFormat.layout.nb_channels * outputFormat.sample_rate *
+                    av_get_bytes_per_sample((AVSampleFormat)outputFormat.format);
     MAX_BUFFER_SIZE = bytes_per_sec * bufferization_time;
 
     audioSink = new QAudioSink(format, this);
     outputer = new AudioOutputer(clock, codec, outputFormat, params, audioSink);
     audioSink->setVolume(last_volume);
     audioSink->setBufferSize(8192);
-    if(params->audio->isMuted)
+    if (params->audio->isMuted)
         mute_unmute();
     outputThread = new QThread();
     outputer->moveToThread(outputThread);
     outputThread->start();
 
-    connect(params, &MediaParameters::isPausedChanged, this,&AudioContext::pause_changed);
-    connect(params->audio, &AudioParameters::isMutedChanged,this,&AudioContext::mute_unmute);
-    connect(params->audio, &AudioParameters::volumeChanged,this,&AudioContext::set_volume);
+    connect(params, &MediaParameters::isPausedChanged, this, &AudioContext::pause_changed);
+    connect(params->audio, &AudioParameters::isMutedChanged, this, &AudioContext::mute_unmute);
+    connect(params->audio, &AudioParameters::volumeChanged, this, &AudioContext::set_volume);
 
-    connect(this, &AudioContext::newPacketArrived, this,&AudioContext::process_packet);
-    connect(outputer, &AudioOutputer::requestFrame, this,&AudioContext::process_packet);
-    connect(this,&IMediaContext::endReached, [this]{decoder.drain_decoder();});
+    connect(this, &AudioContext::newPacketArrived, this, &AudioContext::process_packet);
+    connect(outputer, &AudioOutputer::requestFrame, this, &AudioContext::process_packet);
+    connect(this, &IMediaContext::endReached, [this] { decoder.drain_decoder(); });
 
     audioSink->start(outputer);
-    if(params->isPaused)
+    if (params->isPaused)
         audioSink->suspend();
 }
 
-AudioContext::~AudioContext()
-{
+AudioContext::~AudioContext() {
     outputer->deleteLater();
     outputThread->quit();
     outputThread->wait();
     outputThread->deleteLater();
 }
 
-void AudioContext::process_packet()
-{
+void AudioContext::process_packet() {
     std::lock_guard _(mutex);
     if (buffer_available() <= 0)
         return;
@@ -78,10 +77,8 @@ void AudioContext::process_packet()
     push_to_outputer(queue);
 }
 
-void AudioContext::push_to_outputer(QQueue<Frame>& queue)
-{
-    while(!queue.empty())
-    {
+void AudioContext::push_to_outputer(QQueue<Frame>& queue) {
+    while (!queue.empty()) {
         Frame frame = queue.dequeue();
         qreal frametime = frame->best_effort_timestamp * av_q2d(codec.timeBase);
         qreal currtime = clock->get_time();
@@ -92,36 +89,32 @@ void AudioContext::push_to_outputer(QQueue<Frame>& queue)
     }
 }
 
-qint64 AudioContext::buffer_available()
-{
+qint64 AudioContext::buffer_available() {
     qint64 available_bytes = MAX_BUFFER_SIZE - outputer->bytesAvailable();
     return available_bytes;
 }
-void AudioContext::mute_unmute()
-{
-    if(params->audio->isMuted)
+void AudioContext::mute_unmute() {
+    if (params->audio->isMuted)
         audioSink->setVolume(0);
     else
         audioSink->setVolume(last_volume);
 }
-void AudioContext::set_volume(){
-    last_volume=params->audio->volume;
+void AudioContext::set_volume() {
+    last_volume = params->audio->volume;
     if (!params->audio->isMuted)
         audioSink->setVolume(last_volume);
 }
 
-void AudioContext::pause_changed()
-{
-    if(params->isPaused)
+void AudioContext::pause_changed() {
+    if (params->isPaused)
         audioSink->suspend();
-    else{
+    else {
         audioSink->resume();
         emit outputer->readyRead();
     }
 }
 
-void AudioContext::clear()
-{
+void AudioContext::clear() {
     std::lock_guard _(mutex);
     packet_queue.clear();
     decoder.clear_decoder();
@@ -129,15 +122,17 @@ void AudioContext::clear()
     outputer->reset();
 }
 
-AVSampleFormat AudioContext::convert_to_AVFormat(QAudioFormat::SampleFormat format)
-{
+AVSampleFormat AudioContext::convert_to_AVFormat(QAudioFormat::SampleFormat format) {
     switch (format) {
-    case QAudioFormat::UInt8:   return AV_SAMPLE_FMT_U8;
-    case QAudioFormat::Int16:   return AV_SAMPLE_FMT_S16;
-    case QAudioFormat::Int32:   return AV_SAMPLE_FMT_S32;
-    case QAudioFormat::Float:   return AV_SAMPLE_FMT_FLT;
-    default:                    return AV_SAMPLE_FMT_NONE;
+    case QAudioFormat::UInt8:
+        return AV_SAMPLE_FMT_U8;
+    case QAudioFormat::Int16:
+        return AV_SAMPLE_FMT_S16;
+    case QAudioFormat::Int32:
+        return AV_SAMPLE_FMT_S32;
+    case QAudioFormat::Float:
+        return AV_SAMPLE_FMT_FLT;
+    default:
+        return AV_SAMPLE_FMT_NONE;
     }
 }
-
-

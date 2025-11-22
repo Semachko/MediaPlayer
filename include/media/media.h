@@ -2,85 +2,86 @@
 #define MEDIA_H
 
 extern "C" {
-#include "libavformat/avformat.h"
+#include <libavutil/avutil.h>
 #include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
+
+#include "libavformat/avformat.h"
 #include "libavutil/opt.h"
 #include "libswresample/swresample.h"
-#include <libswscale/swscale.h>
-#include <libavutil/avutil.h>
 }
-#include <QString>
-#include <QVideoSink>
-#include <QUrl>
 #include <QMutex>
+#include <QString>
 #include <QTimer>
-
+#include <QUrl>
+#include <QVideoSink>
 #include <atomic>
 #include <condition_variable>
 
-#include "video/videocontext.h"
-#include "video/videopreview.h"
 #include "audio/audiocontext.h"
-#include "subtitles/subtitles.h"
-#include "sync/clock.h"
 #include "media/demuxer.h"
 #include "media/mediaparameters.h"
+#include "subtitles/subtitles.h"
+#include "sync/clock.h"
+#include "video/videocontext.h"
+#include "video/videopreview.h"
 
-class Media : public QObject
-{
-    Q_OBJECT
-public:
-    Media(MediaParameters* parameters_);
-    ~Media();
+class Media : public QObject {
+        Q_OBJECT
+    public:
+        Media(MediaParameters* parameters_);
+        ~Media();
 
-    void extracted();
-    void set_file();
-    void resume_pause_timer();
-    void seeking_pressed(qreal);
-    void seeking_released();
-    void add_5sec();
-    void subtruct_5sec();
-private:
-    void delete_members();
-    void seek_time(qint64);
+        void extracted();
+        void set_file();
+        void resume_pause_timer();
+        void seeking_pressed(qreal);
+        void seeking_released();
+        void add_5sec();
+        void subtruct_5sec();
 
-    void try_initialize_audio();
-    void try_initialize_video();
-    void try_initialize_subtitles();
+    private:
+        void delete_members();
+        void seek_time(qint64);
 
-signals:
-    void subtruct5sec();
-    void playORpause();
-    void add5sec();
+        void try_initialize_audio();
+        void try_initialize_video();
+        void try_initialize_subtitles();
 
-    void seekingPressed(qreal);
-    void seekingReleased();
-    void endReached();
-//////////////////////////////////////////////////
-//////////////////////////////////////////////////
-public:
-    std::atomic<bool> is_seeking_processing{false};
-private:
-    static constexpr qreal bufferization_time = 0.2;
-    AudioContext* audio = nullptr;
-    VideoContext* video = nullptr;
-    VideoPreview* preview = nullptr;
-    Subtitles* subs = nullptr;
-    Demuxer* demuxer = nullptr;
-    Clock* clock = nullptr;
+    signals:
+        void subtruct5sec();
+        void playORpause();
+        void add5sec();
 
-    AVFormatContext* format_context = nullptr;
+        void seekingPressed(qreal);
+        void seekingReleased();
+        void endReached();
+        //////////////////////////////////////////////////
+        //////////////////////////////////////////////////
+    public:
+        std::atomic<bool> is_seeking_processing{false};
 
-    QThread* audioThread;
-    QThread* videoThread;
-    QThread* previewThread;
-    QThread* subtitlesThread;
-    QThread* demuxerThread;
+    private:
+        static constexpr qreal bufferization_time = 0.2;
+        AudioContext* audio = nullptr;
+        VideoContext* video = nullptr;
+        VideoPreview* preview = nullptr;
+        Subtitles* subs = nullptr;
+        Demuxer* demuxer = nullptr;
+        Clock* clock = nullptr;
 
-    MediaParameters* params;
-    QTimer updateTimer;
-    bool isSeekingPressed = false;
-    void initialize_demuxer();
+        AVFormatContext* format_context = nullptr;
+
+        QThread* audioThread;
+        QThread* videoThread;
+        QThread* previewThread;
+        QThread* subtitlesThread;
+        QThread* demuxerThread;
+
+        MediaParameters* params;
+        QTimer updateTimer;
+        bool isSeekingPressed = false;
+        void initialize_demuxer();
 };
 
-#endif // MEDIA_H
+#endif  // MEDIA_H

@@ -4,17 +4,16 @@
 #include <QObject>
 #include <mutex>
 
-class ThreadSleeper
-{
-public:
-    ThreadSleeper();
-    void wait(qreal seconds);
-    void wake();
+class ThreadSleeper {
+    public:
+        ThreadSleeper();
+        void wait(qreal seconds);
+        void wake();
 
-private:
-    std::mutex mutex;
-    std::condition_variable cv;
-    bool waked = false;
+    private:
+        std::mutex mutex;
+        std::condition_variable cv;
+        bool waked = false;
 };
 
-#endif // THREADSLEEPER_H
+#endif  // THREADSLEEPER_H

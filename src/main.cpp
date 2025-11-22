@@ -1,10 +1,9 @@
-﻿#include <QQmlContext>
-#include <QGuiApplication>
+﻿#include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
 
 #include "media/player.h"
-int main(int argc, char *argv[])
-{
+int main(int argc, char* argv[]) {
     QGuiApplication app(argc, argv);
     QQmlApplicationEngine engine;
     QObject::connect(
@@ -19,9 +18,9 @@ int main(int argc, char *argv[])
     engine.loadFromModule("MediaPlayer", "Main");
 
     QUrl fileToOpen;
-    if (argc > 1){
+    if (argc > 1) {
         fileToOpen = QUrl::fromLocalFile(QString::fromLocal8Bit(argv[1]).trimmed());
-        qDebug()<<fileToOpen;
+        qDebug() << fileToOpen;
         player->setFile(fileToOpen);
     }
 

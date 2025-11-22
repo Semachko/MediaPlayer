@@ -4,18 +4,18 @@
 #include <QFileInfoList>
 #include <QUrl>
 
-class Playlist
-{
-public:
-    Playlist();
-    QString set_new_file(QUrl &filepath);
-    QString next_file();
-    QString prev_file();
-    QString shuffle_playlist();
-    bool isEmpty();
-private:
-    QFileInfoList mediaFiles;
-    int currentIndex = 0;
+class Playlist {
+    public:
+        Playlist();
+        QString set_new_file(QUrl& filepath);
+        QString next_file();
+        QString prev_file();
+        QString shuffle_playlist();
+        bool isEmpty();
+
+    private:
+        QFileInfoList mediaFiles;
+        int currentIndex = 0;
 };
 
-#endif // PLAYLIST_H
+#endif  // PLAYLIST_H

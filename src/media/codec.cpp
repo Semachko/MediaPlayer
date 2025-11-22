@@ -1,4 +1,5 @@
 ﻿#include "media/codec.h"
+
 #include <QDebug>
 
 Codec::Codec(AVStream* stream, int thread_count) {
@@ -21,6 +22,4 @@ Codec::Codec(AVStream* stream, int thread_count) {
     this->timeBase = stream->time_base;
 }
 
-Codec::~Codec(){
-    avcodec_free_context(&context);
-}
+Codec::~Codec() { avcodec_free_context(&context); }

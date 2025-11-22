@@ -2,16 +2,14 @@
 
 ThreadSleeper::ThreadSleeper() {}
 
-void ThreadSleeper::wait(qreal seconds)
-{
+void ThreadSleeper::wait(qreal seconds) {
     auto wait_time = std::chrono::duration<double>(seconds);
     std::unique_lock locker(mutex);
     waked = false;
-    cv.wait_for(locker, wait_time,[this]{return waked;});
+    cv.wait_for(locker, wait_time, [this] { return waked; });
 }
 
-void ThreadSleeper::wake()
-{
+void ThreadSleeper::wake() {
     std::lock_guard _(mutex);
     waked = true;
     cv.notify_all();

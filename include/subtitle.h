@@ -8,21 +8,20 @@ extern "C" {
 }
 
 struct Subtitle {
-    qreal start_time = -1;
-    qreal end_time = -1;
-    qreal duration = -1;
-    QString text;
+        qreal start_time = -1;
+        qreal end_time = -1;
+        qreal duration = -1;
+        QString text;
 
-    Subtitle(){}
-    Subtitle(const Subtitle &) = default;
-    Subtitle(Subtitle &&) = default;
-    Subtitle &operator=(const Subtitle &) = default;
-    Subtitle &operator=(Subtitle &&) = default;
-    Subtitle(AVSubtitle &sub)
-        : start_time(sub.start_display_time / 1000.0),
-        end_time(sub.end_display_time / 1000.0),
-        duration(end_time - start_time) {}
+        Subtitle() {}
+        Subtitle(const Subtitle&) = default;
+        Subtitle(Subtitle&&) = default;
+        Subtitle& operator=(const Subtitle&) = default;
+        Subtitle& operator=(Subtitle&&) = default;
+        Subtitle(AVSubtitle& sub) :
+                start_time(sub.start_display_time / 1000.0),
+                end_time(sub.end_display_time / 1000.0),
+                duration(end_time - start_time) {}
 };
 
-
-#endif // SUBTITLE_H
+#endif  // SUBTITLE_H

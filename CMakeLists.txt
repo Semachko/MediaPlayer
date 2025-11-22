@@ -64,32 +64,3 @@ install(TARGETS appMediaPlayer
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

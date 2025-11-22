@@ -1,52 +1,52 @@
 ﻿#ifndef FRAMEOUTPUT_H
 #define FRAMEOUTPUT_H
 
-#include <QObject>
-#include <QVideoSink>
-#include <QVideoFrame>
 #include <QMutex>
+#include <QObject>
 #include <QPair>
+#include <QVideoFrame>
+#include <QVideoSink>
 
+#include "frame.h"
 #include "media/codec.h"
 #include "media/mediaparameters.h"
-#include "video/filters.h"
-#include "video/imageconverter.h"
+#include "queue.h"
 #include "sync/clock.h"
 #include "sync/threadsleeper.h"
-#include "queue.h"
-#include "frame.h"
+#include "video/filters.h"
+#include "video/imageconverter.h"
 
+class FrameOutput : public QObject {
+        Q_OBJECT
+    public:
+        FrameOutput(Clock*, Codec&, MediaParameters*, qint64);
+        ~FrameOutput();
 
-class FrameOutput: public QObject
-{
-    Q_OBJECT
-public:
-    FrameOutput(Clock*, Codec&, MediaParameters*, qint64);
-    ~FrameOutput();
+        void process_image();
+        void process_one_image();
+        void set_filters_on_currentFrame();
+        void pop_frames_by_time(qint64 time);
+        void stop_and_clear();
+    signals:
+        void requestImage();
+        void outputImage();
 
-    void process_image();
-    void process_one_image();
-    void set_filters_on_currentFrame();
-    void pop_frames_by_time(qint64 time);
-    void stop_and_clear();
-signals:
-    void requestImage();
-    void outputImage();
-private:
-    void copy_frame(Frame source, Frame destination);
-    QVideoFrame filter_and_convert(Frame frame);
-//////////////////////////////////////////////////
-public:
-    Queue<Frame> image_queue;
-private:
-    const Codec& codec;
-    Filters filters;
-    ImageConverter converter;
-    Frame current_frame = make_shared_frame();
-    std::mutex mutex;
-    ThreadSleeper sleeper;
-    Clock* const clock;
-    MediaParameters* const params;
+    private:
+        void copy_frame(Frame source, Frame destination);
+        QVideoFrame filter_and_convert(Frame frame);
+        //////////////////////////////////////////////////
+    public:
+        Queue<Frame> image_queue;
+
+    private:
+        const Codec& codec;
+        Filters filters;
+        ImageConverter converter;
+        Frame current_frame = make_shared_frame();
+        std::mutex mutex;
+        ThreadSleeper sleeper;
+        Clock* const clock;
+        MediaParameters* const params;
 };
 
-#endif // FRAMEOUTPUT_H
+#endif  // FRAMEOUTPUT_H
