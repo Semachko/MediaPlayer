@@ -14,9 +14,10 @@ class Player : public QObject {
         Q_PROPERTY(MediaParameters* params READ getParams CONSTANT)
         MediaParameters* getParams() const { return params; }
 
-        Q_INVOKABLE void setFile(QUrl filepath);
-        Q_INVOKABLE void shuffleMedia();
+        Q_INVOKABLE void setFile(const QString& filepath);
+        Q_INVOKABLE void setFiles(const QStringList& urls);
 
+        Q_INVOKABLE void shuffleMedia();
         Q_INVOKABLE void nextMedia();
         Q_INVOKABLE void prevMedia();
 
@@ -25,6 +26,11 @@ class Player : public QObject {
 
         Q_INVOKABLE void seekingPressed(qreal time);
         Q_INVOKABLE void seekingReleased();
+
+    private:
+        bool isSubtitleFile(const QString& filePath);
+        bool isMediaFile(const QString& filePath);
+        QString validatePath(const QString& path);
         ////////////////////////////////////////////////////////////////////
     private:
         Media* media;

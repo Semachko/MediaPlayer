@@ -5,6 +5,7 @@ project(MediaPlayer VERSION 0.1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+add_compile_definitions(__STDC_CONSTANT_MACROS)
 
 set(QT_QML_GENERATE_QMLLS_INI ON)
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets Qml Quick QuickTimeline Concurrent Multimedia ShaderTools)

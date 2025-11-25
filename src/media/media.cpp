@@ -20,6 +20,7 @@ void Media::set_file() {
         QMetaObject::invokeMethod(
             params->videoSink, [this] { params->videoSink->setVideoFrame(QVideoFrame()); }, Qt::QueuedConnection);
     }
+    std::string str = params->file->path.toStdString();
     avformat_open_input(&format_context, params->file->path.toStdString().c_str(), nullptr, nullptr);
     avformat_find_stream_info(format_context, nullptr);
     params->file->setGlobalTime(format_context->duration / 1'000'000.0);

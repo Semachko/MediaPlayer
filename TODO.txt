@@ -1,5 +1,4 @@
-﻿adding files on drag
-add removing {} in subs
+﻿add removing {} in subs
 add subtitles
 add multiple subs
 check big delays on seeking

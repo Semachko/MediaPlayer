@@ -1,4 +1,4 @@
-﻿ import QtQuick
+﻿import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls.Basic
 import QtMultimedia
@@ -163,12 +163,14 @@ Window {
                 FileDialog {
                     id: fileDialog
                     title: "CHOOSE FILE"
+                    fileMode: FileDialog.OpenFiles
                     nameFilters: [
                         "Media (*.mp4 *.mkv *.avi *.mov *.flv *.webm *.ts *.mpeg *.mpg *.3gp *.m4v *.wmv *.mp3 *.aac *.wav *.flac *.ogg *.opus *.wma *.alac *.ac3 *.dts)",
-                        "Audio (*.mp3 *.aac *.wav *.flac *.ogg *.opus *.wma *.alac *.ac3 *.dts)"
+                        "Audio (*.mp3 *.aac *.wav *.flac *.ogg *.opus *.wma *.alac *.ac3 *.dts)",
+                        "Subtitles (*.srt *.ass *.ssa *.vtt *.sub *.mpl *.smi *.sbv *.jss *.pjs *.aqt *.txt *.rt)"
                     ]
                     onAccepted: {
-                        player.setFile(fileDialog.selectedFile)
+                        player.setFiles(fileDialog.selectedFiles)
                         timeslider.value = 0
                     }
                 }
@@ -233,7 +235,7 @@ Window {
                 HelpTip{
                     x: -12
                     y: -50
-                    visible: parent.hovered
+                    visible: changetimebtnleft.hovered
                     text: "-5 sec (←)"
                 }
             }
@@ -250,8 +252,8 @@ Window {
                 HelpTip{
                     x: -28
                     y: -60
-                    visible: parent.hovered
-                    text: parent.checked ? "Pause (SPACE)" : "Play    (SPACE)"
+                    visible: playbutton.hovered
+                    text: playbutton.checked ? "Pause (SPACE)" : "Play    (SPACE)"
                 }
             }
             ChangeTimeButtonRight {
@@ -373,7 +375,7 @@ Window {
                 HelpTip{
                     x: parent.x - 160
                     y: parent.y - 70
-                    visible: parent.hovered
+                    visible: volumeslider.hovered
                     text: "Volume ( ↕ )"
                 }
             }
@@ -414,7 +416,7 @@ Window {
                 HelpTip{
                     x: resizebutton.checked ? parent.x - 650 : parent.x - 400
                     y: parent.y - 60
-                    visible: parent.hovered
+                    visible: resizebutton.hovered
                     text: resizebutton.checked ? "Exit fullscreen (F)" : "Full screen      (F)"
                 }
             }
@@ -507,5 +509,16 @@ Window {
             }
         }
     }
-}
 
+    DropArea {
+        id: dropArea
+        anchors.fill: parent
+        keys: ["text/uri-list"]
+        onDropped: (drop) => {
+            if (drop.hasUrls && drop.urls.length > 0) {
+                player.setFiles(drop.urls);
+            }
+        }
+        //onEntered: { controls_menu.opacity = 1.0 }
+    }
+}

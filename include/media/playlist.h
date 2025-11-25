@@ -7,7 +7,8 @@
 class Playlist {
     public:
         Playlist();
-        QString set_new_file(QUrl& filepath);
+        QString set_new_file(const QString& filepath);
+        QString set_new_playlist(const QStringList& playlist);
         QString next_file();
         QString prev_file();
         QString shuffle_playlist();

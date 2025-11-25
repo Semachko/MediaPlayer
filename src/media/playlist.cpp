@@ -7,22 +7,25 @@
 
 Playlist::Playlist() {}
 
-QString Playlist::set_new_file(QUrl& filepath) {
+QString Playlist::set_new_file(const QString& filepath) {
     if (filepath.isEmpty())
         return QString{};
 
-    qDebug() << filepath.toLocalFile();
-    QFileInfo fileInfo(filepath.toLocalFile());
-
+    QFileInfo fileInfo(filepath);
     QDir dir(fileInfo.absolutePath());
-    const QStringList filters = {"*.mp4", "*.mkv",  "*.avi", "*.mov",  "*.flv", "*.webm", "*.ts",  "*.mpeg",
-                                 "*.mpg", "*.3gp",  "*.m4v", "*.wmv",  "*.mp3", "*.aac",  "*.wav", "*.flac",
-                                 "*.ogg", "*.opus", "*.wma", "*.alac", "*.ac3", "*.dts"};
-
-    mediaFiles = dir.entryInfoList(filters, QDir::Files);
+    mediaFiles = dir.entryInfoList(QDir::Files);
     currentIndex = mediaFiles.indexOf(fileInfo);
-
     return mediaFiles[currentIndex].absoluteFilePath();
+}
+
+QString Playlist::set_new_playlist(const QStringList& playlist) {
+    if (playlist.isEmpty())
+        return QString{};
+    mediaFiles.clear();
+    for (const QString& path : playlist)
+        mediaFiles << QFileInfo(path);
+    currentIndex = 0;
+    return mediaFiles[0].absoluteFilePath();
 }
 
 QString Playlist::next_file() {
