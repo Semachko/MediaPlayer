@@ -17,7 +17,7 @@ class IMediaContext : public QObject {
         IMediaContext(AVStream* stream, qint64 threadsToUse = 0) :
                 codec(stream, threadsToUse),
                 decoder(codec) {
-            connect(this, &IMediaContext::newPacketArrived, this, &IMediaContext::process_packet);
+            connect(this, &IMediaContext::newPacketArrived, this, &IMediaContext::process_packet, Qt::QueuedConnection);
         }
 
         virtual void process_packet() = 0;

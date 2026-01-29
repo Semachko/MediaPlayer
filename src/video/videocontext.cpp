@@ -24,17 +24,16 @@ VideoContext::VideoContext(AVStream* stream, Clock* clock_, MediaParameters* par
     outputer->moveToThread(outputThread);
     outputThread->start();
     connect(outputer, &FrameOutput::requestImage, this, &VideoContext::process_packet);
-    connect(this, &VideoContext::newPacketArrived, this, &VideoContext::process_packet);
     connect(this, &IMediaContext::endReached, [this] {
         decoder.drain_decoder();
         emit newPacketArrived();
     });
 }
 VideoContext::~VideoContext() {
-    outputer->deleteLater();
     outputThread->quit();
     outputThread->wait();
-    outputThread->deleteLater();
+    delete outputThread;
+    delete outputer;
 }
 
 void VideoContext::process_packet() {

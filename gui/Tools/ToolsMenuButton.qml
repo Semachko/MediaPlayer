@@ -4,6 +4,7 @@ import QtQuick.Controls.Basic
 Button {
     property string label
     property url iconSRC
+    property bool isChecked: false
     id: button
     checkable: true
     implicitWidth: 265
@@ -44,6 +45,6 @@ Button {
         anchors.verticalCenter: parent.verticalCenter
         scale: parent.height/height * 0.7
         checked: false
-        onClicked: button.checked = powerSwitch.checked
+        onClicked: button.isChecked = powerSwitch.checked
     }
 }

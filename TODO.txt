@@ -5,5 +5,6 @@ check big delays on seeking
 fix repeating
 try to fix audio noice while changing audio params
 add hardware decoding
+make release seeking work in case pressed_time != released_time
 fix ui resizing
 add stretching

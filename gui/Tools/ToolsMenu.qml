@@ -109,7 +109,11 @@ Item {
                     popup.close()
                     root.subtitlesClicked()
                 }
-                onCheckableChanged: isSubtitles = subtitles.checked
+                onIsCheckedChanged: isSubtitles = subtitles.isChecked
+                Shortcut {
+                    sequence: "S"
+                    onActivated: subtitles.click()
+                }
             }
         }
     }

@@ -50,7 +50,6 @@ AudioContext::AudioContext(AVStream* stream, Clock* clock_, MediaParameters* par
     connect(params->audio, &AudioParameters::isMutedChanged, this, &AudioContext::mute_unmute);
     connect(params->audio, &AudioParameters::volumeChanged, this, &AudioContext::set_volume);
 
-    connect(this, &AudioContext::newPacketArrived, this, &AudioContext::process_packet);
     connect(outputer, &AudioOutputer::requestFrame, this, &AudioContext::process_packet);
     connect(this, &IMediaContext::endReached, [this] { decoder.drain_decoder(); });
 
@@ -60,10 +59,10 @@ AudioContext::AudioContext(AVStream* stream, Clock* clock_, MediaParameters* par
 }
 
 AudioContext::~AudioContext() {
-    outputer->deleteLater();
     outputThread->quit();
     outputThread->wait();
-    outputThread->deleteLater();
+    delete outputThread;
+    delete outputer;
 }
 
 void AudioContext::process_packet() {
