@@ -12,7 +12,7 @@ Equalizer::Equalizer(Codec& codec_, MediaParameters* params_) :
            ":sample_fmt=" + av_get_sample_fmt_name(codec.context->sample_fmt) + ":channel_layout=" + buf +
            ":channels=" + std::to_string(codec.context->ch_layout.nb_channels);
     update_equalizer();
-    connect(params, &MediaParameters::speedChanged, this, &Equalizer::update_equalizer);
+    connect(params->clock, &Clock::speedChanged, this, &Equalizer::update_equalizer);
     connect(params->audio, &AudioParameters::paramsChanged, this, &Equalizer::update_equalizer);
 }
 
@@ -64,7 +64,7 @@ void Equalizer::update_equalizer() {
     inputs->pad_idx = 0;
     inputs->next = nullptr;
 
-    std::string filter_descr = "atempo=" + std::to_string(params->speed) + std::string(",aformat=sample_fmts=fltp") +
+    std::string filter_descr = "atempo=" + std::to_string(params->clock->get_speed()) + std::string(",aformat=sample_fmts=fltp") +
                                ",equalizer=f=100:width_type=h:width=400:g=" + std::to_string(params->audio->low) +
                                ",equalizer=f=1000:width_type=h:width=2000:g=" + std::to_string(params->audio->mid) +
                                ",equalizer=f=8000:width_type=h:width=8000:g=" + std::to_string(params->audio->high);

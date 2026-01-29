@@ -1,4 +1,5 @@
 ﻿#include "sync/clock.h"
+#include "params/mediaparameters.h"
 
 #include <QThread>
 #include <algorithm>

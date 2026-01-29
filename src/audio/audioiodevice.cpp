@@ -61,7 +61,7 @@ qint64 AudioOutputer::readData(char* data, qint64 maxlen) {
         memcpy(data, reading_buffer.constData(), len);
         reading_buffer.remove(0, len);
         qreal frametime = processed_frame->best_effort_timestamp * av_q2d(codec.timeBase);
-        clock->set_time(frametime);
+        clock->set_time_without_singaling(frametime);
         return len;
     }
     return 0;
@@ -78,7 +78,7 @@ Frame AudioOutputer::equalizer_and_convert(Frame frame) {
 }
 qint64 AudioOutputer::bytesAvailable() const {
     std::lock_guard _(mutex);
-    int res = reading_buffer.size() / params->speed + buffer_size + QIODevice::bytesAvailable();
+    int res = reading_buffer.size() / params->clock->get_speed() + buffer_size + QIODevice::bytesAvailable();
     return res;
 }
 void AudioOutputer::clear() {

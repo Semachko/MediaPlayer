@@ -17,7 +17,7 @@ extern "C" {
 #include "media/codec.h"
 #include "media/decoder.h"
 #include "media/imediacontext.h"
-#include "media/mediaparameters.h"
+#include "params/mediaparameters.h"
 #include "sync/clock.h"
 #include "video/filters.h"
 #include "video/frameoutput.h"

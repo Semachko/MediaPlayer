@@ -1,8 +1,6 @@
 ﻿#ifndef EQUALIZER_H
 #define EQUALIZER_H
 
-#define __STDC_CONSTANT_MACROS
-
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavfilter/avfilter.h>
@@ -17,7 +15,7 @@ extern "C" {
 
 #include "frame.h"
 #include "media/codec.h"
-#include "media/mediaparameters.h"
+#include "params/mediaparameters.h"
 
 class Equalizer : public QObject {
         Q_OBJECT

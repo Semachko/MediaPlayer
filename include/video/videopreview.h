@@ -1,15 +1,15 @@
 ﻿#ifndef VIDEOPREVIEW_H
 #define VIDEOPREVIEW_H
 
-#include "video/imageconverter.h"
 extern "C" {
-#include <libavcodec/avcodec.h>
-
 #include "libavformat/avformat.h"
+#include <libavcodec/avcodec.h>
 }
-#include <media/codec.h>
-#include <media/decoder.h>
-#include <media/mediaparameters.h>
+
+#include "media/codec.h"
+#include "media/decoder.h"
+#include "params/mediaparameters.h"
+#include "video/imageconverter.h"
 
 #include <QObject>
 #include <QVideoSink>

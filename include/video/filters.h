@@ -1,8 +1,6 @@
 ﻿#ifndef FILTERS_H
 #define FILTERS_H
 
-#define __STDC_CONSTANT_MACROS
-
 extern "C" {
 #include <libavfilter/avfilter.h>
 #include <libavfilter/buffersink.h>
@@ -16,7 +14,7 @@ extern "C" {
 
 #include "frame.h"
 #include "media/codec.h"
-#include "media/mediaparameters.h"
+#include "params/mediaparameters.h"
 
 class Filters : public QObject {
         Q_OBJECT

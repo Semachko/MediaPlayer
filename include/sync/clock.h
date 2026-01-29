@@ -1,11 +1,10 @@
-﻿#ifndef SYNCHRONIZER_H
-#define SYNCHRONIZER_H
+﻿#pragma once
 
 #include <QElapsedTimer>
 #include <QObject>
 #include <mutex>
 
-#include "media/mediaparameters.h"
+class MediaParameters;
 
 class Clock : public QObject {
         Q_OBJECT
@@ -24,21 +23,3 @@ class Clock : public QObject {
         MediaParameters* params;
         QElapsedTimer timer;
 };
-
-class ScopedPause {
-    public:
-        ScopedPause(MediaParameters* params_) :
-                params(params_) {
-            if (!params->isPaused)
-                params->setIsPaused(true);
-        }
-        ~ScopedPause() {
-            if (params->isPaused)
-                params->setIsPaused(false);
-        }
-
-    private:
-        MediaParameters* params;
-};
-
-#endif  // SYNCHRONIZER_H

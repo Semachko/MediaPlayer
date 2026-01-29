@@ -9,7 +9,7 @@
 
 #include "frame.h"
 #include "media/codec.h"
-#include "media/mediaparameters.h"
+#include "params/mediaparameters.h"
 #include "queue.h"
 #include "sync/clock.h"
 #include "sync/threadsleeper.h"

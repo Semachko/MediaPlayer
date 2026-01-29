@@ -21,12 +21,6 @@ class Player : public QObject {
         Q_INVOKABLE void nextMedia();
         Q_INVOKABLE void prevMedia();
 
-        Q_INVOKABLE void add5sec();
-        Q_INVOKABLE void subtruct5sec();
-
-        Q_INVOKABLE void seekingPressed(qreal time);
-        Q_INVOKABLE void seekingReleased();
-
     private:
         bool isSubtitleFile(const QString& filePath);
         bool isMediaFile(const QString& filePath);

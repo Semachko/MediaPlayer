@@ -8,7 +8,7 @@
 #include "audio/equalizer.h"
 #include "audio/sampleconverter.h"
 #include "frame.h"
-#include "media/mediaparameters.h"
+#include "params/mediaparameters.h"
 #include "queue.h"
 #include "sync/clock.h"
 
