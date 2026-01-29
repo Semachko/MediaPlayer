@@ -82,7 +82,7 @@ Window {
             Text{
                 id: current_time
                 Layout.bottomMargin: 3
-                text: root.get_time_by_s(player.params.currentTime)
+                text: "00:00:00"
                 color: "white"
                 font.pointSize: 15
                 font.bold: true
@@ -93,25 +93,43 @@ Window {
                 stepSize: player.params.file.timeStep
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+                Timer {
+                    id: updateTimer
+                    interval: 100
+                    running: true
+                    repeat: true
+                    onTriggered: {
+                        if (!timeslider.pressed){
+                            let currtime = player.params.clock.time
+                            timeslider.value = currtime / player.params.file.globalTime
+                            current_time.text = root.get_time_by_s(currtime)
+                        }
+                    }
+                }
                 Connections {
                     target: player.params
-                    function onCurrentTimeChanged() {
-                        if (!timeslider.pressed)
-                            timeslider.value = player.params.currentTime / player.params.file.globalTime
+                    function onIsPausedChanged() {
+                        if (player.params.isPaused)
+                            updateTimer.stop();
+                        else
+                            updateTimer.start(100);
                     }
                 }
                 onMoved:{
                     if (pressed){
-                        player.seekingPressed(position)
+                        player.params.video.reset_videoSink()
                         preview.x = position*timeslider.width - preview.width/2
                         var timepoint = player.params.file.globalTime * position
                         preview.time = get_time_by_s(timepoint)
-                        player.params.video.reset_videoSink()
+                        player.params.pressSeeking(timepoint)
                     }
                 }
                 onPressedChanged:{
-                    if (!pressed)
-                        player.seekingReleased()
+                    if (!pressed){
+                        preview.x = position*timeslider.width - preview.width/2
+                        var timepoint = player.params.file.globalTime * position
+                        player.params.releaseSeeking(timepoint)
+                    }
                 }
                 HoverHandler{
                     id: mouseOnSlider
@@ -187,7 +205,7 @@ Window {
                 onRotateClicked: videoOutput.rotation += 90
                 onShuffleClicked: player.shuffleMedia(playbutton.checked)
                 onIsRepeatingChanged: player.params.isRepeating = toolsmenu.isRepeating
-                //onIsSubtitlesChanged:
+                onIsSubtitlesChanged: player.params.subs.isToggle = toolsmenu.isSubtitles
                 onSubtitlesClicked: subtitleswindow.visible = true
                 Shortcut {
                     sequence: "E"
@@ -227,7 +245,7 @@ Window {
                 id: changetimebtnleft
                 scale: 0.8
                 Layout.fillWidth: true
-                onClicked: player.subtruct5sec()
+                onClicked: player.params.clock.subtruct5sec()
                 Shortcut {
                     sequence: "left"
                     onActivated: changetimebtnleft.click()
@@ -260,7 +278,7 @@ Window {
                 id: changetimebtnright
                 scale: 0.8
                 Layout.fillWidth: true
-                onClicked: player.add5sec()
+                onClicked: player.params.clock.add5sec()
                 Shortcut {
                     sequence: "right"
                     onActivated: changetimebtnright.click()
@@ -285,7 +303,7 @@ Window {
                 HelpTip{
                     x: -65
                     y: -75
-                    visible: parent.hovered
+                    visible: changemediabtnright.hovered
                     text: "Next file (Ctrl + →)"
                 }
             }
@@ -325,13 +343,13 @@ Window {
                         }
                     }
                     SpeedSlider{
-                        property real prev: player.params.speed
+                        property real prev: player.params.clock.speed
                         id: speedslider
                         height: 200
                         Layout.fillWidth: true
                         onMoved:{
                             if (prev !== speedslider.value)
-                                player.params.speed = speedslider.value
+                                player.params.clock.speed = speedslider.value
                             prev = speedslider.value
                         }
                     }

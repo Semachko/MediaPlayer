@@ -34,35 +34,26 @@ class Media : public QObject {
 
         void extracted();
         void set_file();
-        void resume_pause_timer();
-        void seeking_pressed(qreal);
-        void seeking_released();
-        void add_5sec();
-        void subtruct_5sec();
 
     private:
         void delete_members();
-        void seek_time(qint64);
+        void seek_time();
+        void seeking_pressed(qreal time);
+        void seeking_released(qreal time);
 
+        void initialize_demuxer();
         void try_initialize_audio();
         void try_initialize_video();
         void try_initialize_subtitles();
 
     signals:
-        void subtruct5sec();
         void playORpause();
-        void add5sec();
-
-        void seekingPressed(qreal);
-        void seekingReleased();
         void endReached();
         //////////////////////////////////////////////////
         //////////////////////////////////////////////////
-    public:
-        std::atomic<bool> is_seeking_processing{false};
 
     private:
-        static constexpr qreal bufferization_time = 0.2;
+        static constexpr qreal BUFFERIZATION_TIME = 0.2;
         AudioContext* audio = nullptr;
         VideoContext* video = nullptr;
         VideoPreview* preview = nullptr;
@@ -79,9 +70,6 @@ class Media : public QObject {
         QThread* demuxerThread;
 
         MediaParameters* params;
-        QTimer updateTimer;
-        bool isSeekingPressed = false;
-        void initialize_demuxer();
 };
 
 #endif  // MEDIA_H

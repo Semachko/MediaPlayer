@@ -1,5 +1,5 @@
 ﻿#include "media/player.h"
-#include "media/mediaparameters.h"
+#include "params/mediaparameters.h"
 
 #include <QDebug>
 #include <QRegularExpression>
@@ -14,8 +14,8 @@ Player::Player() {
 Player::~Player() {
     mediaThread->quit();
     mediaThread->wait();
-    media->deleteLater();
-    mediaThread->deleteLater();
+    delete mediaThread;
+    delete media;
     delete params;
 }
 
@@ -94,24 +94,6 @@ void Player::prevMedia() {
     params->file->setPath(newFile);
     params->file->setName(QFileInfo(newFile).fileName());
 }
-
-void Player::add5sec() {
-    bool expected = false;
-    if (media->is_seeking_processing.compare_exchange_strong(expected, true))
-        emit media->add5sec();
-}
-void Player::subtruct5sec() {
-    bool expected = false;
-    if (media->is_seeking_processing.compare_exchange_strong(expected, true))
-        emit media->subtruct5sec();
-}
-void Player::seekingPressed(qreal timepos) {
-    bool expected = false;
-    if (media->is_seeking_processing.compare_exchange_strong(expected, true))
-        emit media->seekingPressed(timepos);
-}
-
-void Player::seekingReleased() { emit media->seekingReleased(); }
 
 bool Player::isSubtitleFile(const QString& filePath) {
     static const QStringList subtitleExts = {

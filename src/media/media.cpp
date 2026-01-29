@@ -1,4 +1,6 @@
 ﻿#include "media/media.h"
+#include "media/codec.h"
+#include "sync/scopedpause.h"
 
 #include <QElapsedTimer>
 #include <QVideoFrame>
@@ -6,10 +8,9 @@
 #include <mutex>
 #include <utility>
 
-#include "media/codec.h"
-
 Media::Media(MediaParameters* parameters) :
-        params(parameters) {
+        params(parameters),
+        clock(parameters->clock) {
     connect(params->file, &FileParameters::pathChanged, this, &Media::set_file);
 }
 Media::~Media() { delete_members(); }
@@ -20,74 +21,37 @@ void Media::set_file() {
         QMetaObject::invokeMethod(
             params->videoSink, [this] { params->videoSink->setVideoFrame(QVideoFrame()); }, Qt::QueuedConnection);
     }
-    std::string str = params->file->path.toStdString();
+    std::string filepath = params->file->path.toStdString();
     avformat_open_input(&format_context, params->file->path.toStdString().c_str(), nullptr, nullptr);
     avformat_find_stream_info(format_context, nullptr);
     params->file->setGlobalTime(format_context->duration / 1'000'000.0);
-    clock = new Clock(params);
 
     initialize_demuxer();
     try_initialize_audio();
     try_initialize_video();
     try_initialize_subtitles();
 
-    connect(&updateTimer, &QTimer::timeout, this, [this]() {
-        qreal currtime = clock->get_time();
-        params->setCurrentTime(currtime);
-    });
-    updateTimer.setInterval(100);
-    QMetaObject::invokeMethod(&updateTimer, static_cast<void (QTimer::*)()>(&QTimer::start), Qt::QueuedConnection);
-    connect(params, &MediaParameters::isPausedChanged, this, &Media::resume_pause_timer);
-    connect(this, &Media::seekingPressed, this, &Media::seeking_pressed);
-    connect(this, &Media::seekingReleased, this, &Media::seeking_released);
-    connect(this, &Media::subtruct5sec, this, &Media::subtruct_5sec);
-    connect(this, &Media::add5sec, this, &Media::add_5sec);
+    connect(params, &MediaParameters::seekingPressed, this, &Media::seeking_pressed, Qt::QueuedConnection);
+    connect(params, &MediaParameters::seekingReleased, this, &Media::seeking_released, Qt::QueuedConnection);
+    connect(params->clock, &Clock::timeChanged, this, &Media::seek_time, Qt::QueuedConnection);
     QMetaObject::invokeMethod(demuxer, &Demuxer::demuxe_packets, Qt::QueuedConnection);
     if (video && params->isPaused)
         video->outputer->process_one_image();
 }
 
-void Media::resume_pause_timer() {
-    QMetaObject::invokeMethod(&updateTimer, [this]() {
-        if (params->isPaused)
-            updateTimer.stop();
-        else
-            updateTimer.start(100);
-    });
+void Media::seeking_pressed(qreal time) {
+    if (!params->isPaused) {
+        ScopedPause pauser{params};
+        clock->set_time(time);
+    } else
+        clock->set_time(time);
 }
 
-void Media::add_5sec() {
-    qint64 seek_target = AV_TIME_BASE * (clock->get_time() + 5.0);  // +5 sec
-    if (seek_target > format_context->duration)
-        seek_target = format_context->duration;
-    seek_time(seek_target);
-}
+void Media::seeking_released(qreal time) {}
 
-void Media::subtruct_5sec() {
-    qint64 seek_target = AV_TIME_BASE * (clock->get_time() - 5.0);  // -5 sec
-    if (seek_target < 0)
-        seek_target = 0;
-    seek_time(seek_target);
-}
-
-void Media::seeking_pressed(qreal position) {
-    if (!isSeekingPressed && !params->isPaused) {
-        params->setIsPaused(!params->isPaused);
-        isSeekingPressed = true;
-    }
-    qint64 seek_target = format_context->duration * position;
-    seek_time(seek_target);
-}
-
-void Media::seeking_released() {
-    if (isSeekingPressed) {
-        params->setIsPaused(!params->isPaused);
-        isSeekingPressed = false;
-    }
-}
-
-void Media::seek_time(qint64 seek_target_us) {
-    qreal seek_target_s = seek_target_us / 1'000'000.0;
+void Media::seek_time() {
+    qreal seek_target_s = clock->get_time();
+    qint64 seek_target_us = AV_TIME_BASE * seek_target_s;
     demuxer->mutex.lock();
     if (audio)
         audio->clear();
@@ -95,8 +59,6 @@ void Media::seek_time(qint64 seek_target_us) {
         video->clear();
     if (subs)
         subs->clear();
-    clock->set_time(seek_target_s);
-    params->setCurrentTime(seek_target_s);
     demuxer->seek(seek_target_us);
     QMetaObject::invokeMethod(demuxer, &Demuxer::demuxe_packets, Qt::QueuedConnection);
     demuxer->mutex.unlock();
@@ -109,7 +71,7 @@ void Media::seek_time(qint64 seek_target_us) {
         if (diff > 0)
             video->outputer->process_one_image();
     }
-    is_seeking_processing = false;
+    params->isSeeking = false;
 }
 
 void Media::initialize_demuxer() {
@@ -121,7 +83,7 @@ void Media::initialize_demuxer() {
 void Media::try_initialize_audio() {
     int stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
     if (stream_id >= 0) {
-        audio = new AudioContext(format_context->streams[stream_id], clock, params, bufferization_time);
+        audio = new AudioContext(format_context->streams[stream_id], clock, params, BUFFERIZATION_TIME);
         audioThread = new QThread();
         audio->moveToThread(audioThread);
         audioThread->start();
@@ -131,7 +93,7 @@ void Media::try_initialize_audio() {
 void Media::try_initialize_video() {
     int stream_id = av_find_best_stream(format_context, AVMEDIA_TYPE_VIDEO, -1, -1, nullptr, 0);
     if (stream_id >= 0) {
-        video = new VideoContext(format_context->streams[stream_id], clock, params, bufferization_time);
+        video = new VideoContext(format_context->streams[stream_id], clock, params, BUFFERIZATION_TIME);
         videoThread = new QThread();
         video->moveToThread(videoThread);
         videoThread->start();
@@ -153,59 +115,51 @@ void Media::try_initialize_video() {
     }
 }
 void Media::try_initialize_subtitles() {
-    std::vector<AVStream*> sub_streams;
-    for (unsigned int i = 0; i < format_context->nb_streams; ++i) {
-        AVStream* stream = format_context->streams[i];
-        if (stream->codecpar->codec_type == AVMEDIA_TYPE_SUBTITLE)
-            sub_streams.push_back(stream);
-    }
-    if (!sub_streams.empty()) {
-        subs = new Subtitles(std::move(sub_streams), clock, demuxer, params);
-        subtitlesThread = new QThread();
-        subs->moveToThread(subtitlesThread);
-        subtitlesThread->start();
-    }
+    subs = new Subtitles(params, clock);
+    subtitlesThread = new QThread();
+    subs->moveToThread(subtitlesThread);
+    subtitlesThread->start();
+
+    subs->add_subs(params->file->path);
 }
 
 void Media::delete_members() {
-    disconnect(this, &Media::playORpause, this, &Media::resume_pause_timer);
-    disconnect(this, &Media::seekingPressed, this, &Media::seeking_pressed);
-    disconnect(this, &Media::subtruct5sec, this, &Media::subtruct_5sec);
-    disconnect(this, &Media::add5sec, this, &Media::add_5sec);
+    disconnect(params, &MediaParameters::seekingPressed, this, &Media::seeking_pressed);
+    disconnect(params, &MediaParameters::seekingReleased, this, &Media::seeking_released);
+    disconnect(params->clock, &Clock::timeChanged, this, &Media::seek_time);
 
-    demuxer->deleteLater();
     demuxerThread->quit();
     demuxerThread->wait();
-    demuxerThread->deleteLater();
+    delete demuxerThread;
+    delete demuxer;
 
     if (audio) {
-        audio->deleteLater();
         audioThread->quit();
         audioThread->wait();
-        audioThread->deleteLater();
+        delete audioThread;
+        delete audio;
         audio = nullptr;
     }
     if (video) {
-        video->deleteLater();
         videoThread->quit();
         videoThread->wait();
-        videoThread->deleteLater();
+        delete videoThread;
+        delete video;
         video = nullptr;
 
-        preview->deleteLater();
         previewThread->quit();
         previewThread->wait();
-        previewThread->deleteLater();
+        delete previewThread;
+        delete preview;
         preview = nullptr;
     }
     if (subs) {
-        subs->deleteLater();
         subtitlesThread->quit();
         subtitlesThread->wait();
-        subtitlesThread->deleteLater();
+        delete subtitlesThread;
+        delete subs;
         subs = nullptr;
     }
 
     avformat_close_input(&format_context);
-    delete clock;
 }
