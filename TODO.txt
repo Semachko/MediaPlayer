@@ -1,10 +1,8 @@
-﻿add removing {} in subs
-add subtitles
-add multiple subs
+﻿add multiple subs at the same time
+add hardware decoding
 check big delays on seeking
 fix repeating
 try to fix audio noice while changing audio params
-add hardware decoding
 make release seeking work in case pressed_time != released_time
 fix ui resizing
 add stretching

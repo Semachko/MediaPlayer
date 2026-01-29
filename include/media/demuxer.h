@@ -15,7 +15,7 @@ extern "C" {
 class Demuxer : public QObject {
         Q_OBJECT
     public:
-        explicit Demuxer(AVFormatContext* format_context);
+        explicit Demuxer(AVFormatContext* format_context, QObject* parent = nullptr);
         ~Demuxer();
 
         void add_context(IMediaContext* context);

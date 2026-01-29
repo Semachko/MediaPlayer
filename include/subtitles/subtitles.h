@@ -1,28 +1,29 @@
 #ifndef SUBTITLES_H
 #define SUBTITLES_H
 
-#include <QObject>
+#include <QThread>
 
 #include "media/demuxer.h"
-#include "media/mediaparameters.h"
-#include "subtitles/subtitlecontext.h"
+#include "params/mediaparameters.h"
+#include "subtitles/subtitle.h"
 
 class Subtitles : public QObject {
         Q_OBJECT
     public:
-        Subtitles(std::vector<AVStream*>&& streams, Clock* clock_, Demuxer* demuxer_, MediaParameters* par);
+        Subtitles(MediaParameters* par, Clock* clock);
         ~Subtitles();
-
-        void set_new_subtitles();
+        void add_subs(QString sub_filepath);
         void update_current_sub();
         void clear();
 
     private:
-        Clock* clock;
-        Demuxer* demuxer;
+        QStringList subs_in_ui;
+        std::vector<std::unique_ptr<Subtitle>> subs;
+        qint64 current_index = -1;
+        SubtitlesOutputer* outputer;
+        QThread* outputerThread;
         MediaParameters* params;
-        std::vector<AVStream*> subtitle_streams;
-        SubtitleContext* subs_context = nullptr;
+        Clock* clock;
 };
 
 #endif  // SUBTITLES_H

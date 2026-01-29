@@ -6,7 +6,8 @@
 
 constexpr auto PACKET = "\033[33m[Packet]\033[0m";
 
-Demuxer::Demuxer(AVFormatContext* format_context) :
+Demuxer::Demuxer(AVFormatContext* format_context, QObject* parent) :
+        QObject(parent),
         format_context(format_context) {}
 
 void Demuxer::add_context(IMediaContext* context) {

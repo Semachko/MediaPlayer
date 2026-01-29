@@ -5,16 +5,16 @@
 
 #include "frame.h"
 #include "media/codec.h"
-#include "media/mediaparameters.h"
+#include "params/mediaparameters.h"
 #include "queue.h"
-#include "subtitle.h"
+#include "subtitleunit.h"
 #include "sync/clock.h"
 #include "sync/threadsleeper.h"
 
 class SubtitlesOutputer : public QObject {
         Q_OBJECT
     public:
-        SubtitlesOutputer(Clock* clock, Codec& codec_, MediaParameters* params);
+        SubtitlesOutputer(Clock* clock, MediaParameters* params);
         ~SubtitlesOutputer();
         void process_subtitles();
         void stop_and_clear();
@@ -23,14 +23,13 @@ class SubtitlesOutputer : public QObject {
         void outputSubtitles();
         //////////////////////////////////////////////////
     public:
-        Queue<Subtitle> subs_queue;
+        Queue<SubtitleUnit> subs_queue;
 
     private:
         std::mutex mutex;
         ThreadSleeper sleeper;
-        const Codec& codec;
         Clock* const clock;
-        MediaParameters* const params;
+        MediaParameters* params;
 };
 
 #endif  // SUBTITLESOUTPUTER_H

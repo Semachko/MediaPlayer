@@ -12,7 +12,7 @@ extern "C" {
 #include "codec.h"
 #include "frame.h"
 #include "packet.h"
-#include "subtitle.h"
+#include "subtitleunit.h"
 
 class Decoder {
     public:
@@ -20,7 +20,7 @@ class Decoder {
         ~Decoder();
 
         QQueue<Frame> decode_packet(Packet packet);
-        Subtitle decode_subtitle(Packet packet);
+        SubtitleUnit decode_subtitle(Packet packet);
         void send_packet(Packet packet);
         QQueue<Frame> receive_frames();
         void clear_decoder();

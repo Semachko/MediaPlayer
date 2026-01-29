@@ -27,15 +27,15 @@ QQueue<Frame> Decoder::receive_frames() {
     return queue;
 }
 
-Subtitle Decoder::decode_subtitle(Packet packet) {
+SubtitleUnit Decoder::decode_subtitle(Packet packet) {
     if (!packet)
-        return Subtitle();
+        return SubtitleUnit();
     qreal start = packet->pts * av_q2d(codec.timeBase);
     qreal duration = packet->duration * av_q2d(codec.timeBase);
     AVSubtitle avsub;
     int got_sub = 0;
     int result = avcodec_decode_subtitle2(codec.context, &avsub, &got_sub, packet.get());
-    Subtitle subs(avsub);
+    SubtitleUnit subs(avsub);
     if (result < 0)
         qDebug() << "Error decoding subtitles: " << result;
     if (got_sub) {
@@ -50,6 +50,9 @@ Subtitle Decoder::decode_subtitle(Packet packet) {
                 subs.text += str;
             }
         }
+    } else {
+        avsubtitle_free(&avsub);
+        return SubtitleUnit();
     }
     avsubtitle_free(&avsub);
     subs.start_time = start;
